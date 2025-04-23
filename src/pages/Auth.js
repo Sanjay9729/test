@@ -56,7 +56,6 @@ const Authe = () => {
 
       if (session) {
         setIsLoggedIn(true);
-        setLoggedInEmail(session.user.email);
       }
     };
 
@@ -65,7 +64,6 @@ const Authe = () => {
     const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === "SIGNED_IN" && session) {
         setIsLoggedIn(true);
-        setLoggedInEmail(session.user.email);
         setMessage("✅ Login successful!");
       }
     });
@@ -103,7 +101,6 @@ const Authe = () => {
       if (error) {
         setMessage("❌ " + error.message);
       } else {
-        setOtpSent(true);
         setMessage("📧 OTP sent! Please check your email.");
       }
     } catch (err) {
@@ -211,8 +208,7 @@ const Authe = () => {
 
           {step === 5 && (
             <div className="form-group">
-               {/* Image upload */}
-               <div className="image-upload">
+              <div className="image-upload">
                 <label>Take a Picture</label>
                 <input type="file" accept="image/*" onChange={handleCapture} />
                 {capturedImage && (
@@ -224,21 +220,15 @@ const Authe = () => {
                 )}
               </div>
               <label>Search & Select Product</label>
-
-             
-
-              {/* Search and select product */}
               <input
                 type="text"
                 placeholder="Type product name..."
                 value={productSearch}
                 onChange={(e) => setProductSearch(e.target.value)}
               />
-
               {selectedProduct && (
                 <p className="selected-product">✅ Selected: {selectedProduct}</p>
               )}
-
               <div className="product-list-container">
                 <ul className="product-list">
                   {loading ? (
