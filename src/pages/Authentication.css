@@ -1,0 +1,408 @@
+/* Base Reset & Layout */
+@import url('https://fonts.googleapis.com/css2?family=Figtree:wght@300;400;500;600&display=swap');
+
+body {
+  background-color: #f3f4f6;
+  font-family: sans-serif;
+  margin: 0;
+  box-sizing: border-box;
+  font-family: 'Figtree', sans-serif;
+}
+ul{
+  list-style-type: none;
+}
+ul.product-list {
+  padding-left: 0;
+}
+
+.auth-background, .container, .card {
+  font-family: 'Figtree', sans-serif;
+}
+
+.auth-background {
+  background-image: url('../assets/bg.png');
+  background-size: 100% 100%;
+  background-position: 100%;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Container & Card */
+.container {
+  max-width: 550px;
+  width: 100%;
+  padding: 20px;
+}
+
+.card {
+  background: rgba(255, 255, 255, 0.95);
+  padding: 2rem;
+  border-radius: 16px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+  width: 100%;
+}
+
+/* Title */
+.title {
+  font-size: 1.75rem;
+  font-weight: bold;
+  margin-bottom: 3rem;
+  text-align: center;
+  color: #1f2937;
+}
+
+/* Steps Indicator */
+.steps {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 2.2rem;
+}
+
+.step-circle {
+  width: 35px;
+  height: 35px;
+  border-radius: 50%;
+  background: #ddd;
+  color: #333;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 14px;
+}
+
+.step-circle.active {
+  background: #007bff;
+  color: white;
+}
+
+.step-circle.completed {
+  background: #28a745;
+  color: white;
+}
+
+/* Form Fields */
+.form-group {
+  margin-bottom: 2.2rem;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+  font-size: 14px;
+  color: #374151;
+}
+
+.form-group input,
+.form-group textarea {
+  width: 100%;
+  padding: 0.6rem;
+  font-size: 1rem;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  background-color: #eff6ff;
+  box-sizing: border-box;
+}
+
+input:focus,
+textarea:focus {
+  border-color: #3b82f6;
+  outline: none;
+}
+
+/* Email Step Layout */
+.email-step {
+  margin-bottom: 1.5rem;
+}
+
+.email-input-wrapper {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.email-input-wrapper input {
+  flex: 1;
+}
+
+/* OTP Button */
+.otp-btn {
+  padding: 0.6rem 1rem;
+  background: #007bff;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.3s ease-in-out;
+}
+
+.otp-btn:hover {
+  background-color: #2563eb;
+}
+
+.otp-btn:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+}
+
+/* Message */
+.message {
+  margin-top: 1rem;
+  font-weight: 500;
+  color: #10b981;
+}
+
+/* Button Group */
+.btn-group {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 1.5rem;
+}
+
+.prev-btn,
+.btn-group button {
+  padding: 0.6rem 1.2rem;
+  font-size: 1rem;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.prev-btn {
+  background: #6c757d;
+  color: white;
+  transition: background-color 0.2s ease-in-out;
+}
+
+.prev-btn:hover {
+  background: #4b5563;
+}
+
+.btn-group button:not(.prev-btn) {
+  background: #007bff;
+  color: white;
+  transition: background-color 0.2s ease-in-out;
+}
+
+.btn-group button:not(.prev-btn):hover {
+  background-color: #2563eb;
+}
+.auth-background {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  background-color: #f5f5f5;
+}
+
+.auth-container {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  max-width: 1200px;
+  gap: 20px;
+  padding: 20px;
+}
+
+.form-container {
+  background-color: white;
+  padding: 30px;
+  border-radius: 10px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.image-container {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+}
+
+.auth-image {
+  width: 100%;
+  max-width: 500px;
+  height: auto;
+  border-radius: 10px;
+}
+
+
+
+.steps {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 20px;
+}
+
+.step-circle {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background-color: #ccc;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 0 10px;
+  font-size: 14px;
+}
+
+.step-circle.active {
+  background-color: #4caf50;
+  color: white;
+}
+
+.step-circle.completed {
+  background-color: #2196f3;
+  color: white;
+}
+
+.form-group {
+  margin-bottom: 20px;
+}
+
+.input, .textarea {
+  width: 100%;
+  padding: 10px;
+  border-radius: 5px;
+  border: 1px solid #ccc;
+}
+
+.email-input-wrapper {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.otp-btn {
+  padding: 10px 20px;
+  background-color: #4caf50;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.otp-btn:disabled {
+  background-color: #ccc;
+}
+
+.message {
+  text-align: center;
+  color: red;
+  margin-top: 10px;
+}
+
+.btn-group {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 20px;
+}
+
+.prev-btn, button {
+  padding: 10px 20px;
+  border-radius: 5px;
+  background-color: #2196f3;
+  color: white;
+  border: none;
+  cursor: pointer;
+}
+
+.prev-btn:hover, button:hover {
+  background-color: #005bb5;
+}
+.success-msg {
+  color: green;
+  font-weight: 500;
+  margin-top: 10px;
+}
+
+.message {
+  margin-top: 10px;
+  color: red;
+}
+/* Authentication.css */
+.email-input-group {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 15px;
+}
+
+.email-input-group input {
+  flex: 1;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.message {
+  padding: 10px;
+  border-radius: 4px;
+  margin-bottom: 15px;
+}
+
+.message.success {
+  background-color: #e8f5e9;
+  color: #2e7d32;
+  border: 1px solid #a5d6a7;
+}
+
+.message.info {
+  background-color: #e3f2fd;
+  color: #1565c0;
+  border: 1px solid #90caf9;
+}
+
+.message.error {
+  background-color: #ffebee;
+  color: #d32f2f;
+  border: 1px solid #ef9a9a;
+}
+
+.disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.completion-screen {
+  text-align: center;
+  padding: 20px;
+}
+
+.home-link {
+  display: inline-block;
+  margin-top: 20px;
+  padding: 10px 20px;
+  background: #1976d2;
+  color: white;
+  text-decoration: none;
+  border-radius: 4px;
+  transition: background 0.3s;
+}
+
+.home-link:hover {
+  background: #1565c0;
+}
+.product-image {
+  width: 40px;
+  height: 40px;
+  object-fit: cover;
+  margin-right: 10px;
+}
+li.product-item {
+  cursor: pointer;
+}
+ul.product-list {
+  padding-left: 0;
+  overflow-x: hidden;
+  height: 300px;
+}
+img.image-preview {
+  height: 100%;
+  width: 100%;
+}
+.image-upload {
+    margin-bottom: 14px;
+}
