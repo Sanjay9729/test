@@ -27,8 +27,6 @@ const Authe = () => {
       } catch (err) {
         console.error(err);
         setMessage("❌ Failed to load products.");
-      } finally {
-        setLoading(false);
       }
     };
 
@@ -47,22 +45,25 @@ const Authe = () => {
   }, [productSearch, products]);
 
   useEffect(() => {
-    const checkSession = async () => {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-
-      if (session) {
+    const getSession = async () => {
+      const { data } = await supabase.auth.getSession();
+      if (data?.session) {
         setIsLoggedIn(true);
+        setMessage("✅ Login successful!");
+      } else {
+        setIsLoggedIn(false);
       }
+      setLoading(false); // UI only renders once session check completes
     };
 
-    checkSession();
+    getSession();
 
     const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === "SIGNED_IN" && session) {
         setIsLoggedIn(true);
         setMessage("✅ Login successful!");
+      } else if (event === "SIGNED_OUT") {
+        setIsLoggedIn(false);
       }
     });
 
@@ -85,14 +86,7 @@ const Authe = () => {
     setMessage("");
 
     try {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-
-      if (session && session.user.email === email) {
-        setMessage("✅ You have already logged in.");
-        return;
-      }
+      await supabase.auth.signOut(); // Clean previous session
 
       const { error } = await supabase.auth.signInWithOtp({ email });
 
@@ -148,137 +142,141 @@ const Authe = () => {
             ))}
           </div>
 
-          {step === 1 && (
-            <div className="form-group">
-              <label>Full Name</label>
-              <input
-                type="text"
-                value={fullName}
-                onChange={(e) => setFullName(e.target.value)}
-              />
-            </div>
-          )}
-
-          {step === 2 && (
-            <div className="form-group email-step">
-              <label>Email</label>
-              <div className="email-input-wrapper">
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                />
-                <button
-                  type="button"
-                  className="otp-btn"
-                  onClick={sendOtp}
-                  disabled={loading}
-                >
-                  {loading ? "Sending..." : "Send OTP"}
-                </button>
-              </div>
-            </div>
-          )}
-
-          {step === 3 && (
-            <div className="form-group">
-              <label>Phone Number</label>
-              <input
-                type="tel"
-                placeholder="e.g. +1234567890"
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-              />
-            </div>
-          )}
-
-          {step === 4 && (
-            <div className="form-group">
-              <label>Physical Address</label>
-              <textarea
-                rows={3}
-                placeholder="Enter your address"
-                value={address}
-                onChange={(e) => setAddress(e.target.value)}
-              />
-            </div>
-          )}
-
-          {step === 5 && (
-            <div className="form-group">
-              <div className="image-upload">
-                <label>Take a Picture</label>
-                <input type="file" accept="image/*" onChange={handleCapture} />
-                {capturedImage && (
-                  <img
-                    src={capturedImage}
-                    alt="Captured"
-                    className="image-preview"
+          {!loading && (
+            <>
+              {step === 1 && (
+                <div className="form-group">
+                  <label>Full Name</label>
+                  <input
+                    type="text"
+                    value={fullName}
+                    onChange={(e) => setFullName(e.target.value)}
                   />
+                </div>
+              )}
+
+              {step === 2 && (
+                <div className="form-group email-step">
+                  <label>Email</label>
+                  <div className="email-input-wrapper">
+                    <input
+                      type="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                    />
+                    <button
+                      type="button"
+                      className="otp-btn"
+                      onClick={sendOtp}
+                      disabled={loading}
+                    >
+                      {loading ? "Sending..." : "Send OTP"}
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {step === 3 && (
+                <div className="form-group">
+                  <label>Phone Number</label>
+                  <input
+                    type="tel"
+                    placeholder="e.g. +1234567890"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                  />
+                </div>
+              )}
+
+              {step === 4 && (
+                <div className="form-group">
+                  <label>Physical Address</label>
+                  <textarea
+                    rows={3}
+                    placeholder="Enter your address"
+                    value={address}
+                    onChange={(e) => setAddress(e.target.value)}
+                  />
+                </div>
+              )}
+
+              {step === 5 && (
+                <div className="form-group">
+                  <div className="image-upload">
+                    <label>Take a Picture</label>
+                    <input type="file" accept="image/*" onChange={handleCapture} />
+                    {capturedImage && (
+                      <img
+                        src={capturedImage}
+                        alt="Captured"
+                        className="image-preview"
+                      />
+                    )}
+                  </div>
+                  <label>Search & Select Product</label>
+                  <input
+                    type="text"
+                    placeholder="Type product name..."
+                    value={productSearch}
+                    onChange={(e) => setProductSearch(e.target.value)}
+                  />
+                  {selectedProduct && (
+                    <p className="selected-product">✅ Selected: {selectedProduct}</p>
+                  )}
+                  <div className="product-list-container">
+                    <ul className="product-list">
+                      {loading ? (
+                        <li>Loading products...</li>
+                      ) : filteredProducts.length > 0 ? (
+                        filteredProducts.map((product) => (
+                          <li
+                            key={product.id}
+                            className={`product-item ${selectedProduct === product.title ? "selected" : ""}`}
+                            onClick={() => setSelectedProduct(product.title)}
+                          >
+                            {product.images && product.images.length > 0 && (
+                              <img
+                                src={product.images[0].src}
+                                alt={product.title}
+                                className="product-image"
+                              />
+                            )}
+                            <span className="product-title">{product.title}</span>
+                          </li>
+                        ))
+                      ) : (
+                        <li className="no-products">No products found</li>
+                      )}
+                    </ul>
+                  </div>
+                </div>
+              )}
+
+              {step === 6 && (
+                <div className="form-group">
+                  <h2>Thank You!</h2>
+                  <p className="capitalize">Your Warranty Registration Is Completed.</p>
+                  <a href="https://ellastein.in/" className="back-btn">
+                    ellastein.com
+                  </a>
+                </div>
+              )}
+
+              <div className="btn-group">
+                {step > 1 && step <= 6 && (
+                  <button className="prev-btn" onClick={prevStep}>
+                    Previous
+                  </button>
+                )}
+                {step < 6 && (
+                  <button onClick={nextStep} disabled={step === 5 && !selectedProduct}>
+                    Next
+                  </button>
                 )}
               </div>
-              <label>Search & Select Product</label>
-              <input
-                type="text"
-                placeholder="Type product name..."
-                value={productSearch}
-                onChange={(e) => setProductSearch(e.target.value)}
-              />
-              {selectedProduct && (
-                <p className="selected-product">✅ Selected: {selectedProduct}</p>
-              )}
-              <div className="product-list-container">
-                <ul className="product-list">
-                  {loading ? (
-                    <li>Loading products...</li>
-                  ) : filteredProducts.length > 0 ? (
-                    filteredProducts.map((product) => (
-                      <li
-                        key={product.id}
-                        className={`product-item ${selectedProduct === product.title ? "selected" : ""}`}
-                        onClick={() => setSelectedProduct(product.title)}
-                      >
-                        {product.images && product.images.length > 0 && (
-                          <img
-                            src={product.images[0].src}
-                            alt={product.title}
-                            className="product-image"
-                          />
-                        )}
-                        <span className="product-title">{product.title}</span>
-                      </li>
-                    ))
-                  ) : (
-                    <li className="no-products">No products found</li>
-                  )}
-                </ul>
-              </div>
-            </div>
+              {message && <p className="message">{message}</p>}
+            </>
           )}
-
-          {step === 6 && (
-            <div className="form-group">
-              <h2>Thank You!</h2>
-              <p className="capitalize">Your Warranty Registration Is Completed.</p>
-              <a href="https://ellastein.in/" className="back-btn">
-                ellastein.com
-              </a>
-            </div>
-          )}
-
-          <div className="btn-group">
-            {step > 1 && step <= 6 && (
-              <button className="prev-btn" onClick={prevStep}>
-                Previous
-              </button>
-            )}
-            {step < 6 && (
-              <button onClick={nextStep} disabled={step === 5 && !selectedProduct}>
-                Next
-              </button>
-            )}
-          </div>
-          {message && <p className="message">{message}</p>}
         </div>
       </div>
     </div>
