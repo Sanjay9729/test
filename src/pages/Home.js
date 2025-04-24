@@ -1,4 +1,3 @@
-// src/pages/Home.js
 import React, { useEffect, useState } from 'react'
 import { supabase } from '../supabaseClient'
 import { useNavigate } from 'react-router-dom'
@@ -25,11 +24,24 @@ const Home = () => {
     navigate('/login')
   }
 
+  const formatDisplayName = (email) => {
+    if (!email) return 'User'
+
+    const namePart = email.split('@')[0]
+    return namePart.replace(/\./g, ' ')
+  }
+
   return (
     <div style={{ padding: 20 }}>
-      <h2>Welcome! Sanjay</h2>
-      {user && <p>Email: {user.email}</p>}
-      <button onClick={handleLogout}>Logout</button>
+      {user ? (
+        <>
+          <h2>Welcome! {formatDisplayName(user.email)}</h2>
+          <p>Email: {user.email}</p>
+          <button onClick={handleLogout}>Logout</button>
+        </>
+      ) : (
+        <p>Loading...</p>
+      )}
     </div>
   )
 }

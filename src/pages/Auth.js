@@ -11,6 +11,7 @@ const Authe = () => {
   const [address, setAddress] = useState("");
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(true);
+  const [loadingProducts, setLoadingProducts] = useState(true); // New
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [productSearch, setProductSearch] = useState("");
   const [products, setProducts] = useState([]);
@@ -27,6 +28,8 @@ const Authe = () => {
       } catch (err) {
         console.error(err);
         setMessage("❌ Failed to load products.");
+      } finally {
+        setLoadingProducts(false);
       }
     };
 
@@ -53,7 +56,7 @@ const Authe = () => {
       } else {
         setIsLoggedIn(false);
       }
-      setLoading(false); // UI only renders once session check completes
+      setLoading(false);
     };
 
     getSession();
@@ -86,7 +89,7 @@ const Authe = () => {
     setMessage("");
 
     try {
-      await supabase.auth.signOut(); // Clean previous session
+      await supabase.auth.signOut();
 
       const { error } = await supabase.auth.signInWithOtp({ email });
 
@@ -225,7 +228,7 @@ const Authe = () => {
                   )}
                   <div className="product-list-container">
                     <ul className="product-list">
-                      {loading ? (
+                      {loadingProducts ? (
                         <li>Loading products...</li>
                       ) : filteredProducts.length > 0 ? (
                         filteredProducts.map((product) => (
