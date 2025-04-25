@@ -1,4 +1,3 @@
-/* Base Reset & Layout */
 @import url('https://fonts.googleapis.com/css2?family=Figtree:wght@300;400;500;600&display=swap');
 
 body {
@@ -29,7 +28,6 @@ ul.product-list {
   justify-content: center;
 }
 
-/* Container & Card */
 .container {
   max-width: 550px;
   width: 100%;
@@ -39,21 +37,17 @@ ul.product-list {
 .card {
   background: rgba(255, 255, 255, 0.95);
   padding: 2rem;
-  border-radius: 16px;
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
-  width: 100%;
 }
 
-/* Title */
 .title {
-  font-size: 1.75rem;
+  font-size: 2rem;
   font-weight: bold;
   margin-bottom: 3rem;
   text-align: center;
   color: #1f2937;
 }
 
-/* Steps Indicator */
 .steps {
   display: flex;
   justify-content: space-between;
@@ -74,16 +68,11 @@ ul.product-list {
 }
 
 .step-circle.active {
-  background: #007bff;
+  background: #000;
   color: white;
 }
 
-.step-circle.completed {
-  background: #28a745;
-  color: white;
-}
 
-/* Form Fields */
 .form-group {
   margin-bottom: 2.2rem;
 }
@@ -101,7 +90,6 @@ ul.product-list {
   width: 100%;
   padding: 0.6rem;
   font-size: 1rem;
-  border-radius: 8px;
   border: 1px solid #ccc;
   background-color: #eff6ff;
   box-sizing: border-box;
@@ -128,13 +116,11 @@ textarea:focus {
   flex: 1;
 }
 
-/* OTP Button */
 .otp-btn {
   padding: 0.6rem 1rem;
-  background: #007bff;
+  background: #4caf50;
   color: white;
   border: none;
-  border-radius: 8px;
   font-size: 14px;
   cursor: pointer;
   white-space: nowrap;
@@ -142,7 +128,8 @@ textarea:focus {
 }
 
 .otp-btn:hover {
-  background-color: #2563eb;
+  background-color: #000;
+  color: #fff;
 }
 
 .otp-btn:disabled {
@@ -150,14 +137,12 @@ textarea:focus {
   cursor: not-allowed;
 }
 
-/* Message */
 .message {
   margin-top: 1rem;
   font-weight: 500;
   color: #10b981;
 }
 
-/* Button Group */
 .btn-group {
   display: flex;
   justify-content: space-between;
@@ -166,10 +151,9 @@ textarea:focus {
 
 .prev-btn,
 .btn-group button {
-  padding: 0.6rem 1.2rem;
+  padding: 0.6rem 1.6rem;
   font-size: 1rem;
   border: none;
-  border-radius: 8px;
   cursor: pointer;
   font-weight: 500;
 }
@@ -185,13 +169,14 @@ textarea:focus {
 }
 
 .btn-group button:not(.prev-btn) {
-  background: #007bff;
+  background: #000;
   color: white;
   transition: background-color 0.2s ease-in-out;
 }
-
+.prev-btn, .btn-group button:hover,
 .btn-group button:not(.prev-btn):hover {
-  background-color: #2563eb;
+  background-color: #ccc;
+  color: #000;
 }
 .auth-background {
   display: flex;
@@ -249,13 +234,10 @@ textarea:focus {
   font-size: 14px;
 }
 
-.step-circle.active {
-  background-color: #4caf50;
-  color: white;
-}
+
 
 .step-circle.completed {
-  background-color: #2196f3;
+  background-color: #000;
   color: white;
 }
 
@@ -276,14 +258,7 @@ textarea:focus {
   align-items: center;
 }
 
-.otp-btn {
-  padding: 10px 20px;
-  background-color: #4caf50;
-  color: white;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-}
+
 
 .otp-btn:disabled {
   background-color: #ccc;
@@ -298,20 +273,19 @@ textarea:focus {
 .btn-group {
   display: flex;
   justify-content: space-between;
-  margin-top: 20px;
+  margin-top: 30px;
 }
 
 .prev-btn, button {
   padding: 10px 20px;
-  border-radius: 5px;
-  background-color: #2196f3;
+  background-color: #000;
   color: white;
   border: none;
   cursor: pointer;
 }
 
 .prev-btn:hover, button:hover {
-  background-color: #005bb5;
+  background-color: #000;
 }
 .success-msg {
   color: green;

@@ -259,8 +259,8 @@ const Authe = () => {
                 <div className="form-group">
                   <h2>Thank You!</h2>
                   <p className="capitalize">Your Warranty Registration Is Completed.</p>
-                  <a href="https://ellastein.in/" className="back-btn">
-                    ellastein.com
+                  <a href="https://wholesale.ellastein.com/" className="back-btn">
+                    Ellastein.com
                   </a>
                 </div>
               )}
