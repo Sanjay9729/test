@@ -152,6 +152,7 @@ const Authe = () => {
                   <label>Full Name</label>
                   <input
                     type="text"
+                     id="fullName"
                     placeholder="Full Name"
                     value={fullName}
                     onChange={(e) => setFullName(e.target.value)}
