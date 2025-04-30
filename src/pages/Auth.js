@@ -166,6 +166,8 @@ const Authe = () => {
                   <div className="email-input-wrapper">
                     <input
                       type="email"
+                      id="email"
+                       placeholder="Email Address"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                     />
@@ -186,7 +188,8 @@ const Authe = () => {
                   <label>Phone Number</label>
                   <input
                     type="tel"
-                    placeholder="e.g. +1234567890"
+                    id="tel"
+                    placeholder="Phone Number"
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
                   />
@@ -199,6 +202,7 @@ const Authe = () => {
                   <textarea
                     rows={3}
                     placeholder="Enter your address"
+                id="Enter your address"
                     value={address}
                     onChange={(e) => setAddress(e.target.value)}
                   />
