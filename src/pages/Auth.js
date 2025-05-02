@@ -19,38 +19,6 @@ const Authe = () => {
   const [isLoadingProducts, setIsLoadingProducts] = useState(true);
   const [isInitializing, setIsInitializing] = useState(true);
 
-  // Check session (initial load + from magic link)
-  useEffect(() => {
-    const checkSession = async () => {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-
-      if (session) {
-        setIsLoggedIn(true);
-      }
-
-      setIsInitializing(false);
-    };
-
-    checkSession();
-
-    const { data: listener } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === "SIGNED_IN") {
-        setIsLoggedIn(true);
-        setMessage("✅ Login Successful!");
-        setStep(3);
-      } else if (event === "SIGNED_OUT") {
-        setIsLoggedIn(false);
-      }
-    });
-
-    return () => {
-      listener?.subscription?.unsubscribe();
-    };
-  }, []);
-
-  // Fetch Shopify products
   useEffect(() => {
     const fetchProducts = async () => {
       try {
@@ -69,22 +37,53 @@ const Authe = () => {
     };
 
     fetchProducts();
-  }, [step]);
+  }, [step]); 
 
-  // Filter product list
   useEffect(() => {
     if (productSearch.trim() === "") {
       setFilteredProducts(products);
     } else {
-      setFilteredProducts(
-        products.filter((p) =>
-          p.title.toLowerCase().includes(productSearch.toLowerCase().trim())
-        )
+      const filtered = products.filter((p) =>
+        p.title.toLowerCase().includes(productSearch.toLowerCase().trim())
       );
+      setFilteredProducts(filtered);
     }
   }, [productSearch, products]);
 
-  // Clear error when user types
+  useEffect(() => {
+    const getSession = async () => {
+      const { data } = await supabase.auth.getSession();
+      if (data?.session) {
+        setIsLoggedIn(true);
+      } else {
+        setIsLoggedIn(false);
+      }
+      setIsInitializing(false);
+    };
+
+    getSession();
+
+    const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === "SIGNED_IN" && session) {
+        setIsLoggedIn(true);
+      } else if (event === "SIGNED_OUT") {
+        setIsLoggedIn(false);
+      }
+    });
+
+    return () => {
+      authListener?.subscription?.unsubscribe();
+    };
+  }, []);
+
+  useEffect(() => {
+    if (step === 2 && isLoggedIn) {
+      setMessage("✅ Login Successful!");
+    } else if (step !== 2) {
+      setMessage("");
+    }
+  }, [step, isLoggedIn]);
+
   useEffect(() => {
     setMessage("");
   }, [email]);
@@ -99,22 +98,16 @@ const Authe = () => {
     setMessage("");
 
     try {
-      await supabase.auth.signOut(); // Important: clear old sessions
+      await supabase.auth.signOut();
 
-      const { error } = await supabase.auth.signInWithOtp({
-        email,
-        options: {
-          emailRedirectTo: window.location.origin,
-        },
-      });
+      const { error } = await supabase.auth.signInWithOtp({ email });
 
       if (error) {
         setMessage("❌ " + error.message);
       } else {
-        setMessage("📧 OTP sent! Check your email and click the link.");
+        setMessage("📧 OTP sent! Please check your email.");
       }
     } catch (err) {
-      console.error(err);
       setMessage("❌ Something went wrong.");
     } finally {
       setIsSendingOtp(false);
@@ -142,6 +135,8 @@ const Authe = () => {
     }
   };
 
+  const steps = [1, 2, 3, 4, 5, 6];
+
   if (isInitializing) {
     return (
       <div className="auth-background">
@@ -162,10 +157,10 @@ const Authe = () => {
           <h2 className="title">Warranty Registration</h2>
 
           <div className="steps">
-            {[1, 2, 3, 4, 5, 6].map((s) => (
+            {steps.map((s, index) => (
               <div
-                key={s}
-                className={`step-circle ${s === step ? "active" : s < step ? "completed" : ""}`}
+                key={index}
+                className={step-circle ${s === step ? "active" : s < step ? "completed" : ""}}
               >
                 {s < step ? "✓" : s}
               </div>
@@ -177,6 +172,7 @@ const Authe = () => {
               <label>Full Name</label>
               <input
                 type="text"
+                id="fullName"
                 placeholder="Full Name"
                 value={fullName}
                 onChange={(e) => setFullName(e.target.value)}
@@ -190,11 +186,13 @@ const Authe = () => {
               <div className="email-input-wrapper">
                 <input
                   type="email"
+                  id="email"
                   placeholder="Email Address"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                 />
                 <button
+                  type="button"
                   className="otp-btn"
                   onClick={sendOtp}
                   disabled={isSendingOtp}
@@ -202,11 +200,7 @@ const Authe = () => {
                   {isSendingOtp ? "Sending..." : "Send OTP"}
                 </button>
               </div>
-              {message && (
-                <p className={`message ${message.startsWith("❌") ? "error" : "success"}`}>
-                  {message}
-                </p>
-              )}
+              {message && <p className={message ${message.startsWith("❌") ? "error" : "success"}}>{message}</p>}
             </div>
           )}
 
@@ -215,6 +209,7 @@ const Authe = () => {
               <label>Phone Number</label>
               <input
                 type="tel"
+                id="tel"
                 placeholder="Phone Number"
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
@@ -224,10 +219,11 @@ const Authe = () => {
 
           {step === 4 && (
             <div className="form-group">
-              <label>Address</label>
+              <label>Physical Address</label>
               <textarea
                 rows={3}
                 placeholder="Enter your address"
+                id="Enter your address"
                 value={address}
                 onChange={(e) => setAddress(e.target.value)}
               />
@@ -236,11 +232,17 @@ const Authe = () => {
 
           {step === 5 && (
             <div className="form-group">
-              <label>Take a Picture</label>
-              <input type="file" accept="image/*" onChange={handleCapture} />
-              {capturedImage && (
-                <img src={capturedImage} alt="Captured" className="image-preview" />
-              )}
+              <div className="image-upload">
+                <label>Take a Picture</label>
+                <input type="file" accept="image/*" onChange={handleCapture} />
+                {capturedImage && (
+                  <img
+                    src={capturedImage}
+                    alt="Captured"
+                    className="image-preview"
+                  />
+                )}
+              </div>
               <label>Search & Select Product</label>
               <input
                 type="text"
@@ -248,35 +250,46 @@ const Authe = () => {
                 value={productSearch}
                 onChange={(e) => setProductSearch(e.target.value)}
               />
-              {selectedProduct && <p>✅ Selected: {selectedProduct}</p>}
-              <ul className="product-list">
-                {isLoadingProducts ? (
-                  <li>Loading products...</li>
-                ) : filteredProducts.length > 0 ? (
-                  filteredProducts.map((product) => (
-                    <li
-                      key={product.id}
-                      className={selectedProduct === product.title ? "selected" : ""}
-                      onClick={() => setSelectedProduct(product.title)}
-                    >
-                      {product.images?.[0]?.src && (
-                        <img src={product.images[0].src} alt={product.title} />
-                      )}
-                      {product.title}
-                    </li>
-                  ))
-                ) : (
-                  <li>No products found</li>
-                )}
-              </ul>
+              {selectedProduct && (
+                <p className="selected-product">✅ Selected: {selectedProduct}</p>
+              )}
+              <div className="product-list-container">
+                <ul className="product-list">
+                  {isLoadingProducts ? (
+                    <li>Loading products...</li>
+                  ) : filteredProducts.length > 0 ? (
+                    filteredProducts.map((product) => (
+                      <li
+                        key={product.id}
+                        className={product-item ${selectedProduct === product.title ? "selected" : ""}}
+                        onClick={() => setSelectedProduct(product.title)}
+                      >
+                        {product.images && product.images.length > 0 && (
+                          <img
+                            src={product.images[0].src}
+                            alt={product.title}
+                            className="product-image"
+                          />
+                        )}
+                        <span className="product-title">{product.title}</span>
+                      </li>
+                    ))
+                  ) : (
+                    <li className="no-products">No products found</li>
+                  )}
+                </ul>
+                {message && step === 5 && <p className={message_products ${message.startsWith("❌") ? "error" : "success"}}>{message}</p>}
+              </div>
             </div>
           )}
 
           {step === 6 && (
             <div className="form-group">
               <h2>Thank You!</h2>
-              <p>Your Warranty Registration is complete.</p>
-              <a href="https://wholesale.ellastein.com/">Ellastein.com</a>
+              <p className="capitalize">Your Warranty Registration Is Completed.</p>
+              <a href="https://wholesale.ellastein.com/" className="back-btn">
+                Ellastein.com
+              </a>
             </div>
           )}
 
