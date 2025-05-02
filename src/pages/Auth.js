@@ -10,13 +10,46 @@ const Authe = () => {
   const [phone, setPhone] = useState("");
   const [address, setAddress] = useState("");
   const [message, setMessage] = useState("");
-  const [loading, setLoading] = useState(true);
-  const [loadingProducts, setLoadingProducts] = useState(true); // New
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [productSearch, setProductSearch] = useState("");
   const [products, setProducts] = useState([]);
   const [filteredProducts, setFilteredProducts] = useState([]);
-  const [capturedImage, setCapturedImage] = useState(null); // for preview
+  const [capturedImage, setCapturedImage] = useState(null);
+  const [isSendingOtp, setIsSendingOtp] = useState(false);
+  const [isLoadingProducts, setIsLoadingProducts] = useState(true);
+  const [isInitializing, setIsInitializing] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitMessage, setSubmitMessage] = useState("");
+
+  useEffect(() => {
+    const checkSession = async () => {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
+      if (session) {
+        setIsLoggedIn(true);
+      }
+
+      setIsInitializing(false);
+    };
+
+    checkSession();
+
+    const { data: listener } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === "SIGNED_IN") {
+        setIsLoggedIn(true);
+        setMessage("✅ Login Successful!");
+        setStep(3);
+      } else if (event === "SIGNED_OUT") {
+        setIsLoggedIn(false);
+      }
+    });
+
+    return () => {
+      listener?.subscription?.unsubscribe();
+    };
+  }, []);
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -27,53 +60,28 @@ const Authe = () => {
         setFilteredProducts(data);
       } catch (err) {
         console.error(err);
-        setMessage("❌ Failed to load products.");
+        if (step === 5) {
+          setMessage("❌ Failed to load products.");
+        }
       } finally {
-        setLoadingProducts(false);
+        setIsLoadingProducts(false);
       }
     };
 
     fetchProducts();
-  }, []);
+  }, [step]);
 
   useEffect(() => {
     if (productSearch.trim() === "") {
       setFilteredProducts(products);
     } else {
-      const filtered = products.filter((p) =>
-        p.title.toLowerCase().includes(productSearch.toLowerCase().trim())
+      setFilteredProducts(
+        products.filter((p) =>
+          p.title.toLowerCase().includes(productSearch.toLowerCase().trim())
+        )
       );
-      setFilteredProducts(filtered);
     }
   }, [productSearch, products]);
-
-  useEffect(() => {
-    const getSession = async () => {
-      const { data } = await supabase.auth.getSession();
-      if (data?.session) {
-        setIsLoggedIn(true);
-        setMessage("✅ Login successful!");
-      } else {
-        setIsLoggedIn(false);
-      }
-      setLoading(false);
-    };
-
-    getSession();
-
-    const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === "SIGNED_IN" && session) {
-        setIsLoggedIn(true);
-        setMessage("✅ Login successful!");
-      } else if (event === "SIGNED_OUT") {
-        setIsLoggedIn(false);
-      }
-    });
-
-    return () => {
-      authListener?.subscription?.unsubscribe();
-    };
-  }, []);
 
   useEffect(() => {
     setMessage("");
@@ -85,23 +93,29 @@ const Authe = () => {
       return;
     }
 
-    setLoading(true);
+    setIsSendingOtp(true);
     setMessage("");
 
     try {
       await supabase.auth.signOut();
 
-      const { error } = await supabase.auth.signInWithOtp({ email });
+      const { error } = await supabase.auth.signInWithOtp({
+        email,
+        options: {
+          emailRedirectTo: window.location.origin,
+        },
+      });
 
       if (error) {
         setMessage("❌ " + error.message);
       } else {
-        setMessage("📧 OTP sent! Please check your email.");
+        setMessage("📧 OTP sent! Check your email and click the link.");
       }
     } catch (err) {
+      console.error(err);
       setMessage("❌ Something went wrong.");
     } finally {
-      setLoading(false);
+      setIsSendingOtp(false);
     }
   };
 
@@ -126,7 +140,53 @@ const Authe = () => {
     }
   };
 
-  const steps = [1, 2, 3, 4, 5, 6];
+  const handleSubmit = async () => {
+    setIsSubmitting(true);
+    setSubmitMessage("");
+
+    const payload = {
+      fullName,
+      email,
+      phone,
+      address,
+      selectedProduct,
+      capturedImage,
+    };
+
+    try {
+      const res = await fetch("/.netlify/functions/submit-form", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      const result = await res.json();
+
+      if (res.ok) {
+        setSubmitMessage("✅ Submission successful!");
+      } else {
+        setSubmitMessage("❌ " + result.error || "Submission failed.");
+      }
+    } catch (err) {
+      console.error(err);
+      setSubmitMessage("❌ Network error. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  if (isInitializing) {
+    return (
+      <div className="auth-background">
+        <div className="container">
+          <div className="card">
+            <h2 className="title">Warranty Registration</h2>
+            <p>Loading...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="auth-background">
@@ -135,9 +195,9 @@ const Authe = () => {
           <h2 className="title">Warranty Registration</h2>
 
           <div className="steps">
-            {steps.map((s, index) => (
+            {[1, 2, 3, 4, 5, 6].map((s) => (
               <div
-                key={index}
+                key={s}
                 className={`step-circle ${s === step ? "active" : s < step ? "completed" : ""}`}
               >
                 {s < step ? "✓" : s}
@@ -145,147 +205,137 @@ const Authe = () => {
             ))}
           </div>
 
-          {!loading && (
-            <>
-              {step === 1 && (
-                <div className="form-group">
-                  <label>Full Name</label>
-                  <input
-                    type="text"
-                     id="fullName"
-                    placeholder="Full Name"
-                    value={fullName}
-                    onChange={(e) => setFullName(e.target.value)}
-                  />
-                </div>
-              )}
-
-              {step === 2 && (
-                <div className="form-group email-step">
-                  <label>Email</label>
-                  <div className="email-input-wrapper">
-                    <input
-                      type="email"
-                      id="email"
-                       placeholder="Email Address"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                    />
-                    <button
-                      type="button"
-                      className="otp-btn"
-                      onClick={sendOtp}
-                      disabled={loading}
-                    >
-                      {loading ? "Sending..." : "Send OTP"}
-                    </button>
-                  </div>
-                </div>
-              )}
-
-              {step === 3 && (
-                <div className="form-group">
-                  <label>Phone Number</label>
-                  <input
-                    type="tel"
-                    id="tel"
-                    placeholder="Phone Number"
-                    value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
-                  />
-                </div>
-              )}
-
-              {step === 4 && (
-                <div className="form-group">
-                  <label>Physical Address</label>
-                  <textarea
-                    rows={3}
-                    placeholder="Enter your address"
-                id="Enter your address"
-                    value={address}
-                    onChange={(e) => setAddress(e.target.value)}
-                  />
-                </div>
-              )}
-
-              {step === 5 && (
-                <div className="form-group">
-                  <div className="image-upload">
-                    <label>Take a Picture</label>
-                    <input type="file" accept="image/*" onChange={handleCapture} />
-                    {capturedImage && (
-                      <img
-                        src={capturedImage}
-                        alt="Captured"
-                        className="image-preview"
-                      />
-                    )}
-                  </div>
-                  <label>Search & Select Product</label>
-                  <input
-                    type="text"
-                    placeholder="Type product name..."
-                    value={productSearch}
-                    onChange={(e) => setProductSearch(e.target.value)}
-                  />
-                  {selectedProduct && (
-                    <p className="selected-product">✅ Selected: {selectedProduct}</p>
-                  )}
-                  <div className="product-list-container">
-                    <ul className="product-list">
-                      {loadingProducts ? (
-                        <li>Loading products...</li>
-                      ) : filteredProducts.length > 0 ? (
-                        filteredProducts.map((product) => (
-                          <li
-                            key={product.id}
-                            className={`product-item ${selectedProduct === product.title ? "selected" : ""}`}
-                            onClick={() => setSelectedProduct(product.title)}
-                          >
-                            {product.images && product.images.length > 0 && (
-                              <img
-                                src={product.images[0].src}
-                                alt={product.title}
-                                className="product-image"
-                              />
-                            )}
-                            <span className="product-title">{product.title}</span>
-                          </li>
-                        ))
-                      ) : (
-                        <li className="no-products">No products found</li>
-                      )}
-                    </ul>
-                  </div>
-                </div>
-              )}
-
-              {step === 6 && (
-                <div className="form-group">
-                  <h2>Thank You!</h2>
-                  <p className="capitalize">Your Warranty Registration Is Completed.</p>
-                  <a href="https://wholesale.ellastein.com/" className="back-btn">
-                    Ellastein.com
-                  </a>
-                </div>
-              )}
-
-              <div className="btn-group">
-                {step > 1 && step <= 6 && (
-                  <button className="prev-btn" onClick={prevStep}>
-                    Previous
-                  </button>
-                )}
-                {step < 6 && (
-                  <button onClick={nextStep} disabled={step === 5 && !selectedProduct}>
-                    Next
-                  </button>
-                )}
-              </div>
-              {message && <p className="message">{message}</p>}
-            </>
+          {step === 1 && (
+            <div className="form-group">
+              <label>Full Name</label>
+              <input
+                type="text"
+                placeholder="Full Name"
+                value={fullName}
+                onChange={(e) => setFullName(e.target.value)}
+              />
+            </div>
           )}
+
+          {step === 2 && (
+            <div className="form-group email-step">
+              <label>Email</label>
+              <div className="email-input-wrapper">
+                <input
+                  type="email"
+                  placeholder="Email Address"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                />
+                <button
+                  className="otp-btn"
+                  onClick={sendOtp}
+                  disabled={isSendingOtp}
+                >
+                  {isSendingOtp ? "Sending..." : "Send OTP"}
+                </button>
+              </div>
+              {message && (
+                <p className={`message ${message.startsWith("❌") ? "error" : "success"}`}>
+                  {message}
+                </p>
+              )}
+            </div>
+          )}
+
+          {step === 3 && (
+            <div className="form-group">
+              <label>Phone Number</label>
+              <input
+                type="tel"
+                placeholder="Phone Number"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+              />
+            </div>
+          )}
+
+          {step === 4 && (
+            <div className="form-group">
+              <label>Address</label>
+              <textarea
+                rows={3}
+                placeholder="Enter your address"
+                value={address}
+                onChange={(e) => setAddress(e.target.value)}
+              />
+            </div>
+          )}
+
+          {step === 5 && (
+            <div className="form-group">
+              <label>Take a Picture</label>
+              <input type="file" accept="image/*" onChange={handleCapture} />
+              {capturedImage && (
+                <img src={capturedImage} alt="Captured" className="image-preview" />
+              )}
+              <label>Search & Select Product</label>
+              <input
+                type="text"
+                placeholder="Type product name..."
+                value={productSearch}
+                onChange={(e) => setProductSearch(e.target.value)}
+              />
+              {selectedProduct && <p>✅ Selected: {selectedProduct}</p>}
+              <ul className="product-list">
+                {isLoadingProducts ? (
+                  <li>Loading products...</li>
+                ) : filteredProducts.length > 0 ? (
+                  filteredProducts.map((product) => (
+                    <li
+                      key={product.id}
+                      className={selectedProduct === product.title ? "selected" : ""}
+                      onClick={() => setSelectedProduct(product.title)}
+                    >
+                      {product.images?.[0]?.src && (
+                        <img src={product.images[0].src} alt={product.title} />
+                      )}
+                      {product.title}
+                    </li>
+                  ))
+                ) : (
+                  <li>No products found</li>
+                )}
+              </ul>
+            </div>
+          )}
+
+          {step === 6 && (
+            <div className="form-group">
+              <h2>Final Step</h2>
+              <p>Click the button below to complete your warranty registration.</p>
+              <button
+                onClick={handleSubmit}
+                disabled={isSubmitting}
+                className="submit-btn"
+              >
+                {isSubmitting ? "Submitting..." : "Submit"}
+              </button>
+              {submitMessage && (
+                <p className={`message ${submitMessage.startsWith("❌") ? "error" : "success"}`}>
+                  {submitMessage}
+                </p>
+              )}
+            </div>
+          )}
+
+          <div className="btn-group">
+            {step > 1 && step <= 6 && (
+              <button className="prev-btn" onClick={prevStep}>
+                Previous
+              </button>
+            )}
+            {step < 6 && (
+              <button onClick={nextStep} disabled={step === 5 && !selectedProduct}>
+                Next
+              </button>
+            )}
+          </div>
         </div>
       </div>
     </div>
