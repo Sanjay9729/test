@@ -18,9 +18,8 @@ const Authe = () => {
   const [isSendingOtp, setIsSendingOtp] = useState(false);
   const [isLoadingProducts, setIsLoadingProducts] = useState(true);
   const [isInitializing, setIsInitializing] = useState(true);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [submitMessage, setSubmitMessage] = useState("");
 
+  // Check session (initial load + from magic link)
   useEffect(() => {
     const checkSession = async () => {
       const {
@@ -51,6 +50,7 @@ const Authe = () => {
     };
   }, []);
 
+  // Fetch Shopify products
   useEffect(() => {
     const fetchProducts = async () => {
       try {
@@ -71,6 +71,7 @@ const Authe = () => {
     fetchProducts();
   }, [step]);
 
+  // Filter product list
   useEffect(() => {
     if (productSearch.trim() === "") {
       setFilteredProducts(products);
@@ -83,6 +84,7 @@ const Authe = () => {
     }
   }, [productSearch, products]);
 
+  // Clear error when user types
   useEffect(() => {
     setMessage("");
   }, [email]);
@@ -97,7 +99,7 @@ const Authe = () => {
     setMessage("");
 
     try {
-      await supabase.auth.signOut();
+      await supabase.auth.signOut(); // Important: clear old sessions
 
       const { error } = await supabase.auth.signInWithOtp({
         email,
@@ -140,40 +142,6 @@ const Authe = () => {
     }
   };
 
-  const handleSubmit = async () => {
-    try {
-      const res = await fetch(
-        "https://brilliant-kashata-1d4944.netlify.app/",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            name: fullName,
-            email,
-            phone,
-            address,
-            product: selectedProduct,
-            image: capturedImage,
-          }),
-        }
-      );
-  
-      const result = await res.json();
-  
-      if (res.ok && result.success) {
-        setMessage("✅ Form submitted successfully!");
-        setStep(6); // Move to final step
-      } else {
-        throw new Error(result.error || "Form submission failed");
-      }
-    } catch (err) {
-      console.error("Submit error:", err);
-      setMessage("❌ Network error. Please try again.");
-    }
-  };
-  
   if (isInitializing) {
     return (
       <div className="auth-background">
@@ -306,20 +274,9 @@ const Authe = () => {
 
           {step === 6 && (
             <div className="form-group">
-              <h2>Final Step</h2>
-              <p>Click the button below to complete your warranty registration.</p>
-              <button
-                onClick={handleSubmit}
-                disabled={isSubmitting}
-                className="submit-btn"
-              >
-                {isSubmitting ? "Submitting..." : "Submit"}
-              </button>
-              {submitMessage && (
-                <p className={`message ${submitMessage.startsWith("❌") ? "error" : "success"}`}>
-                  {submitMessage}
-                </p>
-              )}
+              <h2>Thank You!</h2>
+              <p>Your Warranty Registration is complete.</p>
+              <a href="https://wholesale.ellastein.com/">Ellastein.com</a>
             </div>
           )}
 
@@ -329,7 +286,6 @@ const Authe = () => {
                 Previous
               </button>
             )}
-
             {step < 6 && (
               <button onClick={nextStep} disabled={step === 5 && !selectedProduct}>
                 Next
