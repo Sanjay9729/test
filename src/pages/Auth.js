@@ -141,40 +141,39 @@ const Authe = () => {
   };
 
   const handleSubmit = async () => {
-    setIsSubmitting(true);
-    setSubmitMessage("");
-
-    const payload = {
-      fullName,
-      email,
-      phone,
-      address,
-      selectedProduct,
-      capturedImage,
-    };
-
     try {
-      const res = await fetch("/.netlify/functions/submit-form", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-
+      const res = await fetch(
+        "https://brilliant-kashata-1d4944.netlify.app/.netlify/functions/submit-form",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            name: fullName,
+            email,
+            phone,
+            address,
+            product: selectedProduct,
+            image: capturedImage,
+          }),
+        }
+      );
+  
       const result = await res.json();
-
-      if (res.ok) {
-        setSubmitMessage("✅ Submission successful!");
+  
+      if (res.ok && result.success) {
+        setMessage("✅ Form submitted successfully!");
+        setStep(6); // Move to final step
       } else {
-        setSubmitMessage("❌ " + result.error || "Submission failed.");
+        throw new Error(result.error || "Form submission failed");
       }
     } catch (err) {
-      console.error(err);
-      setSubmitMessage("❌ Network error. Please try again.");
-    } finally {
-      setIsSubmitting(false);
+      console.error("Submit error:", err);
+      setMessage("❌ Network error. Please try again.");
     }
   };
-
+  
   if (isInitializing) {
     return (
       <div className="auth-background">
