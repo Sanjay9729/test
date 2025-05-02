@@ -143,7 +143,7 @@ const Authe = () => {
   const handleSubmit = async () => {
     try {
       const res = await fetch(
-        "https://brilliant-kashata-1d4944.netlify.app/.netlify/functions/submit-form",
+        "https://brilliant-kashata-1d4944.netlify.app/",
         {
           method: "POST",
           headers: {
@@ -329,6 +329,7 @@ const Authe = () => {
                 Previous
               </button>
             )}
+
             {step < 6 && (
               <button onClick={nextStep} disabled={step === 5 && !selectedProduct}>
                 Next
