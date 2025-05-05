@@ -12,7 +12,7 @@ const Authe = () => {
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(true);
   const [loadingProducts, setLoadingProducts] = useState(true);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  // const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [productSearch, setProductSearch] = useState("");
   const [products, setProducts] = useState([]);
   const [filteredProducts, setFilteredProducts] = useState([]);
@@ -52,11 +52,14 @@ const Authe = () => {
   useEffect(() => {
     const getSession = async () => {
       const { data } = await supabase.auth.getSession();
+      // if (data?.session) {
+      //   setIsLoggedIn(true);
+      //   setMessage("✅ Login successful!");
+      // } else {
+      //   setIsLoggedIn(false);
+      // }
       if (data?.session) {
-        setIsLoggedIn(true);
         setMessage("✅ Login successful!");
-      } else {
-        setIsLoggedIn(false);
       }
       setLoading(false);
     };
@@ -65,10 +68,10 @@ const Authe = () => {
 
     const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === "SIGNED_IN" && session) {
-        setIsLoggedIn(true);
+        // setIsLoggedIn(true);
         setMessage("✅ Login successful!");
       } else if (event === "SIGNED_OUT") {
-        setIsLoggedIn(false);
+        // setIsLoggedIn(false);
       }
     });
 
