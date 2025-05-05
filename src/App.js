@@ -1,22 +1,19 @@
-// src/App.js
-import React from 'react'
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
-import Auth from './pages/Auth'
-import Home from './pages/Home'
-import Authentication from './pages/Authentication'
-import ViewWarranty from './pages/ViewWarranty'
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import Auth from './pages/Auth';
+import Home from './pages/Home';
+import ViewWarranty from './pages/ViewWarranty';
 
 function App() {
   return (
     <Router>
       <Routes>
         <Route path="/login" element={<Auth />} />
-        <Route path="/Authentication" element={<Authentication />} />
-        <Route path="/ViewWarranty" element={<ViewWarranty />} />
-        <Route path="/" element={<Home />} />
+        <Route path="/" element={<ViewWarranty />} />     
+        <Route path="/home" element={<Home />} />        
       </Routes>
     </Router>
-  )
+  );
 }
 
-export default App
+export default App;
