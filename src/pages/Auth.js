@@ -11,12 +11,11 @@ const Authe = () => {
   const [address, setAddress] = useState("");
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(true);
-  const [loadingProducts, setLoadingProducts] = useState(true); // New
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [loadingProducts, setLoadingProducts] = useState(true);
   const [productSearch, setProductSearch] = useState("");
   const [products, setProducts] = useState([]);
   const [filteredProducts, setFilteredProducts] = useState([]);
-  const [capturedImage, setCapturedImage] = useState(null); // for preview
+  const [capturedImage, setCapturedImage] = useState(null);
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -51,10 +50,7 @@ const Authe = () => {
     const getSession = async () => {
       const { data } = await supabase.auth.getSession();
       if (data?.session) {
-        setIsLoggedIn(true);
         setMessage("✅ Login successful!");
-      } else {
-        setIsLoggedIn(false);
       }
       setLoading(false);
     };
@@ -63,10 +59,7 @@ const Authe = () => {
 
     const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === "SIGNED_IN" && session) {
-        setIsLoggedIn(true);
         setMessage("✅ Login successful!");
-      } else if (event === "SIGNED_OUT") {
-        setIsLoggedIn(false);
       }
     });
 
@@ -74,10 +67,6 @@ const Authe = () => {
       authListener?.subscription?.unsubscribe();
     };
   }, []);
-
-  useEffect(() => {
-    setMessage("");
-  }, [email]);
 
   const sendOtp = async () => {
     if (!email) {
@@ -90,7 +79,6 @@ const Authe = () => {
 
     try {
       await supabase.auth.signOut();
-
       const { error } = await supabase.auth.signInWithOtp({ email });
 
       if (error) {
@@ -105,18 +93,6 @@ const Authe = () => {
     }
   };
 
-  const nextStep = () => {
-    if (step === 2 && !isLoggedIn) {
-      setMessage("❌ Please complete email verification before continuing.");
-      return;
-    }
-    if (step < 6) setStep(step + 1);
-  };
-
-  const prevStep = () => {
-    if (step > 1) setStep(step - 1);
-  };
-
   const handleCapture = (e) => {
     const file = e.target.files[0];
     if (file) {
@@ -124,6 +100,43 @@ const Authe = () => {
       setCapturedImage(imageUrl);
       setMessage("📸 Picture captured!");
     }
+  };
+
+  const handleSubmit = async () => {
+    setLoading(true);
+    setMessage("");
+
+    try {
+      const { error } = await supabase.from("submissions").insert([
+        {
+          full_name: fullName || null,
+          email: email || null,
+          phone: phone || null,
+          address: address || null,
+          selected_product: selectedProduct || null,
+          image_url: capturedImage || null,
+        },
+      ]);
+
+      if (error) {
+        setMessage("❌ Submission failed: " + error.message);
+      } else {
+        setMessage("✅ Form submitted successfully!");
+        setStep(6);
+      }
+    } catch (err) {
+      setMessage("❌ Error occurred during submission.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const nextStep = () => {
+    if (step < 6) setStep(step + 1);
+  };
+
+  const prevStep = () => {
+    if (step > 1) setStep(step - 1);
   };
 
   const steps = [1, 2, 3, 4, 5, 6];
@@ -152,7 +165,6 @@ const Authe = () => {
                   <label>Full Name</label>
                   <input
                     type="text"
-                     id="fullName"
                     placeholder="Full Name"
                     value={fullName}
                     onChange={(e) => setFullName(e.target.value)}
@@ -166,8 +178,7 @@ const Authe = () => {
                   <div className="email-input-wrapper">
                     <input
                       type="email"
-                      id="email"
-                       placeholder="Email Address"
+                      placeholder="Email Address"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                     />
@@ -188,7 +199,6 @@ const Authe = () => {
                   <label>Phone Number</label>
                   <input
                     type="tel"
-                    id="tel"
                     placeholder="Phone Number"
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
@@ -202,7 +212,6 @@ const Authe = () => {
                   <textarea
                     rows={3}
                     placeholder="Enter your address"
-                id="Enter your address"
                     value={address}
                     onChange={(e) => setAddress(e.target.value)}
                   />
@@ -212,26 +221,25 @@ const Authe = () => {
               {step === 5 && (
                 <div className="form-group">
                   <div className="image-upload">
-                    <label>Take a Picture</label>
+                    <label>Take a Picture (optional)</label>
                     <input type="file" accept="image/*" onChange={handleCapture} />
                     {capturedImage && (
-                      <img
-                        src={capturedImage}
-                        alt="Captured"
-                        className="image-preview"
-                      />
+                      <img src={capturedImage} alt="Captured" className="image-preview" />
                     )}
                   </div>
-                  <label>Search & Select Product</label>
+
+                  <label>Search & Select Product (optional)</label>
                   <input
                     type="text"
                     placeholder="Type product name..."
                     value={productSearch}
                     onChange={(e) => setProductSearch(e.target.value)}
                   />
+
                   {selectedProduct && (
                     <p className="selected-product">✅ Selected: {selectedProduct}</p>
                   )}
+
                   <div className="product-list-container">
                     <ul className="product-list">
                       {loadingProducts ? (
@@ -258,6 +266,10 @@ const Authe = () => {
                       )}
                     </ul>
                   </div>
+
+                  <button className="submit-btn" onClick={handleSubmit}>
+                    Submit
+                  </button>
                 </div>
               )}
 
@@ -272,17 +284,18 @@ const Authe = () => {
               )}
 
               <div className="btn-group">
-                {step > 1 && step <= 6 && (
+                {step > 1 && step < 6 && (
                   <button className="prev-btn" onClick={prevStep}>
                     Previous
                   </button>
                 )}
-                {step < 6 && (
-                  <button onClick={nextStep} disabled={step === 5 && !selectedProduct}>
+                {step < 5 && (
+                  <button onClick={nextStep}>
                     Next
                   </button>
                 )}
               </div>
+
               {message && <p className="message">{message}</p>}
             </>
           )}
