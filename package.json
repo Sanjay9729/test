@@ -3,9 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
-    "@shopify/app-bridge": "^3.x.x",
-    "@shopify/app-bridge-react": "^3.x.x",
-     "@shopify/app-bridge/actions": "^3.x.x",
+    "@shopify/app-bridge-react": "^4.1.10",
     "@shopify/polaris": "^13.9.5",
     "@supabase/supabase-js": "^2.49.4",
     "@testing-library/dom": "^10.4.0",
