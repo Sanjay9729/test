@@ -5,6 +5,16 @@ import Home from './pages/Home';
 import ViewWarranty from './pages/ViewWarranty';
 
 function App() {
+  useEffect(() => {
+    const host = new URLSearchParams(window.location.search).get("host");
+
+    createApp({
+      apiKey: "43db155c41abc41f085ba33378e97fa0", 
+      host: host,
+      forceRedirect: true,
+    });
+  }, []);
+
   return (
     <Router>
       <Routes>

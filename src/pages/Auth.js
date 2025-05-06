@@ -12,7 +12,6 @@ const Authe = () => {
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(true);
   const [loadingProducts, setLoadingProducts] = useState(true);
-  // const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [productSearch, setProductSearch] = useState("");
   const [products, setProducts] = useState([]);
   const [filteredProducts, setFilteredProducts] = useState([]);
@@ -21,9 +20,7 @@ const Authe = () => {
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        const res = await fetch(
-          "https://brilliant-kashata-1d4944.netlify.app/.netlify/functions/products"
-        );
+        const res = await fetch("https://brilliant-kashata-1d4944.netlify.app/.netlify/functions/products");
         const data = await res.json();
         setProducts(data);
         setFilteredProducts(data);
@@ -52,12 +49,6 @@ const Authe = () => {
   useEffect(() => {
     const getSession = async () => {
       const { data } = await supabase.auth.getSession();
-      // if (data?.session) {
-      //   setIsLoggedIn(true);
-      //   setMessage("✅ Login successful!");
-      // } else {
-      //   setIsLoggedIn(false);
-      // }
       if (data?.session) {
         setMessage("✅ Login successful!");
       }
@@ -68,10 +59,7 @@ const Authe = () => {
 
     const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === "SIGNED_IN" && session) {
-        // setIsLoggedIn(true);
         setMessage("✅ Login successful!");
-      } else if (event === "SIGNED_OUT") {
-        // setIsLoggedIn(false);
       }
     });
 
@@ -103,14 +91,6 @@ const Authe = () => {
     } finally {
       setLoading(false);
     }
-  };
-
-  const nextStep = () => {
-    if (step < 6) setStep(step + 1);
-  };
-
-  const prevStep = () => {
-    if (step > 1) setStep(step - 1);
   };
 
   const handleCapture = (e) => {
@@ -149,6 +129,14 @@ const Authe = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const nextStep = () => {
+    if (step < 6) setStep(step + 1);
+  };
+
+  const prevStep = () => {
+    if (step > 1) setStep(step - 1);
   };
 
   const steps = [1, 2, 3, 4, 5, 6];
@@ -239,6 +227,7 @@ const Authe = () => {
                       <img src={capturedImage} alt="Captured" className="image-preview" />
                     )}
                   </div>
+
                   <label>Search & Select Product (optional)</label>
                   <input
                     type="text"
@@ -246,9 +235,11 @@ const Authe = () => {
                     value={productSearch}
                     onChange={(e) => setProductSearch(e.target.value)}
                   />
+
                   {selectedProduct && (
                     <p className="selected-product">✅ Selected: {selectedProduct}</p>
                   )}
+
                   <div className="product-list-container">
                     <ul className="product-list">
                       {loadingProducts ? (
@@ -275,6 +266,7 @@ const Authe = () => {
                       )}
                     </ul>
                   </div>
+
                   <button className="submit-btn" onClick={handleSubmit}>
                     Submit
                   </button>
@@ -314,3 +306,5 @@ const Authe = () => {
 };
 
 export default Authe;
+
+
