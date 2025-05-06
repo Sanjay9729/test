@@ -120,9 +120,9 @@ const ViewWarranty = () => {
           <div className="submission-card" key={item.id}>
             <div className="submission-image">
               <img
-                src={item.image_url || 'https://via.placeholder.com/100'}
+                src={item.image_url || 'https://placehold.co/100x100?text=No+Image'}
                 alt="User"
-                onError={(e) => (e.target.src = 'https://via.placeholder.com/100')}
+                onError={(e) => (e.target.src = 'https://placehold.co/100x100?text=No+Image')}
               />
             </div>
             <div className="submission-details">
