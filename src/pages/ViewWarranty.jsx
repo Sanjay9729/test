@@ -5,7 +5,7 @@ const ViewWarranty = () => {
     const [rows, setRows] = useState([]);
 
     useEffect(() => {
-        fetch("/.netlify/functions/getSubmissions")
+        fetch("https://brilliant-kashata-1d4944.netlify.app/.netlify/functions/getSubmissions")
             .then((res) => res.json())
             .then((data) => {
                 const formatted = data.map((item) => [

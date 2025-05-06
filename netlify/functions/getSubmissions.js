@@ -9,9 +9,11 @@ exports.handler = async function (event, context) {
   if (!supabaseUrl || !supabaseKey) {
     console.error("❌ Missing environment variables");
     return {
-      statusCode: 500,
-      body: JSON.stringify({ error: "Missing Supabase config" }),
-    };
+        statusCode: 200,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      };
+      
   }
 
   const supabase = createClient(supabaseUrl, supabaseKey);
