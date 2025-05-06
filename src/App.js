@@ -9,7 +9,7 @@ function App() {
   const host = new URLSearchParams(window.location.search).get("host");
 
   const config = {
-    apiKey: "your-shopify-api-key", // ⛔️ Replace this!
+    apiKey: "43db155c41abc41f085ba33378e97fa0", 
     host: host,
     forceRedirect: true,
   };
