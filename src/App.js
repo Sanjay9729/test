@@ -5,6 +5,14 @@ import Home from './pages/Home';
 import ViewWarranty from './pages/ViewWarranty';
 
 function App() {
+  const host = new URLSearchParams(window.location.search).get("host");
+
+  const config = {
+    apiKey: "your-shopify-api-key", // ⛔️ Replace this!
+    host: host,
+    forceRedirect: true,
+  };
+
   return (
     <Router>
       <Routes>
