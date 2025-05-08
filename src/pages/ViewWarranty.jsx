@@ -185,10 +185,7 @@ const ViewWarranty = () => {
       });
   }, []);
 
-  const formatDate = (dateString) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString();  // Returns date in 'MM/DD/YYYY' format (can adjust if needed)
-  };
+ 
 
   if (loading) return <p>Loading...</p>;
 
