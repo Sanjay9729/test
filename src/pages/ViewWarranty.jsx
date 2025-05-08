@@ -185,6 +185,11 @@ const ViewWarranty = () => {
       });
   }, []);
 
+  // Function to render image
+  const renderImage = (imageUrl) => {
+    return imageUrl ? <img src={imageUrl} alt="Product" style={{ width: '50px', height: '50px', objectFit: 'cover' }} /> : null;
+  };
+
   if (loading) return <p>Loading...</p>;
 
   return (
@@ -197,9 +202,11 @@ const ViewWarranty = () => {
               <th>Name</th>
               <th>Email</th>
               <th>Product</th>
+              <th>Product Image</th> {/* New column for product image */}
               <th>Phone</th>
               <th>Address</th>
               <th>Submitted At</th>
+              <th>File Upload</th> {/* New column for uploaded file */}
             </tr>
           </thead>
           <tbody>
@@ -208,9 +215,20 @@ const ViewWarranty = () => {
                 <td>{item.full_name || '—'}</td>
                 <td>{item.email || '—'}</td>
                 <td>{item.selected_product || '—'}</td>
+                <td>{renderImage(item.product_image_url)}</td> {/* Rendering product image */}
                 <td>{item.phone || '—'}</td>
                 <td>{item.address || '—'}</td>
                 <td>{item.created_at || '—'}</td>
+                <td>
+                  {/* If file URL exists, display it */}
+                  {item.uploaded_file_url ? (
+                    <a href={item.uploaded_file_url} target="_blank" rel="noopener noreferrer">
+                      View File
+                    </a>
+                  ) : (
+                    '—'
+                  )}
+                </td>
               </tr>
             ))}
           </tbody>
@@ -221,6 +239,7 @@ const ViewWarranty = () => {
 };
 
 export default ViewWarranty;
+
 
 
 
