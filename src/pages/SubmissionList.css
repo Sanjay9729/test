@@ -1,31 +1,48 @@
-.submission-list {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 16px;
-    margin-top: 20px;
-    justify-content: center;
-}
-
-.submission-card {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    border: 1px solid #ddd;
-    border-radius: 8px;
-    padding: 12px;
-    width: 360px;
-    background: #f9f9f9;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
-}
-
-.submission-image img {
-    width: 100px;
-    height: 100px;
-    border-radius: 8px;
+.wrapper {
+    padding: 2rem;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  }
+  
+  .heading {
+    text-align: center;
+    font-size: 2rem;
+    margin-bottom: 1.5rem;
+    color: #333;
+  }
+  
+  .table-wrapper {
+    overflow-x: auto;
+  }
+  
+  .submissions-table {
+    width: 100%;
+    border-collapse: collapse;
+    background-color: #fff;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  }
+  
+  .submissions-table th,
+  .submissions-table td {
+    border: 1px solid #e0e0e0;
+    padding: 0.75rem 1rem;
+    text-align: left;
+    font-size: 0.95rem;
+  }
+  
+  .submissions-table th {
+    background-color: #f8f8f8;
+    color: #333;
+    font-weight: 600;
+  }
+  
+  .submissions-table tr:nth-child(even) {
+    background-color: #f9f9f9;
+  }
+  
+  .user-image {
+    width: 60px;
+    height: 60px;
     object-fit: cover;
-    margin-right: 16px;
-}
-
-.submission-details p {
-    margin: 6px 0;
-}
+    border-radius: 6px;
+  }
+  
