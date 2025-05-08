@@ -15,7 +15,6 @@ const Authe = () => {
   const [productSearch, setProductSearch] = useState("");
   const [products, setProducts] = useState([]);
   const [filteredProducts, setFilteredProducts] = useState([]);
-  const [capturedImage, setCapturedImage] = useState(null);
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -93,15 +92,6 @@ const Authe = () => {
     }
   };
 
-  const handleCapture = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      const imageUrl = URL.createObjectURL(file);
-      setCapturedImage(imageUrl);
-      setMessage("📸 Picture captured!");
-    }
-  };
-
   const handleSubmit = async () => {
     setLoading(true);
     setMessage("");
@@ -114,7 +104,6 @@ const Authe = () => {
           phone: phone || null,
           address: address || null,
           selected_product: selectedProduct || null,
-          image_url: capturedImage || null,
         },
       ]);
 
@@ -132,6 +121,31 @@ const Authe = () => {
   };
 
   const nextStep = () => {
+    if (step === 1 && !fullName) {
+      setMessage("❌ Please enter your full name.");
+      return;
+    }
+
+    if (step === 2 && !email) {
+      setMessage("❌ Please enter your email.");
+      return;
+    }
+
+    if (step === 3 && !phone) {
+      setMessage("❌ Please enter your phone number.");
+      return;
+    }
+
+    if (step === 4 && !address) {
+      setMessage("❌ Please enter your address.");
+      return;
+    }
+
+    if (step === 5 && !selectedProduct) {
+      setMessage("❌ Please select a product.");
+      return;
+    }
+
     if (step < 6) setStep(step + 1);
   };
 
@@ -220,14 +234,6 @@ const Authe = () => {
 
               {step === 5 && (
                 <div className="form-group">
-                  <div className="image-upload">
-                    <label>Take a Picture (optional)</label>
-                    <input type="file" accept="image/*" onChange={handleCapture} />
-                    {capturedImage && (
-                      <img src={capturedImage} alt="Captured" className="image-preview" />
-                    )}
-                  </div>
-
                   <label>Search & Select Product (optional)</label>
                   <input
                     type="text"
@@ -306,5 +312,3 @@ const Authe = () => {
 };
 
 export default Authe;
-
-
