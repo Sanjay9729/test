@@ -188,9 +188,9 @@ const ViewWarranty = () => {
   if (loading) return <p>Loading...</p>;
 
   return (
-    <div className="table-container">
+    <div className="wrapper">
       <div className="table-wrapper">
-        <table className="order-table">
+        <table className="submissions-table">
           <thead>
             <tr>
               <th>Order ID</th>
@@ -207,16 +207,16 @@ const ViewWarranty = () => {
             {submissions.map((item) => (
               <tr key={item.id}>
                 <td>{item.order_id || '—'}</td>
-                <td>{item.customer_name || '—'}</td>
-                <td>{item.date || '—'}</td>
+                <td>{item.full_name || '—'}</td>
+                <td>{item.created_at || '—'}</td>
                 <td>
-                  <span className={`payment-status ${item.payment ? 'paid' : 'pending'}`}>
-                    {item.payment ? 'Paid' : 'Pending'}
+                  <span className={`payment-status ${item.payment === 'Paid' ? 'paid' : 'pending'}`}>
+                    {item.payment || 'Pending'}
                   </span>
                 </td>
                 <td>
-                  <span className={`fulfillment-status ${item.fulfillment ? 'fulfilled' : 'unfulfilled'}`}>
-                    {item.fulfillment ? 'Fulfilled' : 'Unfulfilled'}
+                  <span className={`fulfillment-status ${item.fulfillment === 'Fulfilled' ? 'fulfilled' : 'unfulfilled'}`}>
+                    {item.fulfillment || 'Unfulfilled'}
                   </span>
                 </td>
                 <td>{item.quantity || '—'}</td>
@@ -234,7 +234,6 @@ const ViewWarranty = () => {
 };
 
 export default ViewWarranty;
-
 
 
 
