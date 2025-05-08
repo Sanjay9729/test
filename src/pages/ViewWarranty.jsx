@@ -203,7 +203,6 @@ const ViewWarranty = () => {
               <th>Product</th>
               <th>Phone</th>
               <th>Address</th>
-              <th>Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -214,10 +213,6 @@ const ViewWarranty = () => {
                 <td>{item.selected_product || '—'}</td>
                 <td>{item.phone || '—'}</td>
                 <td>{item.address || '—'}</td>
-                <td>{item.created_at ? formatDate(item.created_at) : '—'}</td>
-                <td>
-                  <button className="action-btn">Actions</button>
-                </td>
               </tr>
             ))}
           </tbody>
