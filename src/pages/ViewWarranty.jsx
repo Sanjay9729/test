@@ -185,49 +185,44 @@ const ViewWarranty = () => {
       });
   }, []);
 
-  // Function to render image
-  const renderImage = (imageUrl) => {
-    return imageUrl ? <img src={imageUrl} alt="Product" style={{ width: '50px', height: '50px', objectFit: 'cover' }} /> : null;
-  };
-
   if (loading) return <p>Loading...</p>;
 
   return (
-    <div className="wrapper">
-      <h1 className="heading">Warranty Submissions</h1>
+    <div className="table-container">
       <div className="table-wrapper">
-        <table className="submissions-table">
+        <table className="order-table">
           <thead>
             <tr>
-              <th>Name</th>
-              <th>Email</th>
-              <th>Product</th>
-              <th>Product Image</th> {/* New column for product image */}
-              <th>Phone</th>
-              <th>Address</th>
-              <th>Submitted At</th>
-              <th>File Upload</th> {/* New column for uploaded file */}
+              <th>Order ID</th>
+              <th>Customer Name</th>
+              <th>Date</th>
+              <th>Payment</th>
+              <th>Fulfillment</th>
+              <th>Quantity</th>
+              <th>Price</th>
+              <th>Actions</th>
             </tr>
           </thead>
           <tbody>
             {submissions.map((item) => (
               <tr key={item.id}>
-                <td>{item.full_name || '—'}</td>
-                <td>{item.email || '—'}</td>
-                <td>{item.selected_product || '—'}</td>
-                <td>{renderImage(item.product_image_url)}</td> {/* Rendering product image */}
-                <td>{item.phone || '—'}</td>
-                <td>{item.address || '—'}</td>
-                <td>{item.created_at || '—'}</td>
+                <td>{item.order_id || '—'}</td>
+                <td>{item.customer_name || '—'}</td>
+                <td>{item.date || '—'}</td>
                 <td>
-                  {/* If file URL exists, display it */}
-                  {item.uploaded_file_url ? (
-                    <a href={item.uploaded_file_url} target="_blank" rel="noopener noreferrer">
-                      View File
-                    </a>
-                  ) : (
-                    '—'
-                  )}
+                  <span className={`payment-status ${item.payment ? 'paid' : 'pending'}`}>
+                    {item.payment ? 'Paid' : 'Pending'}
+                  </span>
+                </td>
+                <td>
+                  <span className={`fulfillment-status ${item.fulfillment ? 'fulfilled' : 'unfulfilled'}`}>
+                    {item.fulfillment ? 'Fulfilled' : 'Unfulfilled'}
+                  </span>
+                </td>
+                <td>{item.quantity || '—'}</td>
+                <td>{item.price || '—'}</td>
+                <td>
+                  <button className="action-btn">Actions</button>
                 </td>
               </tr>
             ))}

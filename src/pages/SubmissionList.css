@@ -1,48 +1,87 @@
-.wrapper {
-    padding: 2rem;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+.table-container {
+  padding: 20px;
+  background-color: #f9f9f9;
+}
+
+.table-wrapper {
+  overflow-x: auto;
+}
+
+.order-table {
+  width: 100%;
+  border-collapse: collapse;
+  background-color: #ffffff;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.order-table th, .order-table td {
+  padding: 12px 16px;
+  text-align: left;
+  font-size: 14px;
+  color: #333;
+}
+
+.order-table th {
+  background-color: #f1f1f1;
+  font-weight: bold;
+}
+
+.order-table tr:nth-child(even) {
+  background-color: #f9f9f9;
+}
+
+.payment-status {
+  font-weight: bold;
+  padding: 4px 8px;
+  border-radius: 4px;
+}
+
+.payment-status.paid {
+  background-color: #8BC34A;
+  color: white;
+}
+
+.payment-status.pending {
+  background-color: #FF9800;
+  color: white;
+}
+
+.fulfillment-status {
+  font-weight: bold;
+  padding: 4px 8px;
+  border-radius: 4px;
+}
+
+.fulfillment-status.fulfilled {
+  background-color: #2196F3;
+  color: white;
+}
+
+.fulfillment-status.unfulfilled {
+  background-color: #FFC107;
+  color: white;
+}
+
+.action-btn {
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+}
+
+.action-btn:hover {
+  background-color: #45a049;
+}
+
+@media screen and (max-width: 768px) {
+  .order-table th, .order-table td {
+    font-size: 12px;
+    padding: 8px 10px;
   }
-  
-  .heading {
-    text-align: center;
-    font-size: 2rem;
-    margin-bottom: 1.5rem;
-    color: #333;
+  .action-btn {
+    font-size: 10px;
   }
-  
-  .table-wrapper {
-    overflow-x: auto;
-  }
-  
-  .submissions-table {
-    width: 100%;
-    border-collapse: collapse;
-    background-color: #fff;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-  }
-  
-  .submissions-table th,
-  .submissions-table td {
-    border: 1px solid #e0e0e0;
-    padding: 0.75rem 1rem;
-    text-align: left;
-    font-size: 0.95rem;
-  }
-  
-  .submissions-table th {
-    background-color: #f8f8f8;
-    color: #333;
-    font-weight: 600;
-  }
-  
-  .submissions-table tr:nth-child(even) {
-    background-color: #f9f9f9;
-  }
-  
-  .user-image {
-    width: 60px;
-    height: 60px;
-    object-fit: cover;
-    border-radius: 6px;
-  }
-  
+}
