@@ -166,7 +166,7 @@
 // dynamic data 
 
 import React, { useEffect, useState } from 'react';
-import { Page, Card, DataTable, Spinner, TextStyle } from '@shopify/polaris';
+import { Page, Card, DataTable, Spinner } from '@shopify/polaris';
 
 const ViewWarranty = () => {
   const [submissions, setSubmissions] = useState([]);
