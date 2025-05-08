@@ -88,79 +88,140 @@
 // export default ViewWarranty;
 
 
+// static data 
+// import React from 'react';
+// import './SubmissionList.css';
 
-import React from 'react';
+// const ViewWarranty = () => {
+//   const submissions = [
+//     {
+//       id: 1,
+//       full_name: 'Alice Johnson',
+//       email: 'alice@example.com',
+//       selected_product: 'Smart Blender X500',
+//       phone: '123-456-7890',
+//       address: '123 Maple Street, Springfield',
+//       image_url: 'https://via.placeholder.com/100',
+//       created_at: '2025-05-06 07:03:10',
+//     },
+//     {
+//       id: 2,
+//       full_name: 'Bob Smith',
+//       email: 'bob@example.com',
+//       selected_product: 'Air Purifier Z300',
+//       phone: '987-654-3210',
+//       address: '456 Oak Avenue, Riverdale',
+//       image_url: 'https://via.placeholder.com/100',
+//       created_at: '2025-05-06 06:06:37',
+//     },
+//     {
+//       id: 3,
+//       full_name: 'Charlie Davis',
+//       email: 'charlie@example.com',
+//       selected_product: 'Eco Kettle Pro',
+//       phone: '555-666-7777',
+//       address: '789 Pine Road, Hilltown',
+//       image_url: 'https://via.placeholder.com/100',
+//       created_at: '2025-05-06 05:49:51',
+//     },
+//   ];
+
+//   return (
+//     <div className="wrapper">
+//       <h1 className="heading">Warranty Submissions Test</h1>
+//       <div className="table-wrapper">
+//         <table className="submissions-table">
+//           <thead>
+//             <tr>
+//               <th>Name</th>
+//               <th>Email</th>
+//               <th>Product</th>
+//               <th>Phone</th>
+//               <th>Address</th>
+//               <th>Submitted At</th>
+//             </tr>
+//           </thead>
+//           <tbody>
+//             {submissions.map((item) => (
+//               <tr key={item.id}>
+
+//                 <td>{item.full_name}</td>
+//                 <td>{item.email || '—'}</td>
+//                 <td>{item.selected_product || '—'}</td>
+//                 <td>{item.phone || '—'}</td>
+//                 <td>{item.address || '—'}</td>
+//                 <td>{item.created_at}</td>
+//               </tr>
+//             ))}
+//           </tbody>
+//         </table>
+//       </div>
+//     </div>
+//   );
+// };
+
+// export default ViewWarranty;
+
+
+// dynamic data 
+
+import React, { useEffect, useState } from 'react';
 import './SubmissionList.css';
 
-  const ViewWarranty = () => {
-    const submissions = [
-      {
-        id: 1,
-        full_name: 'Alice Johnson',
-        email: 'alice@example.com',
-        selected_product: 'Smart Blender X500',
-        phone: '123-456-7890',
-        address: '123 Maple Street, Springfield',
-        image_url: 'https://via.placeholder.com/100',
-        created_at: '2025-05-06 07:03:10',
-      },
-      {
-        id: 2,
-        full_name: 'Bob Smith',
-        email: 'bob@example.com',
-        selected_product: 'Air Purifier Z300',
-        phone: '987-654-3210',
-        address: '456 Oak Avenue, Riverdale',
-        image_url: 'https://via.placeholder.com/100',
-        created_at: '2025-05-06 06:06:37',
-      },
-      {
-        id: 3,
-        full_name: 'Charlie Davis',
-        email: 'charlie@example.com',
-        selected_product: 'Eco Kettle Pro',
-        phone: '555-666-7777',
-        address: '789 Pine Road, Hilltown',
-        image_url: 'https://via.placeholder.com/100',
-        created_at: '2025-05-06 05:49:51',
-      },
-    ];
+const ViewWarranty = () => {
+  const [submissions, setSubmissions] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-    return (
-      <div className="wrapper">
-        <h1 className="heading">Warranty Submissions Test</h1>
-        <div className="table-wrapper">
-          <table className="submissions-table">
-            <thead>
-              <tr>
-                <th>Name</th>
-                <th>Email</th>
-                <th>Product</th>
-                <th>Phone</th>
-                <th>Address</th>
-                <th>Submitted At</th>
+  useEffect(() => {
+    fetch('/.netlify/functions/getSubmissions')
+      .then((res) => res.json())
+      .then((data) => {
+        setSubmissions(data);
+        setLoading(false);
+      })
+      .catch((error) => {
+        console.error("Error fetching submissions:", error);
+        setLoading(false);
+      });
+  }, []);
+
+  if (loading) return <p>Loading...</p>;
+
+  return (
+    <div className="wrapper">
+      <h1 className="heading">Warranty Submissions</h1>
+      <div className="table-wrapper">
+        <table className="submissions-table">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Email</th>
+              <th>Product</th>
+              <th>Phone</th>
+              <th>Address</th>
+              <th>Submitted At</th>
+            </tr>
+          </thead>
+          <tbody>
+            {submissions.map((item) => (
+              <tr key={item.id}>
+                <td>{item.full_name || '—'}</td>
+                <td>{item.email || '—'}</td>
+                <td>{item.selected_product || '—'}</td>
+                <td>{item.phone || '—'}</td>
+                <td>{item.address || '—'}</td>
+                <td>{item.created_at || '—'}</td>
               </tr>
-            </thead>
-            <tbody>
-              {submissions.map((item) => (
-                <tr key={item.id}>
-                
-                  <td>{item.full_name}</td>
-                  <td>{item.email || '—'}</td>
-                  <td>{item.selected_product || '—'}</td>
-                  <td>{item.phone || '—'}</td>
-                  <td>{item.address || '—'}</td>
-                  <td>{item.created_at}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+            ))}
+          </tbody>
+        </table>
       </div>
-    );
-  };
+    </div>
+  );
+};
 
-  export default ViewWarranty;
+export default ViewWarranty;
+
 
 
 
