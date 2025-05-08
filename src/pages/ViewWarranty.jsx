@@ -166,7 +166,7 @@
 // dynamic data 
 
 import React, { useEffect, useState } from 'react';
-import './SubmissionList.css';
+import { Page, Card, DataTable, Spinner, TextStyle } from '@shopify/polaris';
 
 const ViewWarranty = () => {
   const [submissions, setSubmissions] = useState([]);
@@ -185,41 +185,37 @@ const ViewWarranty = () => {
       });
   }, []);
 
- 
+  if (loading) return <Spinner size="large" />;
 
-  if (loading) return <p>Loading...</p>;
+  const rows = submissions.map((item) => [
+    item.full_name || '—',
+    item.email || '—',
+    item.selected_product || '—',
+    item.phone || '—',
+    item.address || '—',
+  ]);
 
   return (
-    <div className="wrapper">
-      <div className="table-wrapper">
-        <table className="submissions-table">
-          <thead>
-            <tr>
-              <th>Name</th>
-              <th>Email</th>
-              <th>Product</th>
-              <th>Phone</th>
-              <th>Address</th>
-            </tr>
-          </thead>
-          <tbody>
-            {submissions.map((item) => (
-              <tr key={item.id}>
-                <td>{item.full_name || '—'}</td>
-                <td>{item.email || '—'}</td>
-                <td>{item.selected_product || '—'}</td>
-                <td>{item.phone || '—'}</td>
-                <td>{item.address || '—'}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </div>
+    <Page title="Warranty Submissions">
+      <Card sectioned>
+        <DataTable
+          columnContentTypes={[
+            'text',
+            'text',
+            'text',
+            'text',
+            'text',
+          ]}
+          headings={['Name', 'Email', 'Product', 'Phone', 'Address']}
+          rows={rows}
+        />
+      </Card>
+    </Page>
   );
 };
 
 export default ViewWarranty;
+
 
 
 
