@@ -185,6 +185,11 @@ const ViewWarranty = () => {
       });
   }, []);
 
+  const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString();  // Returns date in 'MM/DD/YYYY' format (can adjust if needed)
+  };
+
   if (loading) return <p>Loading...</p>;
 
   return (
@@ -198,6 +203,7 @@ const ViewWarranty = () => {
               <th>Product</th>
               <th>Phone</th>
               <th>Address</th>
+              <th>Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -208,7 +214,10 @@ const ViewWarranty = () => {
                 <td>{item.selected_product || '—'}</td>
                 <td>{item.phone || '—'}</td>
                 <td>{item.address || '—'}</td>
-                
+                <td>{item.created_at ? formatDate(item.created_at) : '—'}</td>
+                <td>
+                  <button className="action-btn">Actions</button>
+                </td>
               </tr>
             ))}
           </tbody>
@@ -219,6 +228,7 @@ const ViewWarranty = () => {
 };
 
 export default ViewWarranty;
+
 
 
 
