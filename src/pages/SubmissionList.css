@@ -26,47 +26,19 @@
 .submissions-table th {
   background-color: #f1f1f1;
   font-weight: bold;
+  border-top: 2px solid #ddd;
+  border-bottom: 2px solid #ddd;
 }
 
 .submissions-table tr:nth-child(even) {
   background-color: #f9f9f9;
 }
 
-/* Payment Status Styling */
-.payment-status {
-  font-weight: bold;
-  padding: 4px 8px;
-  border-radius: 4px;
+.submissions-table tr:hover {
+  background-color: #f1f1f1;
 }
 
-.payment-status.paid {
-  background-color: #8BC34A;
-  color: white;
-}
-
-.payment-status.pending {
-  background-color: #FF9800;
-  color: white;
-}
-
-/* Fulfillment Status Styling */
-.fulfillment-status {
-  font-weight: bold;
-  padding: 4px 8px;
-  border-radius: 4px;
-}
-
-.fulfillment-status.fulfilled {
-  background-color: #2196F3;
-  color: white;
-}
-
-.fulfillment-status.unfulfilled {
-  background-color: #FFC107;
-  color: white;
-}
-
-/* Actions Button */
+/* Styling for Action Button */
 .action-btn {
   background-color: #4CAF50;
   color: white;
@@ -87,6 +59,7 @@
     font-size: 12px;
     padding: 8px 10px;
   }
+
   .action-btn {
     font-size: 10px;
   }
