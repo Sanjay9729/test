@@ -208,7 +208,7 @@ const ViewWarranty = () => {
                 <td>{item.selected_product || '—'}</td>
                 <td>{item.phone || '—'}</td>
                 <td>{item.address || '—'}</td>
-                <td>{item.created_at || '—'}</td>
+                
               </tr>
             ))}
           </tbody>
