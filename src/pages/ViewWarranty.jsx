@@ -173,6 +173,8 @@ import {
   DataTable,
   Spinner,
   Text,
+  IndexTable,
+  useIndexResourceState,
 } from '@shopify/polaris';
 import enTranslations from '@shopify/polaris/locales/en.json';
 
@@ -202,26 +204,78 @@ const ViewWarranty = () => {
     item.address || '—',
   ]);
 
+  const resourceName = { singular: 'submission', plural: 'submissions' };
+  const { selectedResources, allResourcesSelected, handleSelectionChange } =
+    useIndexResourceState(submissions);
+
+  const indexTableRows = submissions.map((item, index) => (
+    <IndexTable.Row
+      id={item.id || index.toString()}
+      key={item.id || index}
+      selected={selectedResources.includes(item.id || index.toString())}
+      position={index}
+    >
+     <IndexTable.Cell>
+  <Text variant="bodySm" fontWeight="bold">{item.full_name || '—'}</Text>
+</IndexTable.Cell>
+
+      <IndexTable.Cell>{item.email || '—'}</IndexTable.Cell>
+      <IndexTable.Cell>{item.selected_product || '—'}</IndexTable.Cell>
+      <IndexTable.Cell>{item.phone || '—'}</IndexTable.Cell>
+      <IndexTable.Cell>{item.address || '—'}</IndexTable.Cell>
+     
+    </IndexTable.Row>
+  ));
+
   return (
     <AppProvider i18n={enTranslations}>
       <Page title="Warranty Submissions">
-        <Card>
+        <Card sectioned>
           {loading ? (
-            <div style={{ textAlign: 'center', padding: '2rem' }}>
+            <div style={{ textAlign: 'left', padding: '2rem' }}>
               <Spinner accessibilityLabel="Loading submissions" size="large" />
             </div>
           ) : submissions.length === 0 ? (
-            <Card.Section>
-              <Text variant="bodyMd" as="p">
-                No warranty submissions found.
-              </Text>
-            </Card.Section>
+            <Text variant="bodyMd" as="p">
+              No warranty submissions found.
+            </Text>
           ) : (
-            <DataTable
-              columnContentTypes={['text', 'text', 'text', 'text', 'text']}
-              headings={['Name', 'Email', 'Product', 'Phone', 'Address']}
-              rows={rows}
-            />
+            <>
+              {/* ✅ Original DataTable */}
+              <Text variant="headingSm" as="h2" alignment="center" padding="tight">
+                Polaris DataTable
+              </Text>
+              <DataTable
+                columnContentTypes={['text', 'text', 'text', 'text', 'text']}
+                headings={['Name', 'Email', 'Product', 'Phone', 'Address']}
+                rows={rows}
+              />
+
+              {/* ✅ New IndexTable UI */}
+              <div style={{ marginTop: '2rem' }}>
+                <Text variant="headingSm" as="h2" alignment="left" padding="tight">
+                  Shopify IndexTable UI
+                </Text>
+                <IndexTable
+                  resourceName={resourceName}
+                  itemCount={submissions.length}
+                  selectedItemsCount={
+                    allResourcesSelected ? 'All' : selectedResources.length
+                  }
+                  onSelectionChange={handleSelectionChange}
+                  headings={[
+                    { title: 'Name' },
+                    { title: 'Email' },
+                    { title: 'Product' },
+                    { title: 'Phone' },
+                    { title: 'Address' },
+  
+                  ]}
+                >
+                  {indexTableRows}
+                </IndexTable>
+              </div>
+            </>
           )}
         </Card>
       </Page>
@@ -230,6 +284,7 @@ const ViewWarranty = () => {
 };
 
 export default ViewWarranty;
+
 
 
 
