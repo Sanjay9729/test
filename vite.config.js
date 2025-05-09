@@ -1,35 +1,22 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
-import path from 'path';
 
 export default defineConfig({
   plugins: [react()],
-  resolve: {
-    alias: {
-      '@shopify/polaris': path.resolve(__dirname, 'node_modules/@shopify/polaris')
-    }
-  },
   build: {
-    outDir: 'dist',
-    sourcemap: true,
     rollupOptions: {
+      external: [
+        '@shopify/polaris/build/esm/styles.css',
+        '@shopify/polaris/build/styles.css'
+      ],
       output: {
         manualChunks: {
-          'polaris': ['@shopify/polaris'],
-          'vendor': ['react', 'react-dom']
+          'polaris': ['@shopify/polaris']
         }
       }
     }
   },
-  optimizeDeps: {
-    include: ['@shopify/polaris', 'react', 'react-dom']
-  },
   css: {
-    preprocessorOptions: {
-      css: {
-        additionalData: `@import "@shopify/polaris/build/esm/styles.css";`
-      }
-    },
     postcss: {
       plugins: [
         require('postcss-calc')({
@@ -47,5 +34,3 @@ export default defineConfig({
     }
   }
 }); 
-
-
