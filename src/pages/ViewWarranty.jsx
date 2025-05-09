@@ -175,7 +175,6 @@ import {
   Text,
 } from '@shopify/polaris';
 import enTranslations from '@shopify/polaris/locales/en.json';
-import '@shopify/polaris/build/esm/styles.css';
 
 
 const ViewWarranty = () => {
