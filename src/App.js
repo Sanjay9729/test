@@ -3,7 +3,6 @@ import { Route, BrowserRouter as Router, Routes } from 'react-router-dom';
 import Auth from './pages/Auth';
 import Home from './pages/Home';
 import ViewWarranty from './pages/ViewWarranty';
-import '@shopify/polaris/build/esm/styles.css';
 
 
 function App() {
