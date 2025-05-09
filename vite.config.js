@@ -17,9 +17,17 @@ export default defineConfig({
         }
       }
     },
-    cssMinify: false // Disable CSS minification
+    cssMinify: false
+  },
+  optimizeDeps: {
+    include: ['@shopify/polaris']
   },
   css: {
+    preprocessorOptions: {
+      css: {
+        additionalData: `@import "@shopify/polaris/build/esm/styles.css";`
+      }
+    },
     postcss: {
       plugins: [
         require('postcss-calc')({
