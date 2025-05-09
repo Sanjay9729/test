@@ -16,7 +16,8 @@ export default defineConfig({
           'polaris': ['@shopify/polaris']
         }
       }
-    }
+    },
+    cssMinify: false // Disable CSS minification
   },
   css: {
     postcss: {
