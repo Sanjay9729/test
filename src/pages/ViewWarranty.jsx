@@ -165,27 +165,41 @@
 
 // dynamic data 
 import React, { useEffect, useState } from 'react';
-import { Page, Card, DataTable, Spinner } from '@shopify/polaris';
+import { Page, Card, DataTable, Spinner, Text } from '@shopify/polaris';
 import './SubmissionList.css';
 
 const ViewWarranty = () => {
   const [submissions, setSubmissions] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     fetch('/.netlify/functions/getSubmissions')
-      .then((res) => res.json())
+      .then((res) => {
+        if (!res.ok) {
+          throw new Error('Failed to fetch data');
+        }
+        return res.json();
+      })
       .then((data) => {
+        console.log('Fetched data:', data); // Log data to see if it's correct
         setSubmissions(data);
         setLoading(false);
       })
       .catch((error) => {
         console.error("Error fetching submissions:", error);
+        setError(error.message);
         setLoading(false);
       });
   }, []);
 
-  if (loading) return <Spinner size="large" />;
+  if (loading) {
+    return <Spinner size="large" />;
+  }
+
+  if (error) {
+    return <Text color="critical">{error}</Text>;
+  }
 
   const rows = submissions.map((item) => [
     item.full_name || '—',
