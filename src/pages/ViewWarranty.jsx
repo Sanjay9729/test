@@ -166,8 +166,15 @@
 // dynamic data 
 
 import React, { useEffect, useState } from 'react';
-import { Card, DataTable, Page, SkeletonBodyText } from '@shopify/polaris';
-import './SubmissionList.css';
+import {
+  AppProvider,
+  Page,
+  Card,
+  DataTable,
+  Spinner,
+  Text,
+} from '@shopify/polaris';
+import enTranslations from '@shopify/polaris/locales/en.json';
 
 const ViewWarranty = () => {
   const [submissions, setSubmissions] = useState([]);
@@ -181,20 +188,10 @@ const ViewWarranty = () => {
         setLoading(false);
       })
       .catch((error) => {
-        console.error("Error fetching submissions:", error);
+        console.error('Error fetching submissions:', error);
         setLoading(false);
       });
   }, []);
-
-  if (loading) {
-    return (
-      <Page title="Warranty Submissions">
-        <Card sectioned>
-          <SkeletonBodyText />
-        </Card>
-      </Page>
-    );
-  }
 
   const rows = submissions.map((item) => [
     item.full_name || '—',
@@ -205,19 +202,34 @@ const ViewWarranty = () => {
   ]);
 
   return (
-    <Page title="Warranty Submissions">
-      <Card sectioned>
-        <DataTable
-          columnContentTypes={['text', 'text', 'text', 'text', 'text']}
-          headings={['Name', 'Email', 'Product', 'Phone', 'Address']}
-          rows={rows}
-        />
-      </Card>
-    </Page>
+    <AppProvider i18n={enTranslations}>
+      <Page title="Warranty Submissions">
+        <Card>
+          {loading ? (
+            <div style={{ textAlign: 'center', padding: '2rem' }}>
+              <Spinner accessibilityLabel="Loading submissions" size="large" />
+            </div>
+          ) : submissions.length === 0 ? (
+            <Card.Section>
+              <Text variant="bodyMd" as="p">
+                No warranty submissions found.
+              </Text>
+            </Card.Section>
+          ) : (
+            <DataTable
+              columnContentTypes={['text', 'text', 'text', 'text', 'text']}
+              headings={['Name', 'Email', 'Product', 'Phone', 'Address']}
+              rows={rows}
+            />
+          )}
+        </Card>
+      </Page>
+    </AppProvider>
   );
 };
 
 export default ViewWarranty;
+
 
 
 
