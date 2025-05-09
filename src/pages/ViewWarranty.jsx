@@ -166,8 +166,7 @@
 // dynamic data 
 
 import React, { useEffect, useState } from 'react';
-import { Card, DataTable } from '@shopify/polaris';
-import '@shopify/polaris/build/esm/styles.css'; 
+import './SubmissionList.css';
 
 const ViewWarranty = () => {
   const [submissions, setSubmissions] = useState([]);
@@ -186,34 +185,41 @@ const ViewWarranty = () => {
       });
   }, []);
 
-  if (loading) return <p>Loading...</p>;
+ 
 
-  const rows = submissions.map((item) => [
-    item.full_name || '—',
-    item.email || '—',
-    item.selected_product || '—',
-    item.phone || '—',
-    item.address || '—',
-  ]);
+  if (loading) return <p>Loading...</p>;
 
   return (
     <div className="wrapper">
-      <Card>
-        <Card.Section>
-          <DataTable
-            columnContentTypes={['text', 'text', 'text', 'text', 'text']}
-            headings={['Name', 'Email', 'Product', 'Phone', 'Address']}
-            rows={rows}
-          />
-        </Card.Section>
-      </Card>
+      <div className="table-wrapper">
+        <table className="submissions-table">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Email</th>
+              <th>Product</th>
+              <th>Phone</th>
+              <th>Address</th>
+            </tr>
+          </thead>
+          <tbody>
+            {submissions.map((item) => (
+              <tr key={item.id}>
+                <td>{item.full_name || '—'}</td>
+                <td>{item.email || '—'}</td>
+                <td>{item.selected_product || '—'}</td>
+                <td>{item.phone || '—'}</td>
+                <td>{item.address || '—'}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 };
 
 export default ViewWarranty;
-
-
 
 
 
