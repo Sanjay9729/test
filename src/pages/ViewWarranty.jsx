@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import '@shopify/polaris/build/styles.css';
+import '@shopify/polaris/build/esm/styles.css';
 import {
   AppProvider,
   Page,
