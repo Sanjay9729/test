@@ -164,9 +164,8 @@
 
 
 // dynamic data 
-
 import React, { useEffect, useState } from 'react';
-import { Card, DataTable, Spinner, Page, Layout } from '@shopify/polaris';
+import { Page, Card, DataTable, Spinner } from '@shopify/polaris';
 import './SubmissionList.css';
 
 const ViewWarranty = () => {
@@ -186,10 +185,8 @@ const ViewWarranty = () => {
       });
   }, []);
 
-  // Columns for DataTable
-  const columns = ['Name', 'Email', 'Product', 'Phone', 'Address'];
+  if (loading) return <Spinner size="large" />;
 
-  // Transform the data to fit into the DataTable structure
   const rows = submissions.map((item) => [
     item.full_name || '—',
     item.email || '—',
@@ -198,31 +195,17 @@ const ViewWarranty = () => {
     item.address || '—',
   ]);
 
-  if (loading) {
-    return (
-      <Page>
-        <Layout>
-          <Layout.Section>
-            <Spinner size="large" />
-          </Layout.Section>
-        </Layout>
-      </Page>
-    );
-  }
+  const headings = ['Name', 'Email', 'Product', 'Phone', 'Address'];
 
   return (
-    <Page>
-      <Layout>
-        <Layout.Section>
-          <Card title="Warranty Submissions" sectioned>
-            <DataTable
-              columnContentTypes={['text', 'text', 'text', 'text', 'text']}
-              headings={columns}
-              rows={rows}
-            />
-          </Card>
-        </Layout.Section>
-      </Layout>
+    <Page title="Warranty Submissions">
+      <Card>
+        <DataTable
+          columnContentTypes={['text', 'text', 'text', 'text', 'text']}
+          headings={headings}
+          rows={rows}
+        />
+      </Card>
     </Page>
   );
 };
