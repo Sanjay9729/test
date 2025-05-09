@@ -166,7 +166,8 @@
 // dynamic data 
 
 import React, { useEffect, useState } from 'react';
-import { Page, Card, DataTable, Spinner } from '@shopify/polaris';
+import { Card, DataTable } from '@shopify/polaris';
+import '@shopify/polaris/build/esm/styles.css'; 
 
 const ViewWarranty = () => {
   const [submissions, setSubmissions] = useState([]);
@@ -185,7 +186,7 @@ const ViewWarranty = () => {
       });
   }, []);
 
-  if (loading) return <Spinner size="large" />;
+  if (loading) return <p>Loading...</p>;
 
   const rows = submissions.map((item) => [
     item.full_name || '—',
@@ -196,25 +197,22 @@ const ViewWarranty = () => {
   ]);
 
   return (
-    <Page title="Warranty Submissions">
-      <Card sectioned>
-        <DataTable
-          columnContentTypes={[
-            'text',
-            'text',
-            'text',
-            'text',
-            'text',
-          ]}
-          headings={['Name', 'Email', 'Product', 'Phone', 'Address']}
-          rows={rows}
-        />
+    <div className="wrapper">
+      <Card>
+        <Card.Section>
+          <DataTable
+            columnContentTypes={['text', 'text', 'text', 'text', 'text']}
+            headings={['Name', 'Email', 'Product', 'Phone', 'Address']}
+            rows={rows}
+          />
+        </Card.Section>
       </Card>
-    </Page>
+    </div>
   );
 };
 
 export default ViewWarranty;
+
 
 
 
