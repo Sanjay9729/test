@@ -166,6 +166,7 @@
 // dynamic data 
 
 import React, { useEffect, useState } from 'react';
+import { Card, DataTable, Spinner, Page, Layout } from '@shopify/polaris';
 import './SubmissionList.css';
 
 const ViewWarranty = () => {
@@ -185,41 +186,49 @@ const ViewWarranty = () => {
       });
   }, []);
 
- 
+  // Columns for DataTable
+  const columns = ['Name', 'Email', 'Product', 'Phone', 'Address'];
 
-  if (loading) return <p>Loading...</p>;
+  // Transform the data to fit into the DataTable structure
+  const rows = submissions.map((item) => [
+    item.full_name || '—',
+    item.email || '—',
+    item.selected_product || '—',
+    item.phone || '—',
+    item.address || '—',
+  ]);
+
+  if (loading) {
+    return (
+      <Page>
+        <Layout>
+          <Layout.Section>
+            <Spinner size="large" />
+          </Layout.Section>
+        </Layout>
+      </Page>
+    );
+  }
 
   return (
-    <div className="wrapper">
-      <div className="table-wrapper">
-        <table className="submissions-table">
-          <thead>
-            <tr>
-              <th>Name</th>
-              <th>Email</th>
-              <th>Product</th>
-              <th>Phone</th>
-              <th>Address</th>
-            </tr>
-          </thead>
-          <tbody>
-            {submissions.map((item) => (
-              <tr key={item.id}>
-                <td>{item.full_name || '—'}</td>
-                <td>{item.email || '—'}</td>
-                <td>{item.selected_product || '—'}</td>
-                <td>{item.phone || '—'}</td>
-                <td>{item.address || '—'}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </div>
+    <Page>
+      <Layout>
+        <Layout.Section>
+          <Card title="Warranty Submissions" sectioned>
+            <DataTable
+              columnContentTypes={['text', 'text', 'text', 'text', 'text']}
+              headings={columns}
+              rows={rows}
+            />
+          </Card>
+        </Layout.Section>
+      </Layout>
+    </Page>
   );
 };
 
 export default ViewWarranty;
+
 
 
 
