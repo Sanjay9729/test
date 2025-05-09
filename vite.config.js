@@ -16,21 +16,4 @@ export default defineConfig({
       }
     }
   },
-  css: {
-    postcss: {
-      plugins: [
-        require('postcss-calc')({
-          preserve: true,
-          warnWhenCannotResolve: true,
-          mediaQueries: true,
-          selectors: true
-        }),
-        require('postcss-custom-properties')({
-          preserve: true
-        }),
-        require('autoprefixer')(),
-        require('postcss-nested')()
-      ]
-    }
-  }
 }); 
