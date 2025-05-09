@@ -1,12 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import {
-  AppProvider,
   Page,
   Card,
   IndexTable,
   Text,
 } from '@shopify/polaris';
-import enTranslations from '@shopify/polaris/locales/en.json';
 
 const ViewWarranty = () => {
   const [submissions, setSubmissions] = useState([]);
@@ -44,31 +42,29 @@ const ViewWarranty = () => {
   ));
 
   return (
-    <AppProvider i18n={enTranslations}>
-      <Page title="Warranty Submissions">
-        <Card>
-          {!loading && submissions.length === 0 ? (
-            <Text variant="bodyMd" as="p" alignment="center">
-              No warranty submissions found.
-            </Text>
-          ) : (
-            <IndexTable
-              itemCount={submissions.length}
-              selectable={false} // ✅ disables checkboxes
-              headings={[
-                { title: 'Name' },
-                { title: 'Email' },
-                { title: 'Product' },
-                { title: 'Phone' },
-                { title: 'Address' },
-              ]}
-            >
-              {rows}
-            </IndexTable>
-          )}
-        </Card>
-      </Page>
-    </AppProvider>
+    <Page title="Warranty Submissions">
+      <Card>
+        {!loading && submissions.length === 0 ? (
+          <Text variant="bodyMd" as="p" alignment="center">
+            No warranty submissions found.
+          </Text>
+        ) : (
+          <IndexTable
+            itemCount={submissions.length}
+            selectable={false}
+            headings={[
+              { title: 'Name' },
+              { title: 'Email' },
+              { title: 'Product' },
+              { title: 'Phone' },
+              { title: 'Address' },
+            ]}
+          >
+            {rows}
+          </IndexTable>
+        )}
+      </Card>
+    </Page>
   );
 };
 
