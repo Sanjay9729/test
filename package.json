@@ -25,7 +25,7 @@
     "cors": "^2.8.5",
     "css-loader": "^6.5.1",
     "css-minimizer-webpack-plugin": "^3.2.0",
-    "dotenv": "^10.0.0",
+    "dotenv": "^16.5.0",
     "dotenv-expand": "^5.1.0",
     "eslint": "^8.3.0",
     "eslint-config-react-app": "^7.0.1",
@@ -40,11 +40,13 @@
     "jest-watch-typeahead": "^1.0.0",
     "mini-css-extract-plugin": "^2.4.5",
     "node-fetch": "^2.7.0",
-    "postcss": "^8.4.4",
+    "postcss": "^8.4.27",
+    "postcss-calc": "^8.2.4",
+    "postcss-custom-properties": "^13.0.0",
     "postcss-flexbugs-fixes": "^5.0.2",
     "postcss-loader": "^6.2.1",
     "postcss-normalize": "^10.0.1",
-    "postcss-preset-env": "^7.0.1",
+    "postcss-preset-env": "^7.8.3",
     "prompts": "^2.4.2",
     "react": "^18.3.1",
     "react-app-polyfill": "^3.0.0",
@@ -53,6 +55,7 @@
     "react-icons": "^5.5.0",
     "react-refresh": "^0.11.0",
     "react-router-dom": "^7.5.1",
+    "react-scripts": "5.0.1",
     "resolve": "^1.20.0",
     "resolve-url-loader": "^4.0.0",
     "sass-loader": "^12.3.0",
@@ -68,9 +71,10 @@
     "workbox-webpack-plugin": "^6.4.1"
   },
   "scripts": {
-    "start": "node scripts/start.js",
-    "build": "node scripts/build.js",
-    "test": "node scripts/test.js"
+    "start": "react-scripts start",
+    "build": "GENERATE_SOURCEMAP=false react-scripts build",
+    "test": "react-scripts test",
+    "eject": "react-scripts eject"
   },
   "eslintConfig": {
     "extends": [
@@ -91,8 +95,12 @@
     ]
   },
   "devDependencies": {
-    "autoprefixer": "^10.4.21",
-    "postcss": "^8.5.3",
+    "autoprefixer": "^10.4.14",
+    "postcss": "^8.4.27",
+    "postcss-calc": "^8.2.4",
+    "postcss-custom-properties": "^13.0.0",
+    "postcss-flexbugs-fixes": "^5.0.2",
+    "postcss-preset-env": "^7.8.3",
     "tailwindcss": "^4.1.4"
   },
   "jest": {
