@@ -164,6 +164,7 @@
 
 
 // dynamic data 
+
 import React, { useEffect, useState } from 'react';
 import { Page, Card, DataTable, Spinner, Text } from '@shopify/polaris';
 import './SubmissionList.css';
@@ -177,18 +178,22 @@ const ViewWarranty = () => {
     fetch('/.netlify/functions/getSubmissions')
       .then((res) => {
         if (!res.ok) {
-          throw new Error('Failed to fetch data');
+          throw new Error('Failed to fetch data from API');
         }
         return res.json();
       })
       .then((data) => {
-        console.log('Fetched data:', data); // Log data to see if it's correct
-        setSubmissions(data);
+        console.log("Fetched data:", data); // Log the data to ensure it's correct
+        if (Array.isArray(data) && data.length > 0) {
+          setSubmissions(data);
+        } else {
+          setError('No data available.');
+        }
         setLoading(false);
       })
       .catch((error) => {
         console.error("Error fetching submissions:", error);
-        setError(error.message);
+        setError("Failed to load data.");
         setLoading(false);
       });
   }, []);
@@ -201,21 +206,22 @@ const ViewWarranty = () => {
     return <Text color="critical">{error}</Text>;
   }
 
-  const rows = submissions.map((item) => [
-    item.full_name || '—',
-    item.email || '—',
-    item.selected_product || '—',
-    item.phone || '—',
-    item.address || '—',
+  const rows = submissions.map((item, index) => [
+    item.name || '—',
+    item.customer_name || '—',
+    item.payment_status || '—',
+    item.fulfillment_status || '—',
+    `${item.quantity || '—'} Items`,
+    item.price || '—',
   ]);
 
-  const headings = ['Name', 'Email', 'Product', 'Phone', 'Address'];
+  const headings = ['Name', 'Customer Name', 'Payment', 'Fulfillment', 'Quantity', 'Price'];
 
   return (
     <Page title="Warranty Submissions">
       <Card>
         <DataTable
-          columnContentTypes={['text', 'text', 'text', 'text', 'text']}
+          columnContentTypes={['text', 'text', 'text', 'text', 'text', 'text']}
           headings={headings}
           rows={rows}
         />
