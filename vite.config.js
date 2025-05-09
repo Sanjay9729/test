@@ -10,17 +10,19 @@ export default defineConfig({
     }
   },
   build: {
+    outDir: 'dist',
+    sourcemap: true,
     rollupOptions: {
       output: {
         manualChunks: {
-          'polaris': ['@shopify/polaris']
+          'polaris': ['@shopify/polaris'],
+          'vendor': ['react', 'react-dom']
         }
       }
-    },
-    cssMinify: false
+    }
   },
   optimizeDeps: {
-    include: ['@shopify/polaris']
+    include: ['@shopify/polaris', 'react', 'react-dom']
   },
   css: {
     preprocessorOptions: {
