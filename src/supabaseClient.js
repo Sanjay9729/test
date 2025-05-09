@@ -13,13 +13,12 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   }
 });
 
-// Function to delete data from a specific table
 export const deleteData = async (tableName, conditions) => {
   try {
     const { data, error } = await supabase
-      .from(tableName)  // Table from which to delete
+      .from(tableName)  
       .delete()
-      .match(conditions); // The condition to match for deletion
+      .match(conditions); 
 
     if (error) {
       throw new Error(error.message);
