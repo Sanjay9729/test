@@ -170,9 +170,8 @@ import {
   AppProvider,
   Page,
   Card,
-  Spinner,
-  Text,
   IndexTable,
+  Text,
 } from '@shopify/polaris';
 import enTranslations from '@shopify/polaris/locales/en.json';
 
@@ -193,15 +192,16 @@ const ViewWarranty = () => {
       });
   }, []);
 
-  const indexTableRows = submissions.map((item, index) => (
+  const rows = submissions.map((item, index) => (
     <IndexTable.Row
       id={item.id || index.toString()}
       key={item.id || index}
-      selected={false} // Disable selection
       position={index}
     >
       <IndexTable.Cell>
-        <Text variant="bodySm" fontWeight="bold">{item.full_name || '—'}</Text>
+        <Text variant="bodySm" fontWeight="bold">
+          {item.full_name || '—'}
+        </Text>
       </IndexTable.Cell>
       <IndexTable.Cell>{item.email || '—'}</IndexTable.Cell>
       <IndexTable.Cell>{item.selected_product || '—'}</IndexTable.Cell>
@@ -214,30 +214,24 @@ const ViewWarranty = () => {
     <AppProvider i18n={enTranslations}>
       <Page title="Warranty Submissions">
         <Card>
-          {loading ? (
-            <div style={{ textAlign: 'left', padding: '2rem' }}>
-              <Spinner accessibilityLabel="Loading submissions" size="large" />
-            </div>
-          ) : submissions.length === 0 ? (
-            <Text variant="bodyMd" as="p">
+          {!loading && submissions.length === 0 ? (
+            <Text variant="bodyMd" as="p" alignment="center">
               No warranty submissions found.
             </Text>
           ) : (
-            <div style={{ marginTop: '1rem' }}>
-              <IndexTable
-                itemCount={submissions.length}
-                selectable={false} // ✅ This disables the checkboxes
-                headings={[
-                  { title: 'Name' },
-                  { title: 'Email' },
-                  { title: 'Product' },
-                  { title: 'Phone' },
-                  { title: 'Address' },
-                ]}
-              >
-                {indexTableRows}
-              </IndexTable>
-            </div>
+            <IndexTable
+              itemCount={submissions.length}
+              selectable={false} // ✅ disables checkboxes
+              headings={[
+                { title: 'Name' },
+                { title: 'Email' },
+                { title: 'Product' },
+                { title: 'Phone' },
+                { title: 'Address' },
+              ]}
+            >
+              {rows}
+            </IndexTable>
           )}
         </Card>
       </Page>
@@ -246,6 +240,9 @@ const ViewWarranty = () => {
 };
 
 export default ViewWarranty;
+
+
+
 
 
 
