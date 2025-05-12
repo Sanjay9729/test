@@ -215,31 +215,34 @@ const ViewWarranty = () => {
 
   return (
     <AppProvider i18n={enTranslations}>
-      <Page title="Warranty Submissions">
-        <Box width="100%">
-          <Card>
-            {!loading && submissions.length === 0 ? (
-              <Text variant="bodyMd" as="p" alignment="center">
-                No warranty submissions found.
-              </Text>
-            ) : (
-              <IndexTable
-                itemCount={submissions.length}
-                selectable={false}
-                headings={[
-                  { title: 'Email' },
-                  { title: 'Product' },
-                  { title: 'Phone' },
-                  { title: 'Address' },
-                ]}
-              >
-                {rows}
-              </IndexTable>
-            )}
-          </Card>
-        </Box>
-      </Page>
-    </AppProvider>
+  <Page fullWidth>
+    <Box paddingBlockStart="400" paddingInline="400">
+      <Card>
+        {!loading && submissions.length === 0 ? (
+          <Box padding="400" display="flex" justifyContent="center">
+            <Text variant="bodyLg" as="p">
+              No warranty submissions found.
+            </Text>
+          </Box>
+        ) : (
+          <IndexTable
+            itemCount={submissions.length}
+            selectable={false}
+            headings={[
+              { title: 'Email' },
+              { title: 'Product' },
+              { title: 'Phone' },
+              { title: 'Address' },
+            ]}
+          >
+            {rows}
+          </IndexTable>
+        )}
+      </Card>
+    </Box>
+  </Page>
+</AppProvider>
+
   );
 };
 
