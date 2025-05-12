@@ -172,6 +172,8 @@ import {
   Text,
   Box,
   TextField,
+  Button,
+  Layout, // Import Layout to manage the page structure
 } from '@shopify/polaris';
 import enTranslations from '@shopify/polaris/locales/en.json';
 
@@ -198,28 +200,18 @@ const ViewWarranty = () => {
     setSearchTerm(value);
   };
 
-  // Log submission data for debugging
-  console.log("Submissions Data:", submissions);
-
-  // Filter submissions based on search term
   const filteredSubmissions = submissions.filter((item) => {
-    const lowerCaseSearchTerm = searchTerm.trim().toLowerCase(); // Trim spaces and lowercase for case-insensitive comparison
-
-    // Handle undefined/null or empty values by falling back to empty strings
+    const lowerCaseSearchTerm = searchTerm.trim().toLowerCase();
     const fullName = item.full_name ? item.full_name.toLowerCase() : '';
     const email = item.email ? item.email.toLowerCase() : '';
     const product = item.selected_product ? item.selected_product.toLowerCase() : '';
     const phone = item.phone ? item.phone.toLowerCase() : '';
 
-    // Log what we are comparing for debugging purposes
-    console.log("Comparing:", lowerCaseSearchTerm, "to Full Name:", fullName);
-
-    // Check if any of the fields include the search term (including partial matching)
     return (
-      fullName.includes(lowerCaseSearchTerm) || // Search by full name (partial match)
-      email.includes(lowerCaseSearchTerm) || // Search by email
-      product.includes(lowerCaseSearchTerm) || // Search by product
-      phone.includes(lowerCaseSearchTerm) // Search by phone
+      fullName.includes(lowerCaseSearchTerm) ||
+      email.includes(lowerCaseSearchTerm) ||
+      product.includes(lowerCaseSearchTerm) ||
+      phone.includes(lowerCaseSearchTerm)
     );
   });
 
@@ -229,31 +221,26 @@ const ViewWarranty = () => {
       key={item.id || index}
       position={index}
     >
-      {/* Full Name Column */}
       <IndexTable.Cell>
         <Box paddingBlock="300">
           <Text as="span" variant="bodyLg">{item.full_name || '—'}</Text>
         </Box>
       </IndexTable.Cell>
-      {/* Email Column */}
       <IndexTable.Cell>
         <Box paddingBlock="300">
           <Text as="span" variant="bodyLg">{item.email || '—'}</Text>
         </Box>
       </IndexTable.Cell>
-      {/* Product Column */}
       <IndexTable.Cell>
         <Box paddingBlock="300">
           <Text as="span" variant="bodyLg">{item.selected_product || '—'}</Text>
         </Box>
       </IndexTable.Cell>
-      {/* Phone Column */}
       <IndexTable.Cell>
         <Box paddingBlock="300">
           <Text as="span" variant="bodyLg">{item.phone || '—'}</Text>
         </Box>
       </IndexTable.Cell>
-      {/* Address Column */}
       <IndexTable.Cell>
         <Box paddingBlock="300">
           <Text as="span" variant="bodyLg">{item.address || '—'}</Text>
@@ -265,6 +252,18 @@ const ViewWarranty = () => {
   return (
     <AppProvider i18n={enTranslations}>
       <Page fullWidth>
+        <Layout>
+          <Layout.Section>
+            {/* Left Side: Warranty Registration Text */}
+            <Text variant="headingMd" as="h1">Warranty Registration</Text>
+          </Layout.Section>
+
+          <Layout.Section secondary>
+            {/* Right Side: Export Button */}
+            <Button primary onClick={() => alert("Exporting data...")}>Export</Button>
+          </Layout.Section>
+        </Layout>
+
         <Box padding="0">
           {/* Search bar */}
           <Box paddingBottom="4">
@@ -285,7 +284,7 @@ const ViewWarranty = () => {
               itemCount={filteredSubmissions.length}
               selectable={false}
               headings={[
-                { title: 'Full Name' }, // Added Full Name heading
+                { title: 'Full Name' },
                 { title: 'Email' },
                 { title: 'Product' },
                 { title: 'Phone' },
@@ -302,6 +301,7 @@ const ViewWarranty = () => {
 };
 
 export default ViewWarranty;
+
 
 
 
