@@ -15,7 +15,6 @@ const Authe = () => {
   const [productSearch, setProductSearch] = useState("");
   const [products, setProducts] = useState([]);
   const [filteredProducts, setFilteredProducts] = useState([]);
-  const [submissions, setSubmissions] = useState([]); // Store fetched submissions
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -57,19 +56,6 @@ const Authe = () => {
     };
   }, []);
 
-  const fetchSubmissions = async () => {
-    const { data, error } = await supabase.from("submissions").select("*");
-    if (error) {
-      console.error("Error fetching submissions:", error);
-    } else {
-      setSubmissions(data);
-    }
-  };
-
-  useEffect(() => {
-    fetchSubmissions(); // Fetch submissions when the component loads
-  }, []);
-
   const sendOtp = async () => {
     if (!email || !validateEmail(email)) {
       setFieldErrors({ email: "❌ Please enter a valid email." });
@@ -101,7 +87,7 @@ const Authe = () => {
 
     try {
       // Insert data into Supabase
-      const { data, error } = await supabase.from("submissions").insert([
+      await supabase.from("submissions").insert([
         {
           full_name: fullName || null,  // Ensure fullName is included
           email: email || null,
@@ -110,12 +96,7 @@ const Authe = () => {
           selected_product: selectedProduct || null,
         },
       ]);
-      if (error) {
-        console.error("Error submitting data:", error);
-      } else {
-        setStep(6); // Success step
-        fetchSubmissions(); // Fetch new submissions after adding
-      }
+      setStep(6); // Success step
     } catch (err) {
       console.error("Error submitting data:", err); // Log error if any
     } finally {
@@ -147,16 +128,6 @@ const Authe = () => {
   };
 
   const steps = [1, 2, 3, 4, 5, 6];
-
-  const rows = submissions.map((item, index) => (
-    <tr key={index}>
-      <td>{item.full_name || '—'}</td>
-      <td>{item.email || '—'}</td>
-      <td>{item.selected_product || '—'}</td>
-      <td>{item.phone || '—'}</td>
-      <td>{item.address || '—'}</td>
-    </tr>
-  ));
 
   return (
     <div className="auth-background">
@@ -327,23 +298,6 @@ const Authe = () => {
             </>
           )}
         </div>
-      </div>
-
-      {/* Displaying the Submissions Table */}
-      <div className="submissions-table">
-        <h3>Warranty Registration Submissions</h3>
-        <table>
-          <thead>
-            <tr>
-              <th>Full Name</th>
-              <th>Email</th>
-              <th>Product</th>
-              <th>Phone</th>
-              <th>Address</th>
-            </tr>
-          </thead>
-          <tbody>{rows}</tbody>
-        </table>
       </div>
     </div>
   );

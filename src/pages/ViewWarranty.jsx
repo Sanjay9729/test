@@ -164,7 +164,7 @@
 
 
 // dynamic data 
-  import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   AppProvider,
   Page,
@@ -200,6 +200,7 @@ const ViewWarranty = () => {
 
   // Filter submissions based on search term
   const filteredSubmissions = submissions.filter((item) =>
+    item.full_name.toLowerCase().includes(searchTerm.toLowerCase()) || // Search by full name
     item.email.toLowerCase().includes(searchTerm.toLowerCase()) || // Search by email
     item.selected_product.toLowerCase().includes(searchTerm.toLowerCase()) || // Search by product
     item.phone.toLowerCase().includes(searchTerm.toLowerCase()) // Search by phone
@@ -211,21 +212,31 @@ const ViewWarranty = () => {
       key={item.id || index}
       position={index}
     >
+      {/* Full Name Column */}
+      <IndexTable.Cell>
+        <Box paddingBlock="300">
+          <Text as="span" variant="bodyLg">{item.full_name || '—'}</Text>
+        </Box>
+      </IndexTable.Cell>
+      {/* Email Column */}
       <IndexTable.Cell>
         <Box paddingBlock="300">
           <Text as="span" variant="bodyLg">{item.email || '—'}</Text>
         </Box>
       </IndexTable.Cell>
+      {/* Product Column */}
       <IndexTable.Cell>
         <Box paddingBlock="300">
           <Text as="span" variant="bodyLg">{item.selected_product || '—'}</Text>
         </Box>
       </IndexTable.Cell>
+      {/* Phone Column */}
       <IndexTable.Cell>
         <Box paddingBlock="300">
           <Text as="span" variant="bodyLg">{item.phone || '—'}</Text>
         </Box>
       </IndexTable.Cell>
+      {/* Address Column */}
       <IndexTable.Cell>
         <Box paddingBlock="300">
           <Text as="span" variant="bodyLg">{item.address || '—'}</Text>
@@ -257,6 +268,7 @@ const ViewWarranty = () => {
               itemCount={filteredSubmissions.length}
               selectable={false}
               headings={[
+                { title: 'Full Name' }, // Added Full Name heading
                 { title: 'Email' },
                 { title: 'Product' },
                 { title: 'Phone' },
@@ -273,6 +285,7 @@ const ViewWarranty = () => {
 };
 
 export default ViewWarranty;
+
 
 
 
