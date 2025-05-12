@@ -198,22 +198,22 @@ const ViewWarranty = () => {
       position={index}
     >
       <IndexTable.Cell>
-        <Box paddingBlock="250">
+        <Box paddingBlock="290">
           <Text as="span" variant="bodyLg">{item.email || '—'}</Text>
         </Box>
       </IndexTable.Cell>
       <IndexTable.Cell>
-        <Box paddingBlock="250">
+        <Box paddingBlock="290">
           <Text as="span" variant="bodyLg">{item.selected_product || '—'}</Text>
         </Box>
       </IndexTable.Cell>
       <IndexTable.Cell>
-        <Box paddingBlock="250">
+        <Box paddingBlock="290">
           <Text as="span" variant="bodyLg">{item.phone || '—'}</Text>
         </Box>
       </IndexTable.Cell>
       <IndexTable.Cell>
-        <Box paddingBlock="250">
+        <Box paddingBlock="290">
           <Text as="span" variant="bodyLg">{item.address || '—'}</Text>
         </Box>
       </IndexTable.Cell>
