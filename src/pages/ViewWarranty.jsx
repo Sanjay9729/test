@@ -172,22 +172,32 @@ import {
   useIndexResourceState,
   Text,
   Spinner,
+  Banner,
 } from '@shopify/polaris';
 
 const ViewWarranty = () => {
   const [submissions, setSubmissions] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
   useEffect(() => {
     fetch('/.netlify/functions/getSubmissions')
-      .then((res) => res.json())
+      .then((res) => {
+        if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+        return res.json();
+      })
       .then((data) => {
-        console.log('Fetched submissions:', data); // Debug log
-        setSubmissions(data);
+        console.log('✅ API Response:', data);
+        if (Array.isArray(data)) {
+          setSubmissions(data);
+        } else {
+          throw new Error('Expected an array but got: ' + typeof data);
+        }
         setLoading(false);
       })
       .catch((error) => {
-        console.error('Error fetching submissions:', error);
+        console.error('🚨 Fetch error:', error);
+        setError(error.message);
         setLoading(false);
       });
   }, []);
@@ -197,18 +207,15 @@ const ViewWarranty = () => {
     plural: 'submissions',
   };
 
-  const {
-    selectedResources,
-    allResourcesSelected,
-    handleSelectionChange,
-  } = useIndexResourceState(submissions);
+  const { selectedResources, allResourcesSelected, handleSelectionChange } =
+    useIndexResourceState(submissions);
 
   const rowMarkup = submissions.map(
     ({ id, full_name, email, selected_product, phone, address }, index) => (
       <IndexTable.Row
-        id={id}
-        key={id}
-        selected={selectedResources.includes(id)}
+        id={id?.toString() || index.toString()}
+        key={id?.toString() || index.toString()}
+        selected={selectedResources.includes(id?.toString())}
         position={index}
       >
         <IndexTable.Cell>
@@ -227,11 +234,24 @@ const ViewWarranty = () => {
   return (
     <Page title="Warranty Submissions">
       <LegacyCard>
-        {loading ? (
-          <div style={{ padding: '20px', textAlign: 'center' }}>
-            <Spinner accessibilityLabel="Loading submissions" size="large" />
+        {loading && (
+          <div style={{ padding: 20, textAlign: 'center' }}>
+            <Spinner accessibilityLabel="Loading" size="large" />
+            <p>Loading submissions...</p>
           </div>
-        ) : (
+        )}
+
+        {error && (
+          <Banner title="Error loading submissions" status="critical">
+            <p>{error}</p>
+          </Banner>
+        )}
+
+        {!loading && !error && submissions.length === 0 && (
+          <p style={{ padding: 20 }}>No submissions found.</p>
+        )}
+
+        {!loading && !error && submissions.length > 0 && (
           <IndexTable
             resourceName={resourceName}
             itemCount={submissions.length}
@@ -256,6 +276,7 @@ const ViewWarranty = () => {
 };
 
 export default ViewWarranty;
+
 
 
 
