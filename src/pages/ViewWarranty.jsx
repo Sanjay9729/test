@@ -89,46 +89,137 @@
 
 
 // static data 
-// import React from 'react';
+import React from 'react';
+import {
+  Page,
+  IndexTable,
+  LegacyCard,
+  useIndexResourceState,
+  Text,
+} from '@shopify/polaris';
+
+const ViewWarranty = () => {
+  const submissions = [
+    {
+      id: '1',
+      full_name: 'Alice Johnson',
+      email: 'alice@example.com',
+      selected_product: 'Smart Blender X500',
+      phone: '123-456-7890',
+      address: '123 Maple Street, Springfield',
+      created_at: '2025-05-06 07:03:10',
+    },
+    {
+      id: '2',
+      full_name: 'Bob Smith',
+      email: 'bob@example.com',
+      selected_product: 'Air Purifier Z300',
+      phone: '987-654-3210',
+      address: '456 Oak Avenue, Riverdale',
+      created_at: '2025-05-06 06:06:37',
+    },
+    {
+      id: '3',
+      full_name: 'Charlie Davis',
+      email: 'charlie@example.com',
+      selected_product: 'Eco Kettle Pro',
+      phone: '555-666-7777',
+      address: '789 Pine Road, Hilltown',
+      created_at: '2025-05-06 05:49:51',
+    },
+  ];
+
+  const resourceName = {
+    singular: 'submission',
+    plural: 'submissions',
+  };
+
+  const {selectedResources, allResourcesSelected, handleSelectionChange} =
+    useIndexResourceState(submissions);
+
+  const rowMarkup = submissions.map(
+    (
+      {id, full_name, email, selected_product, phone, address, created_at},
+      index,
+    ) => (
+      <IndexTable.Row
+        id={id}
+        key={id}
+        selected={selectedResources.includes(id)}
+        position={index}
+      >
+        <IndexTable.Cell>
+          <Text variant="bodyMd" fontWeight="medium" as="span">
+            {full_name}
+          </Text>
+        </IndexTable.Cell>
+        <IndexTable.Cell>{email || '—'}</IndexTable.Cell>
+        <IndexTable.Cell>{selected_product || '—'}</IndexTable.Cell>
+        <IndexTable.Cell>{phone || '—'}</IndexTable.Cell>
+        <IndexTable.Cell>{address || '—'}</IndexTable.Cell>
+        <IndexTable.Cell>{created_at}</IndexTable.Cell>
+      </IndexTable.Row>
+    ),
+  );
+
+  return (
+    <Page title="Warranty Submissions">
+      <LegacyCard>
+        <IndexTable
+          resourceName={resourceName}
+          itemCount={submissions.length}
+          selectedItemsCount={
+            allResourcesSelected ? 'All' : selectedResources.length
+          }
+          onSelectionChange={handleSelectionChange}
+          headings={[
+            {title: 'Name'},
+            {title: 'Email'},
+            {title: 'Product'},
+            {title: 'Phone'},
+            {title: 'Address'},
+            {title: 'Submitted At'},
+          ]}
+        >
+          {rowMarkup}
+        </IndexTable>
+      </LegacyCard>
+    </Page>
+  );
+};
+
+export default ViewWarranty;
+
+
+
+// dynamic data 
+
+// import React, { useEffect, useState } from 'react';
 // import './SubmissionList.css';
 
 // const ViewWarranty = () => {
-//   const submissions = [
-//     {
-//       id: 1,
-//       full_name: 'Alice Johnson',
-//       email: 'alice@example.com',
-//       selected_product: 'Smart Blender X500',
-//       phone: '123-456-7890',
-//       address: '123 Maple Street, Springfield',
-//       image_url: 'https://via.placeholder.com/100',
-//       created_at: '2025-05-06 07:03:10',
-//     },
-//     {
-//       id: 2,
-//       full_name: 'Bob Smith',
-//       email: 'bob@example.com',
-//       selected_product: 'Air Purifier Z300',
-//       phone: '987-654-3210',
-//       address: '456 Oak Avenue, Riverdale',
-//       image_url: 'https://via.placeholder.com/100',
-//       created_at: '2025-05-06 06:06:37',
-//     },
-//     {
-//       id: 3,
-//       full_name: 'Charlie Davis',
-//       email: 'charlie@example.com',
-//       selected_product: 'Eco Kettle Pro',
-//       phone: '555-666-7777',
-//       address: '789 Pine Road, Hilltown',
-//       image_url: 'https://via.placeholder.com/100',
-//       created_at: '2025-05-06 05:49:51',
-//     },
-//   ];
+//   const [submissions, setSubmissions] = useState([]);
+//   const [loading, setLoading] = useState(true);
+
+//   useEffect(() => {
+//     fetch('/.netlify/functions/getSubmissions')
+//       .then((res) => res.json())
+//       .then((data) => {
+//         setSubmissions(data);
+//         setLoading(false);
+//       })
+//       .catch((error) => {
+//         console.error("Error fetching submissions:", error);
+//         setLoading(false);
+//       });
+//   }, []);
+
+ 
+
+//   if (loading) return <p>Loading...</p>;
 
 //   return (
 //     <div className="wrapper">
-//       <h1 className="heading">Warranty Submissions Test</h1>
 //       <div className="table-wrapper">
 //         <table className="submissions-table">
 //           <thead>
@@ -138,19 +229,16 @@
 //               <th>Product</th>
 //               <th>Phone</th>
 //               <th>Address</th>
-//               <th>Submitted At</th>
 //             </tr>
 //           </thead>
 //           <tbody>
 //             {submissions.map((item) => (
 //               <tr key={item.id}>
-
-//                 <td>{item.full_name}</td>
+//                 <td>{item.full_name || '—'}</td>
 //                 <td>{item.email || '—'}</td>
 //                 <td>{item.selected_product || '—'}</td>
 //                 <td>{item.phone || '—'}</td>
 //                 <td>{item.address || '—'}</td>
-//                 <td>{item.created_at}</td>
 //               </tr>
 //             ))}
 //           </tbody>
@@ -161,77 +249,6 @@
 // };
 
 // export default ViewWarranty;
-
-
-// dynamic data 
-
-import React, { useEffect, useState } from 'react';
-import { Page, Card, DataTable, Spinner, Text } from '@shopify/polaris';
-import './SubmissionList.css';
-
-const ViewWarranty = () => {
-  const [submissions, setSubmissions] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-
-  useEffect(() => {
-    fetch('/.netlify/functions/getSubmissions')
-      .then((res) => {
-        if (!res.ok) {
-          throw new Error('Failed to fetch data from API');
-        }
-        return res.json();
-      })
-      .then((data) => {
-        console.log("Fetched data:", data); // Log the data to ensure it's correct
-        if (Array.isArray(data) && data.length > 0) {
-          setSubmissions(data);
-        } else {
-          setError('No data available.');
-        }
-        setLoading(false);
-      })
-      .catch((error) => {
-        console.error("Error fetching submissions:", error);
-        setError("Failed to load data.");
-        setLoading(false);
-      });
-  }, []);
-
-  if (loading) {
-    return <Spinner size="large" />;
-  }
-
-  if (error) {
-    return <Text color="critical">{error}</Text>;
-  }
-
-  const rows = submissions.map((item, index) => [
-    item.name || '—',
-    item.customer_name || '—',
-    item.payment_status || '—',
-    item.fulfillment_status || '—',
-    `${item.quantity || '—'} Items`,
-    item.price || '—',
-  ]);
-
-  const headings = ['Name', 'Customer Name', 'Payment', 'Fulfillment', 'Quantity', 'Price'];
-
-  return (
-    <Page title="Warranty Submissions">
-      <Card>
-        <DataTable
-          columnContentTypes={['text', 'text', 'text', 'text', 'text', 'text']}
-          headings={headings}
-          rows={rows}
-        />
-      </Card>
-    </Page>
-  );
-};
-
-export default ViewWarranty;
-
 
 
 
