@@ -171,9 +171,9 @@ import {
   Card,
   IndexTable,
   Text,
+  Box,
 } from '@shopify/polaris';
 import enTranslations from '@shopify/polaris/locales/en.json';
-
 
 const ViewWarranty = () => {
   const [submissions, setSubmissions] = useState([]);
@@ -199,47 +199,52 @@ const ViewWarranty = () => {
       position={index}
     >
       <IndexTable.Cell>
-        <Text variant="bodySm" fontWeight="bold">
-          {item.full_name || '—'}
-        </Text>
+        <Text as="span" variant="bodyLg">{item.email || '—'}</Text>
       </IndexTable.Cell>
-      <IndexTable.Cell>{item.email || '—'}</IndexTable.Cell>
-      <IndexTable.Cell>{item.selected_product || '—'}</IndexTable.Cell>
-      <IndexTable.Cell>{item.phone || '—'}</IndexTable.Cell>
-      <IndexTable.Cell>{item.address || '—'}</IndexTable.Cell>
+      <IndexTable.Cell>
+        <Text as="span" variant="bodyLg">{item.selected_product || '—'}</Text>
+      </IndexTable.Cell>
+      <IndexTable.Cell>
+        <Text as="span" variant="bodyLg">{item.phone || '—'}</Text>
+      </IndexTable.Cell>
+      <IndexTable.Cell>
+        <Text as="span" variant="bodyLg">{item.address || '—'}</Text>
+      </IndexTable.Cell>
     </IndexTable.Row>
   ));
 
   return (
     <AppProvider i18n={enTranslations}>
       <Page title="Warranty Submissions">
-        <Card>
-          {!loading && submissions.length === 0 ? (
-            <Text variant="bodyMd" as="p" alignment="center">
-              No warranty submissions found.
-            </Text>
-          ) : (
-            <IndexTable
-              itemCount={submissions.length}
-              selectable={false} // ✅ disables checkboxes
-              headings={[
-                { title: 'Name' },
-                { title: 'Email' },
-                { title: 'Product' },
-                { title: 'Phone' },
-                { title: 'Address' },
-              ]}
-            >
-              {rows}
-            </IndexTable>
-          )}
-        </Card>
+        <Box width="100%">
+          <Card>
+            {!loading && submissions.length === 0 ? (
+              <Text variant="bodyMd" as="p" alignment="center">
+                No warranty submissions found.
+              </Text>
+            ) : (
+              <IndexTable
+                itemCount={submissions.length}
+                selectable={false}
+                headings={[
+                  { title: 'Email' },
+                  { title: 'Product' },
+                  { title: 'Phone' },
+                  { title: 'Address' },
+                ]}
+              >
+                {rows}
+              </IndexTable>
+            )}
+          </Card>
+        </Box>
       </Page>
     </AppProvider>
   );
 };
 
 export default ViewWarranty;
+
 
 
 
