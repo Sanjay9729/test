@@ -164,19 +164,21 @@
 
 
 // dynamic data 
-import React, { useEffect, useState } from 'react';
+  import React, { useEffect, useState } from 'react';
 import {
   AppProvider,
   Page,
   IndexTable,
   Text,
   Box,
+  TextField,  // Import TextField for search input
 } from '@shopify/polaris';
 import enTranslations from '@shopify/polaris/locales/en.json';
 
 const ViewWarranty = () => {
   const [submissions, setSubmissions] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState(''); // State to hold the search term
 
   useEffect(() => {
     fetch('/.netlify/functions/getSubmissions')
@@ -191,7 +193,19 @@ const ViewWarranty = () => {
       });
   }, []);
 
-  const rows = submissions.map((item, index) => (
+  // Function to handle search
+  const handleSearchChange = (value) => {
+    setSearchTerm(value);
+  };
+
+  // Filter submissions based on search term
+  const filteredSubmissions = submissions.filter((item) =>
+    item.email.toLowerCase().includes(searchTerm.toLowerCase()) || // Search by email
+    item.selected_product.toLowerCase().includes(searchTerm.toLowerCase()) || // Search by product
+    item.phone.toLowerCase().includes(searchTerm.toLowerCase()) // Search by phone
+  );
+
+  const rows = filteredSubmissions.map((item, index) => (
     <IndexTable.Row
       id={item.id || index.toString()}
       key={item.id || index}
@@ -224,13 +238,23 @@ const ViewWarranty = () => {
     <AppProvider i18n={enTranslations}>
       <Page fullWidth>
         <Box padding="0">
-          {!loading && submissions.length === 0 ? (
-            <Box  display="flex" justifyContent="center">
+          {/* Search bar */}
+          <Box paddingBottom="4">
+            <TextField
+              label="Search by Name or Details"
+              value={searchTerm}
+              onChange={handleSearchChange}
+              placeholder="Enter name, email, or product"
+            />
+          </Box>
+          
+          {!loading && filteredSubmissions.length === 0 ? (
+            <Box display="flex" justifyContent="center">
               <Text variant="bodyLg" as="p">No warranty submissions found.</Text>
             </Box>
           ) : (
             <IndexTable
-              itemCount={submissions.length}
+              itemCount={filteredSubmissions.length}
               selectable={false}
               headings={[
                 { title: 'Email' },
@@ -249,6 +273,7 @@ const ViewWarranty = () => {
 };
 
 export default ViewWarranty;
+
 
 
 
