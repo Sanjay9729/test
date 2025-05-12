@@ -210,7 +210,7 @@ const ViewWarranty = () => {
 
     // Check if any of the fields include the search term (including partial matching)
     return (
-      fullName.includes(lowerCaseSearchTerm) || // Search by full name
+      fullName.includes(lowerCaseSearchTerm) || // Search by full name (partial match)
       email.includes(lowerCaseSearchTerm) || // Search by email
       product.includes(lowerCaseSearchTerm) || // Search by product
       phone.includes(lowerCaseSearchTerm) // Search by phone
@@ -296,6 +296,8 @@ const ViewWarranty = () => {
 };
 
 export default ViewWarranty;
+
+
 
 
 
