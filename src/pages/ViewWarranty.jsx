@@ -223,7 +223,7 @@ const ViewWarranty = () => {
   return (
     <AppProvider i18n={enTranslations}>
       <Page fullWidth>
-        <Box paddingBlock="600" paddingInline="0">
+        <Box padding="0">
           {!loading && submissions.length === 0 ? (
             <Box paddingBlock="400" paddingInline="0" display="flex" justifyContent="center">
               <Text variant="bodyLg" as="p">No warranty submissions found.</Text>
