@@ -225,7 +225,7 @@ const ViewWarranty = () => {
       <Page fullWidth>
         <Box padding="0">
           {!loading && submissions.length === 0 ? (
-            <Box padding="400" display="flex" justifyContent="center">
+            <Box display="flex" justifyContent="center">
               <Text variant="bodyLg" as="p">
                 No warranty submissions found.
               </Text>
