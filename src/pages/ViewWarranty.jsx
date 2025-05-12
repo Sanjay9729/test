@@ -198,24 +198,24 @@ const ViewWarranty = () => {
       position={index}
     >
       <IndexTable.Cell>
-        <Text as="span" variant="bodyLg">
-          {item.email || '—'}
-        </Text>
+        <Box paddingBlock="300">
+          <Text as="span" variant="bodyLg">{item.email || '—'}</Text>
+        </Box>
       </IndexTable.Cell>
       <IndexTable.Cell>
-        <Text as="span" variant="bodyLg">
-          {item.selected_product || '—'}
-        </Text>
+        <Box paddingBlock="300">
+          <Text as="span" variant="bodyLg">{item.selected_product || '—'}</Text>
+        </Box>
       </IndexTable.Cell>
       <IndexTable.Cell>
-        <Text as="span" variant="bodyLg">
-          {item.phone || '—'}
-        </Text>
+        <Box paddingBlock="300">
+          <Text as="span" variant="bodyLg">{item.phone || '—'}</Text>
+        </Box>
       </IndexTable.Cell>
       <IndexTable.Cell>
-        <Text as="span" variant="bodyLg">
-          {item.address || '—'}
-        </Text>
+        <Box paddingBlock="300">
+          <Text as="span" variant="bodyLg">{item.address || '—'}</Text>
+        </Box>
       </IndexTable.Cell>
     </IndexTable.Row>
   ));
@@ -226,9 +226,7 @@ const ViewWarranty = () => {
         <Box paddingBlock="600" paddingInline="0">
           {!loading && submissions.length === 0 ? (
             <Box paddingBlock="400" paddingInline="0" display="flex" justifyContent="center">
-              <Text variant="bodyLg" as="p">
-                No warranty submissions found.
-              </Text>
+              <Text variant="bodyLg" as="p">No warranty submissions found.</Text>
             </Box>
           ) : (
             <IndexTable
@@ -251,6 +249,7 @@ const ViewWarranty = () => {
 };
 
 export default ViewWarranty;
+
 
 
 
