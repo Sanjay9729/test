@@ -198,6 +198,9 @@ const ViewWarranty = () => {
     setSearchTerm(value);
   };
 
+  // Log submission data for debugging
+  console.log("Submissions Data:", submissions);
+
   // Filter submissions based on search term
   const filteredSubmissions = submissions.filter((item) => {
     const lowerCaseSearchTerm = searchTerm.trim().toLowerCase(); // Trim spaces and lowercase for case-insensitive comparison
@@ -207,6 +210,9 @@ const ViewWarranty = () => {
     const email = item.email ? item.email.toLowerCase() : '';
     const product = item.selected_product ? item.selected_product.toLowerCase() : '';
     const phone = item.phone ? item.phone.toLowerCase() : '';
+
+    // Log what we are comparing for debugging purposes
+    console.log("Comparing:", lowerCaseSearchTerm, "to Full Name:", fullName);
 
     // Check if any of the fields include the search term (including partial matching)
     return (
@@ -296,6 +302,7 @@ const ViewWarranty = () => {
 };
 
 export default ViewWarranty;
+
 
 
 
