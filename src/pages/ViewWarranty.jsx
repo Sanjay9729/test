@@ -173,9 +173,10 @@ import {
   Box,
   TextField,
   Button,
-  Layout, // Import Layout to manage the page structure
+  Layout,
 } from '@shopify/polaris';
 import enTranslations from '@shopify/polaris/locales/en.json';
+import Papa from 'papaparse'; // Import papaparse
 
 const ViewWarranty = () => {
   const [submissions, setSubmissions] = useState([]);
@@ -198,6 +199,28 @@ const ViewWarranty = () => {
   // Function to handle search
   const handleSearchChange = (value) => {
     setSearchTerm(value);
+  };
+
+  // Function to trigger export
+  const exportToCSV = () => {
+    const data = submissions.map((item) => ({
+      full_name: item.full_name,
+      email: item.email,
+      product: item.selected_product,
+      phone: item.phone,
+      address: item.address,
+      created_at: item.created_at,
+    }));
+
+    // Convert data to CSV format
+    const csv = Papa.unparse(data);
+
+    // Create a Blob object with the CSV data and trigger a download
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = 'warranty_submissions.csv'; // Filename for the exported file
+    link.click();
   };
 
   const filteredSubmissions = submissions.filter((item) => {
@@ -254,18 +277,15 @@ const ViewWarranty = () => {
       <Page fullWidth>
         <Layout>
           <Layout.Section>
-            {/* Left Side: Warranty Registration Text */}
             <Text variant="headingMd" as="h1">Warranty Registration</Text>
           </Layout.Section>
 
           <Layout.Section secondary>
-            {/* Right Side: Export Button */}
-            <Button primary onClick={() => alert("Exporting data...")}>Export</Button>
+            <Button primary onClick={exportToCSV}>Export</Button>
           </Layout.Section>
         </Layout>
 
         <Box padding="0">
-          {/* Search bar */}
           <Box paddingBottom="4">
             <TextField
               label="Search by Name or Details"
@@ -301,6 +321,7 @@ const ViewWarranty = () => {
 };
 
 export default ViewWarranty;
+
 
 
 
