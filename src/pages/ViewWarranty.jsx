@@ -164,69 +164,55 @@
 
 
 // dynamic data 
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import {
   Page,
   IndexTable,
   LegacyCard,
   useIndexResourceState,
   Text,
-  Spinner,
-  Banner,
 } from '@shopify/polaris';
 
 const ViewWarranty = () => {
-  const [submissions, setSubmissions] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const submissions = [
+    {
+      id: '1',
+      full_name: 'Alice Johnson',
+      email: 'alice@example.com',
+      selected_product: 'Smart Blender X500',
+      phone: '123-456-7890',
+      address: '123 Maple Street',
+    },
+    {
+      id: '2',
+      full_name: 'Bob Smith',
+      email: 'bob@example.com',
+      selected_product: 'Air Purifier Z300',
+      phone: '987-654-3210',
+      address: '456 Oak Avenue',
+    },
+  ];
 
-  useEffect(() => {
-    fetch('/.netlify/functions/getSubmissions')
-      .then((res) => {
-        if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
-        return res.json();
-      })
-      .then((data) => {
-        console.log('✅ API Response:', data);
-        if (Array.isArray(data)) {
-          setSubmissions(data);
-        } else {
-          throw new Error('Expected an array but got: ' + typeof data);
-        }
-        setLoading(false);
-      })
-      .catch((error) => {
-        console.error('🚨 Fetch error:', error);
-        setError(error.message);
-        setLoading(false);
-      });
-  }, []);
-
-  const resourceName = {
-    singular: 'submission',
-    plural: 'submissions',
-  };
-
-  const { selectedResources, allResourcesSelected, handleSelectionChange } =
+  const {selectedResources, allResourcesSelected, handleSelectionChange} =
     useIndexResourceState(submissions);
 
   const rowMarkup = submissions.map(
-    ({ id, full_name, email, selected_product, phone, address }, index) => (
+    ({id, full_name, email, selected_product, phone, address}, index) => (
       <IndexTable.Row
-        id={id?.toString() || index.toString()}
-        key={id?.toString() || index.toString()}
-        selected={selectedResources.includes(id?.toString())}
+        id={id}
+        key={id}
+        selected={selectedResources.includes(id)}
         position={index}
       >
         <IndexTable.Cell>
           <Text variant="bodyMd" fontWeight="medium" as="span">
-            {full_name || '—'}
+            {full_name}
           </Text>
         </IndexTable.Cell>
-        <IndexTable.Cell>{email || '—'}</IndexTable.Cell>
-        <IndexTable.Cell>{selected_product || '—'}</IndexTable.Cell>
-        <IndexTable.Cell>{phone || '—'}</IndexTable.Cell>
-        <IndexTable.Cell>{address || '—'}</IndexTable.Cell>
+        <IndexTable.Cell>{email}</IndexTable.Cell>
+        <IndexTable.Cell>{selected_product}</IndexTable.Cell>
+        <IndexTable.Cell>{phone}</IndexTable.Cell>
+        <IndexTable.Cell>{address}</IndexTable.Cell>
       </IndexTable.Row>
     )
   );
@@ -234,48 +220,30 @@ const ViewWarranty = () => {
   return (
     <Page title="Warranty Submissions">
       <LegacyCard>
-        {loading && (
-          <div style={{ padding: 20, textAlign: 'center' }}>
-            <Spinner accessibilityLabel="Loading" size="large" />
-            <p>Loading submissions...</p>
-          </div>
-        )}
-
-        {error && (
-          <Banner title="Error loading submissions" status="critical">
-            <p>{error}</p>
-          </Banner>
-        )}
-
-        {!loading && !error && submissions.length === 0 && (
-          <p style={{ padding: 20 }}>No submissions found.</p>
-        )}
-
-        {!loading && !error && submissions.length > 0 && (
-          <IndexTable
-            resourceName={resourceName}
-            itemCount={submissions.length}
-            selectedItemsCount={
-              allResourcesSelected ? 'All' : selectedResources.length
-            }
-            onSelectionChange={handleSelectionChange}
-            headings={[
-              { title: 'Name' },
-              { title: 'Email' },
-              { title: 'Product' },
-              { title: 'Phone' },
-              { title: 'Address' },
-            ]}
-          >
-            {rowMarkup}
-          </IndexTable>
-        )}
+        <IndexTable
+          resourceName={{singular: 'submission', plural: 'submissions'}}
+          itemCount={submissions.length}
+          selectedItemsCount={
+            allResourcesSelected ? 'All' : selectedResources.length
+          }
+          onSelectionChange={handleSelectionChange}
+          headings={[
+            {title: 'Name'},
+            {title: 'Email'},
+            {title: 'Product'},
+            {title: 'Phone'},
+            {title: 'Address'},
+          ]}
+        >
+          {rowMarkup}
+        </IndexTable>
       </LegacyCard>
     </Page>
   );
 };
 
 export default ViewWarranty;
+
 
 
 
