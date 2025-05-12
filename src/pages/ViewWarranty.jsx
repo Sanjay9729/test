@@ -199,12 +199,22 @@ const ViewWarranty = () => {
   };
 
   // Filter submissions based on search term
-  const filteredSubmissions = submissions.filter((item) =>
-    item.full_name.toLowerCase().includes(searchTerm.toLowerCase()) || // Search by full name
-    item.email.toLowerCase().includes(searchTerm.toLowerCase()) || // Search by email
-    item.selected_product.toLowerCase().includes(searchTerm.toLowerCase()) || // Search by product
-    item.phone.toLowerCase().includes(searchTerm.toLowerCase()) // Search by phone
-  );
+  const filteredSubmissions = submissions.filter((item) => {
+    const lowerCaseSearchTerm = searchTerm.toLowerCase(); // Convert search term to lowercase for case-insensitive comparison
+
+    // Handle undefined/null or empty values by falling back to empty strings
+    const fullName = item.full_name ? item.full_name.toLowerCase() : '';
+    const email = item.email ? item.email.toLowerCase() : '';
+    const product = item.selected_product ? item.selected_product.toLowerCase() : '';
+    const phone = item.phone ? item.phone.toLowerCase() : '';
+
+    return (
+      fullName.includes(lowerCaseSearchTerm) || // Search by full name
+      email.includes(lowerCaseSearchTerm) || // Search by email
+      product.includes(lowerCaseSearchTerm) || // Search by product
+      phone.includes(lowerCaseSearchTerm) // Search by phone
+    );
+  });
 
   const rows = filteredSubmissions.map((item, index) => (
     <IndexTable.Row
@@ -285,6 +295,8 @@ const ViewWarranty = () => {
 };
 
 export default ViewWarranty;
+
+
 
 
 
