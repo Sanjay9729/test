@@ -164,81 +164,78 @@
 
 
 // dynamic data 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import {
+  AppProvider,
   Page,
+  Card,
   IndexTable,
-  LegacyCard,
-  useIndexResourceState,
   Text,
 } from '@shopify/polaris';
+import enTranslations from '@shopify/polaris/locales/en.json';
+
 
 const ViewWarranty = () => {
-  const submissions = [
-    {
-      id: '1',
-      full_name: 'Alice Johnson',
-      email: 'alice@example.com',
-      selected_product: 'Smart Blender X500',
-      phone: '123-456-7890',
-      address: '123 Maple Street',
-    },
-    {
-      id: '2',
-      full_name: 'Bob Smith',
-      email: 'bob@example.com',
-      selected_product: 'Air Purifier Z300',
-      phone: '987-654-3210',
-      address: '456 Oak Avenue',
-    },
-  ];
+  const [submissions, setSubmissions] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  const {selectedResources, allResourcesSelected, handleSelectionChange} =
-    useIndexResourceState(submissions);
+  useEffect(() => {
+    fetch('/.netlify/functions/getSubmissions')
+      .then((res) => res.json())
+      .then((data) => {
+        setSubmissions(data);
+        setLoading(false);
+      })
+      .catch((error) => {
+        console.error('Error fetching submissions:', error);
+        setLoading(false);
+      });
+  }, []);
 
-  const rowMarkup = submissions.map(
-    ({id, full_name, email, selected_product, phone, address}, index) => (
-      <IndexTable.Row
-        id={id}
-        key={id}
-        selected={selectedResources.includes(id)}
-        position={index}
-      >
-        <IndexTable.Cell>
-          <Text variant="bodyMd" fontWeight="medium" as="span">
-            {full_name}
-          </Text>
-        </IndexTable.Cell>
-        <IndexTable.Cell>{email}</IndexTable.Cell>
-        <IndexTable.Cell>{selected_product}</IndexTable.Cell>
-        <IndexTable.Cell>{phone}</IndexTable.Cell>
-        <IndexTable.Cell>{address}</IndexTable.Cell>
-      </IndexTable.Row>
-    )
-  );
+  const rows = submissions.map((item, index) => (
+    <IndexTable.Row
+      id={item.id || index.toString()}
+      key={item.id || index}
+      position={index}
+    >
+      <IndexTable.Cell>
+        <Text variant="bodySm" fontWeight="bold">
+          {item.full_name || '—'}
+        </Text>
+      </IndexTable.Cell>
+      <IndexTable.Cell>{item.email || '—'}</IndexTable.Cell>
+      <IndexTable.Cell>{item.selected_product || '—'}</IndexTable.Cell>
+      <IndexTable.Cell>{item.phone || '—'}</IndexTable.Cell>
+      <IndexTable.Cell>{item.address || '—'}</IndexTable.Cell>
+    </IndexTable.Row>
+  ));
 
   return (
-    <Page title="Warranty Submissions">
-      <LegacyCard>
-        <IndexTable
-          resourceName={{singular: 'submission', plural: 'submissions'}}
-          itemCount={submissions.length}
-          selectedItemsCount={
-            allResourcesSelected ? 'All' : selectedResources.length
-          }
-          onSelectionChange={handleSelectionChange}
-          headings={[
-            {title: 'Name'},
-            {title: 'Email'},
-            {title: 'Product'},
-            {title: 'Phone'},
-            {title: 'Address'},
-          ]}
-        >
-          {rowMarkup}
-        </IndexTable>
-      </LegacyCard>
-    </Page>
+    <AppProvider i18n={enTranslations}>
+      <Page title="Warranty Submissions">
+        <Card>
+          {!loading && submissions.length === 0 ? (
+            <Text variant="bodyMd" as="p" alignment="center">
+              No warranty submissions found.
+            </Text>
+          ) : (
+            <IndexTable
+              itemCount={submissions.length}
+              selectable={false} // ✅ disables checkboxes
+              headings={[
+                { title: 'Name' },
+                { title: 'Email' },
+                { title: 'Product' },
+                { title: 'Phone' },
+                { title: 'Address' },
+              ]}
+            >
+              {rows}
+            </IndexTable>
+          )}
+        </Card>
+      </Page>
+    </AppProvider>
   );
 };
 
