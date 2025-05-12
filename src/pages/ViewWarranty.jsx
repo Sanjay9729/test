@@ -168,7 +168,6 @@ import React, { useEffect, useState } from 'react';
 import {
   AppProvider,
   Page,
-  Card,
   IndexTable,
   Text,
   Box,
@@ -199,54 +198,60 @@ const ViewWarranty = () => {
       position={index}
     >
       <IndexTable.Cell>
-        <Text as="span" variant="bodyLg">{item.email || '—'}</Text>
+        <Text as="span" variant="bodyLg">
+          {item.email || '—'}
+        </Text>
       </IndexTable.Cell>
       <IndexTable.Cell>
-        <Text as="span" variant="bodyLg">{item.selected_product || '—'}</Text>
+        <Text as="span" variant="bodyLg">
+          {item.selected_product || '—'}
+        </Text>
       </IndexTable.Cell>
       <IndexTable.Cell>
-        <Text as="span" variant="bodyLg">{item.phone || '—'}</Text>
+        <Text as="span" variant="bodyLg">
+          {item.phone || '—'}
+        </Text>
       </IndexTable.Cell>
       <IndexTable.Cell>
-        <Text as="span" variant="bodyLg">{item.address || '—'}</Text>
+        <Text as="span" variant="bodyLg">
+          {item.address || '—'}
+        </Text>
       </IndexTable.Cell>
     </IndexTable.Row>
   ));
 
   return (
     <AppProvider i18n={enTranslations}>
-  <Page fullWidth>
-    <Box paddingBlockStart="400" paddingInline="400">
-      <Card>
-        {!loading && submissions.length === 0 ? (
-          <Box padding="400" display="flex" justifyContent="center">
-            <Text variant="bodyLg" as="p">
-              No warranty submissions found.
-            </Text>
-          </Box>
-        ) : (
-          <IndexTable
-            itemCount={submissions.length}
-            selectable={false}
-            headings={[
-              { title: 'Email' },
-              { title: 'Product' },
-              { title: 'Phone' },
-              { title: 'Address' },
-            ]}
-          >
-            {rows}
-          </IndexTable>
-        )}
-      </Card>
-    </Box>
-  </Page>
-</AppProvider>
-
+      <Page fullWidth>
+        <Box padding="0">
+          {!loading && submissions.length === 0 ? (
+            <Box padding="400" display="flex" justifyContent="center">
+              <Text variant="bodyLg" as="p">
+                No warranty submissions found.
+              </Text>
+            </Box>
+          ) : (
+            <IndexTable
+              itemCount={submissions.length}
+              selectable={false}
+              headings={[
+                { title: 'Email' },
+                { title: 'Product' },
+                { title: 'Phone' },
+                { title: 'Address' },
+              ]}
+            >
+              {rows}
+            </IndexTable>
+          )}
+        </Box>
+      </Page>
+    </AppProvider>
   );
 };
 
 export default ViewWarranty;
+
 
 
 
