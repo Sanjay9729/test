@@ -208,6 +208,7 @@ const ViewWarranty = () => {
     const product = item.selected_product ? item.selected_product.toLowerCase() : '';
     const phone = item.phone ? item.phone.toLowerCase() : '';
 
+    // Check if any of the fields include the search term (including partial matching)
     return (
       fullName.includes(lowerCaseSearchTerm) || // Search by full name
       email.includes(lowerCaseSearchTerm) || // Search by email
@@ -295,6 +296,7 @@ const ViewWarranty = () => {
 };
 
 export default ViewWarranty;
+
 
 
 
