@@ -171,7 +171,7 @@ import {
   IndexTable,
   Text,
   Box,
-  TextField,  // Import TextField for search input
+  TextField,
 } from '@shopify/polaris';
 import enTranslations from '@shopify/polaris/locales/en.json';
 
@@ -296,6 +296,7 @@ const ViewWarranty = () => {
 };
 
 export default ViewWarranty;
+
 
 
 
