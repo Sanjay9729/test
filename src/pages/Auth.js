@@ -1,15 +1,15 @@
 import React, { useState, useEffect } from "react";
-import { supabase } from "../supabaseClient";
+import { supabase } from "../supabaseClient"; // Assuming supabaseClient is set up correctly
 import "./Authentication.css";
 
 const Authe = () => {
   const [step, setStep] = useState(1);
   const [selectedProduct, setSelectedProduct] = useState("");
-  const [fullName, setFullName] = useState("");
+  const [fullName, setFullName] = useState(""); // Full name state
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [address, setAddress] = useState("");
-  const [message, setMessage] = useState("");
+  const [fieldErrors, setFieldErrors] = useState({});
   const [loading, setLoading] = useState(true);
   const [loadingProducts, setLoadingProducts] = useState(true);
   const [productSearch, setProductSearch] = useState("");
@@ -24,13 +24,11 @@ const Authe = () => {
         setProducts(data);
         setFilteredProducts(data);
       } catch (err) {
-        console.error(err);
-        setMessage("❌ Failed to load products.");
+        // Silent error - no global message
       } finally {
         setLoadingProducts(false);
       }
     };
-
     fetchProducts();
   }, []);
 
@@ -47,109 +45,85 @@ const Authe = () => {
 
   useEffect(() => {
     const getSession = async () => {
-      const { data } = await supabase.auth.getSession();
-      if (data?.session) {
-        setMessage("✅ Login successful!");
-      }
+      await supabase.auth.getSession(); // No message set
       setLoading(false);
     };
-
     getSession();
 
-    const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === "SIGNED_IN" && session) {
-        setMessage("✅ Login successful!");
-      }
-    });
-
+    const { data: authListener } = supabase.auth.onAuthStateChange(() => {});
     return () => {
       authListener?.subscription?.unsubscribe();
     };
   }, []);
 
   const sendOtp = async () => {
-    if (!email) {
-      setMessage("❌ Please enter a valid email.");
+    if (!email || !validateEmail(email)) {
+      setFieldErrors({ email: "❌ Please enter a valid email." });
       return;
     }
 
     setLoading(true);
-    setMessage("");
+    setFieldErrors({});
 
     try {
       await supabase.auth.signOut();
-      const { error } = await supabase.auth.signInWithOtp({ email });
-
-      if (error) {
-        setMessage("❌ " + error.message);
-      } else {
-        setMessage("📧 OTP sent! Please check your email.");
-      }
+      await supabase.auth.signInWithOtp({ email });
+      // Silent success
     } catch (err) {
-      setMessage("❌ Something went wrong.");
+      // Silent failure
     } finally {
       setLoading(false);
     }
   };
 
+  const validateEmail = (email) => {
+    const regex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/;
+    return regex.test(email);
+  };
+
   const handleSubmit = async () => {
     setLoading(true);
-    setMessage("");
+    setFieldErrors({});
 
     try {
-      const { error } = await supabase.from("submissions").insert([
+      // Insert data into Supabase
+      await supabase.from("submissions").insert([
         {
-          full_name: fullName || null,
+          full_name: fullName || null,  // Ensure fullName is included
           email: email || null,
           phone: phone || null,
           address: address || null,
           selected_product: selectedProduct || null,
         },
       ]);
-
-      if (error) {
-        setMessage("❌ Submission failed: " + error.message);
-      } else {
-        setMessage("✅ Form submitted successfully!");
-        setStep(6);
-      }
+      setStep(6); // Success step
     } catch (err) {
-      setMessage("❌ Error occurred during submission.");
+      console.error("Error submitting data:", err); // Log error if any
     } finally {
       setLoading(false);
     }
   };
 
   const nextStep = () => {
-    if (step === 1 && !fullName) {
-      setMessage("❌ Please enter your full name.");
-      return;
-    }
+    const errors = {};
 
-    if (step === 2 && !email) {
-      setMessage("❌ Please enter your email.");
-      return;
-    }
+    // Validation for each step
+    if (step === 1 && !fullName) errors.fullName = "Please enter your full name.";
+    if (step === 2 && (!email || !validateEmail(email))) errors.email = "Please enter a valid email.";
+    if (step === 3 && !phone) errors.phone = "Please enter your phone number.";
+    if (step === 4 && !address) errors.address = "Please enter your address.";
+    if (step === 5 && !selectedProduct) errors.selectedProduct = "Please select a product.";
 
-    if (step === 3 && !phone) {
-      setMessage("❌ Please enter your phone number.");
-      return;
+    if (Object.keys(errors).length > 0) {
+      setFieldErrors(errors);
+    } else {
+      setFieldErrors({});
+      if (step < 6) setStep(step + 1);
     }
-
-    if (step === 4 && !address) {
-      setMessage("❌ Please enter your address.");
-      return;
-    }
-
-    if (step === 5 && !selectedProduct) {
-      setMessage("❌ Please select a product.");
-      return;
-    }
-
-    if (step < 6) setStep(step + 1);
   };
 
   const prevStep = () => {
+    setFieldErrors({});
     if (step > 1) setStep(step - 1);
   };
 
@@ -162,9 +136,9 @@ const Authe = () => {
           <h2 className="title">Warranty Registration</h2>
 
           <div className="steps">
-            {steps.map((s, index) => (
+            {steps.map((s) => (
               <div
-                key={index}
+                key={s}
                 className={`step-circle ${s === step ? "active" : s < step ? "completed" : ""}`}
               >
                 {s < step ? "✓" : s}
@@ -174,6 +148,7 @@ const Authe = () => {
 
           {!loading && (
             <>
+              {/* Step 1: Full Name */}
               {step === 1 && (
                 <div className="form-group">
                   <label>Full Name</label>
@@ -181,33 +156,38 @@ const Authe = () => {
                     type="text"
                     placeholder="Full Name"
                     value={fullName}
-                    onChange={(e) => setFullName(e.target.value)}
+                    onChange={(e) => {
+                      setFullName(e.target.value);
+                      setFieldErrors({});
+                    }}
                   />
+                  {fieldErrors.fullName && <p className="error">{fieldErrors.fullName}</p>}
                 </div>
               )}
 
+              {/* Step 2: Email */}
               {step === 2 && (
-                <div className="form-group email-step">
+                <div className="form-group">
                   <label>Email</label>
                   <div className="email-input-wrapper">
                     <input
                       type="email"
                       placeholder="Email Address"
                       value={email}
-                      onChange={(e) => setEmail(e.target.value)}
+                      onChange={(e) => {
+                        setEmail(e.target.value);
+                        setFieldErrors({});
+                      }}
                     />
-                    <button
-                      type="button"
-                      className="otp-btn"
-                      onClick={sendOtp}
-                      disabled={loading}
-                    >
+                    <button onClick={sendOtp} disabled={loading} className="otp-btn">
                       {loading ? "Sending..." : "Send OTP"}
                     </button>
                   </div>
+                  {fieldErrors.email && <p className="error">{fieldErrors.email}</p>}
                 </div>
               )}
 
+              {/* Step 3: Phone Number */}
               {step === 3 && (
                 <div className="form-group">
                   <label>Phone Number</label>
@@ -215,11 +195,16 @@ const Authe = () => {
                     type="tel"
                     placeholder="Phone Number"
                     value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
+                    onChange={(e) => {
+                      setPhone(e.target.value);
+                      setFieldErrors({});
+                    }}
                   />
+                  {fieldErrors.phone && <p className="error">{fieldErrors.phone}</p>}
                 </div>
               )}
 
+              {/* Step 4: Address */}
               {step === 4 && (
                 <div className="form-group">
                   <label>Physical Address</label>
@@ -227,11 +212,16 @@ const Authe = () => {
                     rows={3}
                     placeholder="Enter your address"
                     value={address}
-                    onChange={(e) => setAddress(e.target.value)}
+                    onChange={(e) => {
+                      setAddress(e.target.value);
+                      setFieldErrors({});
+                    }}
                   />
+                  {fieldErrors.address && <p className="error">{fieldErrors.address}</p>}
                 </div>
               )}
 
+              {/* Step 5: Product Selection */}
               {step === 5 && (
                 <div className="form-group">
                   <label>Search & Select Product (optional)</label>
@@ -241,11 +231,9 @@ const Authe = () => {
                     value={productSearch}
                     onChange={(e) => setProductSearch(e.target.value)}
                   />
-
                   {selectedProduct && (
                     <p className="selected-product">✅ Selected: {selectedProduct}</p>
                   )}
-
                   <div className="product-list-container">
                     <ul className="product-list">
                       {loadingProducts ? (
@@ -255,9 +243,12 @@ const Authe = () => {
                           <li
                             key={product.id}
                             className={`product-item ${selectedProduct === product.title ? "selected" : ""}`}
-                            onClick={() => setSelectedProduct(product.title)}
+                            onClick={() => {
+                              setSelectedProduct(product.title);
+                              setFieldErrors({});
+                            }}
                           >
-                            {product.images && product.images.length > 0 && (
+                            {product.images?.[0]?.src && (
                               <img
                                 src={product.images[0].src}
                                 alt={product.title}
@@ -272,13 +263,16 @@ const Authe = () => {
                       )}
                     </ul>
                   </div>
-
+                  {fieldErrors.selectedProduct && (
+                    <p className="error">{fieldErrors.selectedProduct}</p>
+                  )}
                   <button className="submit-btn" onClick={handleSubmit}>
                     Submit
                   </button>
                 </div>
               )}
 
+              {/* Step 6: Completion */}
               {step === 6 && (
                 <div className="form-group">
                   <h2>Thank You!</h2>
@@ -301,8 +295,6 @@ const Authe = () => {
                   </button>
                 )}
               </div>
-
-              {message && <p className="message">{message}</p>}
             </>
           )}
         </div>
