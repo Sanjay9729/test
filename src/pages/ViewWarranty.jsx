@@ -200,7 +200,7 @@ const ViewWarranty = () => {
 
   // Filter submissions based on search term
   const filteredSubmissions = submissions.filter((item) => {
-    const lowerCaseSearchTerm = searchTerm.toLowerCase(); // Convert search term to lowercase for case-insensitive comparison
+    const lowerCaseSearchTerm = searchTerm.trim().toLowerCase(); // Trim spaces and lowercase for case-insensitive comparison
 
     // Handle undefined/null or empty values by falling back to empty strings
     const fullName = item.full_name ? item.full_name.toLowerCase() : '';
@@ -268,7 +268,7 @@ const ViewWarranty = () => {
               placeholder="Enter name, email, or product"
             />
           </Box>
-          
+
           {!loading && filteredSubmissions.length === 0 ? (
             <Box display="flex" justifyContent="center">
               <Text variant="bodyLg" as="p">No warranty submissions found.</Text>
@@ -295,6 +295,7 @@ const ViewWarranty = () => {
 };
 
 export default ViewWarranty;
+
 
 
 
