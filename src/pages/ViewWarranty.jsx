@@ -164,7 +164,6 @@
 
 
 // dynamic data 
-
 import React, { useEffect, useState } from 'react';
 import {
   Page,
@@ -183,6 +182,7 @@ const ViewWarranty = () => {
     fetch('/.netlify/functions/getSubmissions')
       .then((res) => res.json())
       .then((data) => {
+        console.log('Fetched submissions:', data); // Debug log
         setSubmissions(data);
         setLoading(false);
       })
@@ -197,8 +197,11 @@ const ViewWarranty = () => {
     plural: 'submissions',
   };
 
-  const { selectedResources, allResourcesSelected, handleSelectionChange } =
-    useIndexResourceState(submissions);
+  const {
+    selectedResources,
+    allResourcesSelected,
+    handleSelectionChange,
+  } = useIndexResourceState(submissions);
 
   const rowMarkup = submissions.map(
     ({ id, full_name, email, selected_product, phone, address }, index) => (
@@ -253,6 +256,7 @@ const ViewWarranty = () => {
 };
 
 export default ViewWarranty;
+
 
 
 
