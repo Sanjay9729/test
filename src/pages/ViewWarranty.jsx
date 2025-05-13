@@ -240,36 +240,38 @@ const ViewWarranty = () => {
     setSelectedSubmission((prev) => ({ ...prev, [field]: value }));
   };
 
-  const handleSave = async () => {
-    try {
-      const { id, ...fieldsToUpdate } = selectedSubmission;
+const handleSave = async () => {
+  try {
+    const { id, ...fieldsToUpdate } = selectedSubmission;
 
-      const response = await fetch('/.netlify/functions/updateSubmission', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id, ...fieldsToUpdate }),
-      });
+    const response = await fetch("/.netlify/functions/updateSubmission", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id, ...fieldsToUpdate }),
+    });
 
-      const result = await response.json();
+    const result = await response.json();
 
-      if (result.error) {
-        console.error("Update failed:", result.error);
-        alert("❌ Update failed");
-        return;
-      }
-
-      const updated = submissions.map((item) =>
-        item.id === selectedSubmission.id ? selectedSubmission : item
-      );
-      setSubmissions(updated);
-
-      alert("✅ Submission updated!");
-      setModalOpen(false);
-    } catch (err) {
-      console.error("Update error:", err);
-      alert("❌ Error while updating");
+    if (result.error) {
+      console.error("Update failed:", result.error);
+      alert("❌ Update failed");
+      return;
     }
-  };
+
+    alert("✅ Saved!");
+    setModalOpen(false);
+
+    // Optional: reload from server to be sure it's synced
+    const res = await fetch("/.netlify/functions/getSubmissions");
+    const freshData = await res.json();
+    setSubmissions(freshData);
+
+  } catch (err) {
+    console.error("Unexpected error:", err);
+    alert("❌ Unexpected error during save");
+  }
+};
+
 
   const rows = filteredSubmissions.map((item, index) => (
     <IndexTable.Row
@@ -456,3 +458,12 @@ export default ViewWarranty;
 // };
 
 // export default ViewWarranty;
+
+
+
+
+
+
+
+
+

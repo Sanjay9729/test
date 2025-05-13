@@ -1,11 +1,6 @@
-const { createClient } = require('@supabase/supabase-js');
+const { createClient } = require("@supabase/supabase-js");
 
-const supabase = createClient(
-  process.env.SUPABASE_URL,
-  process.env.SUPABASE_ANON_KEY
-);
-
-exports.handler = async (event) => {
+exports.handler = async function (event, context) {
   if (event.httpMethod !== "POST") {
     return {
       statusCode: 405,
@@ -13,16 +8,23 @@ exports.handler = async (event) => {
     };
   }
 
-  const data = JSON.parse(event.body);
+  const supabase = createClient(
+    process.env.SUPABASE_URL,
+    process.env.SUPABASE_SERVICE_ROLE_KEY  // ✅ must use service role key
+  );
 
-  if (!data.id) {
+  const body = JSON.parse(event.body);
+
+  const { id, full_name, email, selected_product, phone, address } = body;
+
+  if (!id) {
     return {
       statusCode: 400,
-      body: JSON.stringify({ error: "Missing ID for update" }),
+      body: JSON.stringify({ error: "Missing ID" }),
     };
   }
 
-  const { id, full_name, email, selected_product, phone, address } = data;
+  console.log("🔄 Updating submission ID:", id);
 
   const { error } = await supabase
     .from("submissions")
@@ -36,6 +38,7 @@ exports.handler = async (event) => {
     .eq("id", id);
 
   if (error) {
+    console.error("❌ Supabase update error:", error.message);
     return {
       statusCode: 500,
       body: JSON.stringify({ error: error.message }),
