@@ -166,10 +166,18 @@
 // dynamic data 
 import React, { useEffect, useState } from 'react';
 import {
-  AppProvider, Page, IndexTable, Text, Box,
-  TextField, Button, Modal, FormLayout,
+  AppProvider,
+  Page,
+  IndexTable,
+  Text,
+  Box,
+  TextField,
+  Button,
+  Modal,
+  FormLayout,
 } from '@shopify/polaris';
 import enTranslations from '@shopify/polaris/locales/en.json';
+import Papa from 'papaparse';
 
 const ViewWarranty = () => {
   const [submissions, setSubmissions] = useState([]);
@@ -178,109 +186,140 @@ const ViewWarranty = () => {
   const [selectedSubmission, setSelectedSubmission] = useState(null);
   const [modalOpen, setModalOpen] = useState(false);
 
+  // Fetch submissions
   useEffect(() => {
-    fetch('/.netlify/functions/getSubmissions') // You must also create this!
+    fetch('/.netlify/functions/getSubmissions')
       .then((res) => res.json())
       .then((data) => {
         setSubmissions(data);
         setLoading(false);
+      })
+      .catch((error) => {
+        console.error('Error fetching submissions:', error);
+        setLoading(false);
       });
   }, []);
 
+  // Search filter
+  const handleSearchChange = (value) => {
+    setSearchTerm(value);
+  };
+
+  // CSV Export
+  const exportToCSV = () => {
+    const data = submissions.map((item) => ({
+      full_name: item.full_name,
+      email: item.email,
+      product: item.selected_product,
+      phone: item.phone,
+      address: item.address,
+      created_at: item.created_at,
+    }));
+
+    const csv = Papa.unparse(data);
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = 'warranty_submissions.csv';
+    link.click();
+  };
+
+  const filteredSubmissions = submissions.filter((item) => {
+    const lower = searchTerm.toLowerCase();
+    return (
+      item.full_name?.toLowerCase().includes(lower) ||
+      item.email?.toLowerCase().includes(lower) ||
+      item.selected_product?.toLowerCase().includes(lower) ||
+      item.phone?.toLowerCase().includes(lower)
+    );
+  });
+
+  // Handle row click to open modal
   const handleRowClick = (item) => {
     setSelectedSubmission({ ...item });
     setModalOpen(true);
   };
 
+  // Handle modal input change
   const handleModalChange = (field, value) => {
-    setSelectedSubmission(prev => ({ ...prev, [field]: value }));
+    setSelectedSubmission((prev) => ({ ...prev, [field]: value }));
   };
 
-  const handleSave = async () => {
-    try {
-      const response = await fetch('/.netlify/functions/updateSubmission', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(selectedSubmission),
-      });
+  // Handle modal save
+  const handleSave = () => {
+    console.log('Updated submission:', selectedSubmission);
 
-      const result = await response.json();
-
-      if (!response.ok) {
-        console.error('❌ Failed to save to Supabase:', result.error);
-        return;
-      }
-
-      const updated = submissions.map((s) =>
-        s.id === selectedSubmission.id ? selectedSubmission : s
-      );
-
-      setSubmissions(updated);
-      setModalOpen(false);
-    } catch (err) {
-      console.error('Unexpected error:', err);
-    }
+    // TODO: send to API if needed
+    setModalOpen(false);
   };
 
-  const rows = submissions
-    .filter((item) => {
-      const val = searchTerm.toLowerCase();
-      return (
-        item.full_name?.toLowerCase().includes(val) ||
-        item.email?.toLowerCase().includes(val) ||
-        item.selected_product?.toLowerCase().includes(val)
-      );
-    })
-    .map((item, index) => (
-      <IndexTable.Row
-        id={item.id || index.toString()}
-        key={item.id || index}
-        position={index}
-      >
-        <IndexTable.Cell>
-          <Button plain onClick={() => handleRowClick(item)}>
-            {item.full_name || '—'}
-          </Button>
-        </IndexTable.Cell>
-        <IndexTable.Cell>{item.email}</IndexTable.Cell>
-        <IndexTable.Cell>{item.selected_product}</IndexTable.Cell>
-        <IndexTable.Cell>{item.phone}</IndexTable.Cell>
-        <IndexTable.Cell>{item.address}</IndexTable.Cell>
-      </IndexTable.Row>
-    ));
+  const rows = filteredSubmissions.map((item, index) => (
+    <IndexTable.Row
+      id={item.id || index.toString()}
+      key={item.id || index}
+      position={index}
+      onClick={() => handleRowClick(item)}
+    >
+      <IndexTable.Cell><Text variant="bodyLg">{item.full_name || '—'}</Text></IndexTable.Cell>
+      <IndexTable.Cell><Text variant="bodyLg">{item.email || '—'}</Text></IndexTable.Cell>
+      <IndexTable.Cell><Text variant="bodyLg">{item.selected_product || '—'}</Text></IndexTable.Cell>
+      <IndexTable.Cell><Text variant="bodyLg">{item.phone || '—'}</Text></IndexTable.Cell>
+      <IndexTable.Cell><Text variant="bodyLg">{item.address || '—'}</Text></IndexTable.Cell>
+    </IndexTable.Row>
+  ));
 
   return (
     <AppProvider i18n={enTranslations}>
-      <Page fullWidth title="Warranty Registration">
-        <Box paddingBlockEnd="4">
+      <Page fullWidth>
+        <div style={{ display: 'flex', justifyContent: 'flex-end', paddingBottom: '16px' }}>
+          <Button onClick={exportToCSV}>Export</Button>
+        </div>
+
+        <Box paddingBottom="4">
           <TextField
             label="Search by Name or Details"
             value={searchTerm}
-            onChange={setSearchTerm}
+            onChange={handleSearchChange}
+            placeholder="Enter name, email, or product"
           />
         </Box>
 
-        <IndexTable
-          itemCount={submissions.length}
-          headings={[
-            { title: 'Full Name' },
-            { title: 'Email' },
-            { title: 'Product' },
-            { title: 'Phone' },
-            { title: 'Address' },
-          ]}
-          selectable={false}
-        >
-          {rows}
-        </IndexTable>
+        {!loading && filteredSubmissions.length === 0 ? (
+          <Box display="flex" justifyContent="center">
+            <Text variant="bodyLg">No warranty submissions found.</Text>
+          </Box>
+        ) : (
+          <IndexTable
+            itemCount={filteredSubmissions.length}
+            selectable={false}
+            headings={[
+              { title: 'Full Name' },
+              { title: 'Email' },
+              { title: 'Product' },
+              { title: 'Phone' },
+              { title: 'Address' },
+            ]}
+          >
+            {rows}
+          </IndexTable>
+        )}
 
+        {/* Edit Modal */}
         {selectedSubmission && (
           <Modal
             open={modalOpen}
             onClose={() => setModalOpen(false)}
             title="Edit Submission"
-            primaryAction={{ content: 'Save', onAction: handleSave }}
-            secondaryActions={[{ content: 'Cancel', onAction: () => setModalOpen(false) }]}
+            primaryAction={{
+              content: 'Save',
+              onAction: handleSave,
+            }}
+            secondaryActions={[
+              {
+                content: 'Cancel',
+                onAction: () => setModalOpen(false),
+              },
+            ]}
           >
             <Modal.Section>
               <FormLayout>
@@ -319,9 +358,6 @@ const ViewWarranty = () => {
 };
 
 export default ViewWarranty;
-
-
-
 
 
 
