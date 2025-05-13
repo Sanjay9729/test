@@ -186,7 +186,6 @@ const ViewWarranty = () => {
   const [selectedSubmission, setSelectedSubmission] = useState(null);
   const [modalOpen, setModalOpen] = useState(false);
 
-  // Fetch submissions
   useEffect(() => {
     fetch('/.netlify/functions/getSubmissions')
       .then((res) => res.json())
@@ -200,12 +199,10 @@ const ViewWarranty = () => {
       });
   }, []);
 
-  // Search filter
   const handleSearchChange = (value) => {
     setSearchTerm(value);
   };
 
-  // CSV Export
   const exportToCSV = () => {
     const data = submissions.map((item) => ({
       full_name: item.full_name,
@@ -234,47 +231,62 @@ const ViewWarranty = () => {
     );
   });
 
-  // Handle row click to open modal
   const handleRowClick = (item) => {
     setSelectedSubmission({ ...item });
     setModalOpen(true);
   };
 
-  // Handle modal input change
   const handleModalChange = (field, value) => {
     setSelectedSubmission((prev) => ({ ...prev, [field]: value }));
   };
 
-  // Handle modal save
   const handleSave = () => {
-    console.log('Updated submission:', selectedSubmission);
+    // Update in local state
+    const updatedList = submissions.map((item) =>
+      item.id === selectedSubmission.id ? selectedSubmission : item
+    );
 
-    // TODO: send to API if needed
+    setSubmissions(updatedList);
     setModalOpen(false);
+
+    // Optional: Send to backend
+    fetch('/.netlify/functions/updateSubmission', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(selectedSubmission),
+    })
+      .then((res) => res.json())
+      .then((response) => {
+        console.log('Updated on server:', response);
+      })
+      .catch((error) => {
+        console.error('Update failed:', error);
+      });
   };
 
- const rows = filteredSubmissions.map((item, index) => (
-  <IndexTable.Row
-    id={item.id || index.toString()}
-    key={item.id || index}
-    position={index}
-  >
-    <IndexTable.Cell>
-      <Text as="a" variant="bodyLg" onClick={() => handleRowClick(item)} style={{ cursor: 'pointer', color: '#2c6ecb' }}>
-        {item.full_name || '—'}
-      </Text>
-    </IndexTable.Cell>
-    <IndexTable.Cell><Text variant="bodyLg">{item.email || '—'}</Text></IndexTable.Cell>
-    <IndexTable.Cell><Text variant="bodyLg">{item.selected_product || '—'}</Text></IndexTable.Cell>
-    <IndexTable.Cell><Text variant="bodyLg">{item.phone || '—'}</Text></IndexTable.Cell>
-    <IndexTable.Cell><Text variant="bodyLg">{item.address || '—'}</Text></IndexTable.Cell>
-  </IndexTable.Row>
-));
-
+  const rows = filteredSubmissions.map((item, index) => (
+    <IndexTable.Row
+      id={item.id || index.toString()}
+      key={item.id || index}
+      position={index}
+    >
+      <IndexTable.Cell>
+        <Button plain onClick={() => handleRowClick(item)}>
+          {item.full_name || '—'}
+        </Button>
+      </IndexTable.Cell>
+      <IndexTable.Cell><Text variant="bodyLg">{item.email || '—'}</Text></IndexTable.Cell>
+      <IndexTable.Cell><Text variant="bodyLg">{item.selected_product || '—'}</Text></IndexTable.Cell>
+      <IndexTable.Cell><Text variant="bodyLg">{item.phone || '—'}</Text></IndexTable.Cell>
+      <IndexTable.Cell><Text variant="bodyLg">{item.address || '—'}</Text></IndexTable.Cell>
+    </IndexTable.Row>
+  ));
 
   return (
     <AppProvider i18n={enTranslations}>
-      <Page fullWidth>
+      <Page fullWidth title="Warranty Registration">
         <div style={{ display: 'flex', justifyContent: 'flex-end', paddingBottom: '16px' }}>
           <Button onClick={exportToCSV}>Export</Button>
         </div>
@@ -362,6 +374,7 @@ const ViewWarranty = () => {
 };
 
 export default ViewWarranty;
+
 
 
 
