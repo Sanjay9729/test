@@ -248,31 +248,33 @@ const ViewWarranty = () => {
 
   // Save updates locally + backend
   const handleSave = async () => {
-    try {
-      const response = await fetch('/.netlify/functions/updateSubmission', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(selectedSubmission),
-      });
+  console.log('➡️ Sending this to updateSubmission:', selectedSubmission); // Add this
 
-      const result = await response.json();
+  try {
+    const response = await fetch('/.netlify/functions/updateSubmission', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(selectedSubmission),
+    });
 
-      if (!response.ok) {
-        console.error('Failed to save to Supabase:', result.error);
-        return;
-      }
+    const result = await response.json();
+    console.log('📦 Response from server:', result); // Add this
 
-      // Update state in UI
-      const updatedList = submissions.map((item) =>
-        item.id === selectedSubmission.id ? selectedSubmission : item
-      );
-
-      setSubmissions(updatedList);
-      setModalOpen(false);
-    } catch (error) {
-      console.error('Unexpected error saving:', error);
+    if (!response.ok) {
+      console.error('❌ Failed to save to Supabase:', result.error);
+      return;
     }
-  };
+
+    const updatedList = submissions.map((item) =>
+      item.id === selectedSubmission.id ? selectedSubmission : item
+    );
+
+    setSubmissions(updatedList);
+    setModalOpen(false);
+  } catch (error) {
+    console.error('❌ Unexpected error saving:', error);
+  }
+};
 
   // Render rows
   const rows = filteredSubmissions.map((item, index) => (
