@@ -173,7 +173,6 @@ import {
   Box,
   TextField,
   Button,
-  Layout,
 } from '@shopify/polaris';
 import enTranslations from '@shopify/polaris/locales/en.json';
 import Papa from 'papaparse'; // Import papaparse
@@ -212,14 +211,11 @@ const ViewWarranty = () => {
       created_at: item.created_at,
     }));
 
-    // Convert data to CSV format
     const csv = Papa.unparse(data);
-
-    // Create a Blob object with the CSV data and trigger a download
     const blob = new Blob([csv], { type: 'text/csv' });
     const link = document.createElement('a');
     link.href = URL.createObjectURL(blob);
-    link.download = 'warranty_submissions.csv'; // Filename for the exported file
+    link.download = 'warranty_submissions.csv';
     link.click();
   };
 
@@ -275,52 +271,46 @@ const ViewWarranty = () => {
   return (
     <AppProvider i18n={enTranslations}>
       <Page fullWidth>
-        <Layout>
-          <Layout.Section>
-            <Text variant="headingMd" as="h1">Warranty Registration</Text>
-          </Layout.Section>
-
-          <Layout.Section secondary>
-            <Button primary onClick={exportToCSV}>Export</Button>
-          </Layout.Section>
-        </Layout>
-
-        <Box padding="0">
-          <Box paddingBottom="4">
-            <TextField
-              label="Search by Name or Details"
-              value={searchTerm}
-              onChange={handleSearchChange}
-              placeholder="Enter name, email, or product"
-            />
-          </Box>
-
-          {!loading && filteredSubmissions.length === 0 ? (
-            <Box display="flex" justifyContent="center">
-              <Text variant="bodyLg" as="p">No warranty submissions found.</Text>
-            </Box>
-          ) : (
-            <IndexTable
-              itemCount={filteredSubmissions.length}
-              selectable={false}
-              headings={[
-                { title: 'Full Name' },
-                { title: 'Email' },
-                { title: 'Product' },
-                { title: 'Phone' },
-                { title: 'Address' },
-              ]}
-            >
-              {rows}
-            </IndexTable>
-          )}
+        <Box display="flex" alignItems="center" justifyContent="space-between" paddingBlockEnd="4">
+          <Text variant="headingMd" as="h1">Warranty Registration</Text>
+          <Button primary onClick={exportToCSV}>Export</Button>
         </Box>
+
+        <Box paddingBottom="4">
+          <TextField
+            label="Search by Name or Details"
+            value={searchTerm}
+            onChange={handleSearchChange}
+            placeholder="Enter name, email, or product"
+          />
+        </Box>
+
+        {!loading && filteredSubmissions.length === 0 ? (
+          <Box display="flex" justifyContent="center">
+            <Text variant="bodyLg" as="p">No warranty submissions found.</Text>
+          </Box>
+        ) : (
+          <IndexTable
+            itemCount={filteredSubmissions.length}
+            selectable={false}
+            headings={[
+              { title: 'Full Name' },
+              { title: 'Email' },
+              { title: 'Product' },
+              { title: 'Phone' },
+              { title: 'Address' },
+            ]}
+          >
+            {rows}
+          </IndexTable>
+        )}
       </Page>
     </AppProvider>
   );
 };
 
 export default ViewWarranty;
+
 
 
 
