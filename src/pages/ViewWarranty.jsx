@@ -166,18 +166,10 @@
 // dynamic data 
 import React, { useEffect, useState } from 'react';
 import {
-  AppProvider,
-  Page,
-  IndexTable,
-  Text,
-  Box,
-  TextField,
-  Button,
-  Modal,
-  FormLayout,
+  AppProvider, Page, IndexTable, Text, Box,
+  TextField, Button, Modal, FormLayout,
 } from '@shopify/polaris';
 import enTranslations from '@shopify/polaris/locales/en.json';
-import Papa from 'papaparse';
 
 const ViewWarranty = () => {
   const [submissions, setSubmissions] = useState([]);
@@ -186,167 +178,109 @@ const ViewWarranty = () => {
   const [selectedSubmission, setSelectedSubmission] = useState(null);
   const [modalOpen, setModalOpen] = useState(false);
 
-  // Fetch data from Supabase via Netlify function
   useEffect(() => {
-    fetch('/.netlify/functions/getSubmissions')
+    fetch('/.netlify/functions/getSubmissions') // You must also create this!
       .then((res) => res.json())
       .then((data) => {
         setSubmissions(data);
         setLoading(false);
-      })
-      .catch((error) => {
-        console.error('Error fetching submissions:', error);
-        setLoading(false);
       });
   }, []);
 
-  // Filter by search term
-  const filteredSubmissions = submissions.filter((item) => {
-    const lower = searchTerm.toLowerCase();
-    return (
-      item.full_name?.toLowerCase().includes(lower) ||
-      item.email?.toLowerCase().includes(lower) ||
-      item.selected_product?.toLowerCase().includes(lower) ||
-      item.phone?.toLowerCase().includes(lower)
-    );
-  });
-
-  // Handle search bar input
-  const handleSearchChange = (value) => {
-    setSearchTerm(value);
-  };
-
-  // Export to CSV
-  const exportToCSV = () => {
-    const data = submissions.map((item) => ({
-      full_name: item.full_name,
-      email: item.email,
-      product: item.selected_product,
-      phone: item.phone,
-      address: item.address,
-      created_at: item.created_at,
-    }));
-
-    const csv = Papa.unparse(data);
-    const blob = new Blob([csv], { type: 'text/csv' });
-    const link = document.createElement('a');
-    link.href = URL.createObjectURL(blob);
-    link.download = 'warranty_submissions.csv';
-    link.click();
-  };
-
-  // Open modal on row click
   const handleRowClick = (item) => {
     setSelectedSubmission({ ...item });
     setModalOpen(true);
   };
 
-  // Handle modal field input
   const handleModalChange = (field, value) => {
-    setSelectedSubmission((prev) => ({ ...prev, [field]: value }));
+    setSelectedSubmission(prev => ({ ...prev, [field]: value }));
   };
 
-  // Save updates locally + backend
   const handleSave = async () => {
-  console.log('➡️ Sending this to updateSubmission:', selectedSubmission); // Add this
+    try {
+      const response = await fetch('/.netlify/functions/updateSubmission', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(selectedSubmission),
+      });
 
-  try {
-    const response = await fetch('/.netlify/functions/updateSubmission', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(selectedSubmission),
-    });
+      const result = await response.json();
 
-    const result = await response.json();
-    console.log('📦 Response from server:', result); // Add this
+      if (!response.ok) {
+        console.error('❌ Failed to save to Supabase:', result.error);
+        return;
+      }
 
-    if (!response.ok) {
-      console.error('❌ Failed to save to Supabase:', result.error);
-      return;
+      const updated = submissions.map((s) =>
+        s.id === selectedSubmission.id ? selectedSubmission : s
+      );
+
+      setSubmissions(updated);
+      setModalOpen(false);
+    } catch (err) {
+      console.error('Unexpected error:', err);
     }
+  };
 
-    const updatedList = submissions.map((item) =>
-      item.id === selectedSubmission.id ? selectedSubmission : item
-    );
-
-    setSubmissions(updatedList);
-    setModalOpen(false);
-  } catch (error) {
-    console.error('❌ Unexpected error saving:', error);
-  }
-};
-
-  // Render rows
-  const rows = filteredSubmissions.map((item, index) => (
-    <IndexTable.Row
-      id={item.id || index.toString()}
-      key={item.id || index}
-      position={index}
-    >
-      <IndexTable.Cell>
-        <Button plain onClick={() => handleRowClick(item)}>
-          {item.full_name || '—'}
-        </Button>
-      </IndexTable.Cell>
-      <IndexTable.Cell><Text variant="bodyLg">{item.email || '—'}</Text></IndexTable.Cell>
-      <IndexTable.Cell><Text variant="bodyLg">{item.selected_product || '—'}</Text></IndexTable.Cell>
-      <IndexTable.Cell><Text variant="bodyLg">{item.phone || '—'}</Text></IndexTable.Cell>
-      <IndexTable.Cell><Text variant="bodyLg">{item.address || '—'}</Text></IndexTable.Cell>
-    </IndexTable.Row>
-  ));
+  const rows = submissions
+    .filter((item) => {
+      const val = searchTerm.toLowerCase();
+      return (
+        item.full_name?.toLowerCase().includes(val) ||
+        item.email?.toLowerCase().includes(val) ||
+        item.selected_product?.toLowerCase().includes(val)
+      );
+    })
+    .map((item, index) => (
+      <IndexTable.Row
+        id={item.id || index.toString()}
+        key={item.id || index}
+        position={index}
+      >
+        <IndexTable.Cell>
+          <Button plain onClick={() => handleRowClick(item)}>
+            {item.full_name || '—'}
+          </Button>
+        </IndexTable.Cell>
+        <IndexTable.Cell>{item.email}</IndexTable.Cell>
+        <IndexTable.Cell>{item.selected_product}</IndexTable.Cell>
+        <IndexTable.Cell>{item.phone}</IndexTable.Cell>
+        <IndexTable.Cell>{item.address}</IndexTable.Cell>
+      </IndexTable.Row>
+    ));
 
   return (
     <AppProvider i18n={enTranslations}>
       <Page fullWidth title="Warranty Registration">
-        <div style={{ display: 'flex', justifyContent: 'flex-end', paddingBottom: '16px' }}>
-          <Button onClick={exportToCSV}>Export</Button>
-        </div>
-
-        <Box paddingBottom="4">
+        <Box paddingBlockEnd="4">
           <TextField
             label="Search by Name or Details"
             value={searchTerm}
-            onChange={handleSearchChange}
-            placeholder="Enter name, email, or product"
+            onChange={setSearchTerm}
           />
         </Box>
 
-        {!loading && filteredSubmissions.length === 0 ? (
-          <Box display="flex" justifyContent="center">
-            <Text variant="bodyLg">No warranty submissions found.</Text>
-          </Box>
-        ) : (
-          <IndexTable
-            itemCount={filteredSubmissions.length}
-            selectable={false}
-            headings={[
-              { title: 'Full Name' },
-              { title: 'Email' },
-              { title: 'Product' },
-              { title: 'Phone' },
-              { title: 'Address' },
-            ]}
-          >
-            {rows}
-          </IndexTable>
-        )}
+        <IndexTable
+          itemCount={submissions.length}
+          headings={[
+            { title: 'Full Name' },
+            { title: 'Email' },
+            { title: 'Product' },
+            { title: 'Phone' },
+            { title: 'Address' },
+          ]}
+          selectable={false}
+        >
+          {rows}
+        </IndexTable>
 
-        {/* Edit Modal */}
         {selectedSubmission && (
           <Modal
             open={modalOpen}
             onClose={() => setModalOpen(false)}
             title="Edit Submission"
-            primaryAction={{
-              content: 'Save',
-              onAction: handleSave,
-            }}
-            secondaryActions={[
-              {
-                content: 'Cancel',
-                onAction: () => setModalOpen(false),
-              },
-            ]}
+            primaryAction={{ content: 'Save', onAction: handleSave }}
+            secondaryActions={[{ content: 'Cancel', onAction: () => setModalOpen(false) }]}
           >
             <Modal.Section>
               <FormLayout>
@@ -385,6 +319,7 @@ const ViewWarranty = () => {
 };
 
 export default ViewWarranty;
+
 
 
 
