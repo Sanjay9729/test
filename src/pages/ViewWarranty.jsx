@@ -186,6 +186,7 @@ const ViewWarranty = () => {
   const [selectedSubmission, setSelectedSubmission] = useState(null);
   const [modalOpen, setModalOpen] = useState(false);
 
+  // Fetch data from Supabase via Netlify function
   useEffect(() => {
     fetch('/.netlify/functions/getSubmissions')
       .then((res) => res.json())
@@ -199,10 +200,23 @@ const ViewWarranty = () => {
       });
   }, []);
 
+  // Filter by search term
+  const filteredSubmissions = submissions.filter((item) => {
+    const lower = searchTerm.toLowerCase();
+    return (
+      item.full_name?.toLowerCase().includes(lower) ||
+      item.email?.toLowerCase().includes(lower) ||
+      item.selected_product?.toLowerCase().includes(lower) ||
+      item.phone?.toLowerCase().includes(lower)
+    );
+  });
+
+  // Handle search bar input
   const handleSearchChange = (value) => {
     setSearchTerm(value);
   };
 
+  // Export to CSV
   const exportToCSV = () => {
     const data = submissions.map((item) => ({
       full_name: item.full_name,
@@ -221,51 +235,46 @@ const ViewWarranty = () => {
     link.click();
   };
 
-  const filteredSubmissions = submissions.filter((item) => {
-    const lower = searchTerm.toLowerCase();
-    return (
-      item.full_name?.toLowerCase().includes(lower) ||
-      item.email?.toLowerCase().includes(lower) ||
-      item.selected_product?.toLowerCase().includes(lower) ||
-      item.phone?.toLowerCase().includes(lower)
-    );
-  });
-
+  // Open modal on row click
   const handleRowClick = (item) => {
     setSelectedSubmission({ ...item });
     setModalOpen(true);
   };
 
+  // Handle modal field input
   const handleModalChange = (field, value) => {
     setSelectedSubmission((prev) => ({ ...prev, [field]: value }));
   };
 
-  const handleSave = () => {
-    // Update in local state
-    const updatedList = submissions.map((item) =>
-      item.id === selectedSubmission.id ? selectedSubmission : item
-    );
-
-    setSubmissions(updatedList);
-    setModalOpen(false);
-
-    // Optional: Send to backend
-    fetch('/.netlify/functions/updateSubmission', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(selectedSubmission),
-    })
-      .then((res) => res.json())
-      .then((response) => {
-        console.log('Updated on server:', response);
-      })
-      .catch((error) => {
-        console.error('Update failed:', error);
+  // Save updates locally + backend
+  const handleSave = async () => {
+    try {
+      const response = await fetch('/.netlify/functions/updateSubmission', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(selectedSubmission),
       });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        console.error('Failed to save to Supabase:', result.error);
+        return;
+      }
+
+      // Update state in UI
+      const updatedList = submissions.map((item) =>
+        item.id === selectedSubmission.id ? selectedSubmission : item
+      );
+
+      setSubmissions(updatedList);
+      setModalOpen(false);
+    } catch (error) {
+      console.error('Unexpected error saving:', error);
+    }
   };
 
+  // Render rows
   const rows = filteredSubmissions.map((item, index) => (
     <IndexTable.Row
       id={item.id || index.toString()}
@@ -374,6 +383,7 @@ const ViewWarranty = () => {
 };
 
 export default ViewWarranty;
+
 
 
 
