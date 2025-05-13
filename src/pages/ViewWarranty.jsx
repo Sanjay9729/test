@@ -173,15 +173,20 @@ import {
   Box,
   TextField,
   Button,
+  Modal,
+  FormLayout,
 } from '@shopify/polaris';
 import enTranslations from '@shopify/polaris/locales/en.json';
-import Papa from 'papaparse'; // Import papaparse
+import Papa from 'papaparse';
 
 const ViewWarranty = () => {
   const [submissions, setSubmissions] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState(''); // State to hold the search term
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedSubmission, setSelectedSubmission] = useState(null);
+  const [modalOpen, setModalOpen] = useState(false);
 
+  // Fetch submissions
   useEffect(() => {
     fetch('/.netlify/functions/getSubmissions')
       .then((res) => res.json())
@@ -195,12 +200,12 @@ const ViewWarranty = () => {
       });
   }, []);
 
-  // Function to handle search
+  // Search filter
   const handleSearchChange = (value) => {
     setSearchTerm(value);
   };
 
-  // Function to trigger export
+  // CSV Export
   const exportToCSV = () => {
     const data = submissions.map((item) => ({
       full_name: item.full_name,
@@ -220,61 +225,55 @@ const ViewWarranty = () => {
   };
 
   const filteredSubmissions = submissions.filter((item) => {
-    const lowerCaseSearchTerm = searchTerm.trim().toLowerCase();
-    const fullName = item.full_name ? item.full_name.toLowerCase() : '';
-    const email = item.email ? item.email.toLowerCase() : '';
-    const product = item.selected_product ? item.selected_product.toLowerCase() : '';
-    const phone = item.phone ? item.phone.toLowerCase() : '';
-
+    const lower = searchTerm.toLowerCase();
     return (
-      fullName.includes(lowerCaseSearchTerm) ||
-      email.includes(lowerCaseSearchTerm) ||
-      product.includes(lowerCaseSearchTerm) ||
-      phone.includes(lowerCaseSearchTerm)
+      item.full_name?.toLowerCase().includes(lower) ||
+      item.email?.toLowerCase().includes(lower) ||
+      item.selected_product?.toLowerCase().includes(lower) ||
+      item.phone?.toLowerCase().includes(lower)
     );
   });
+
+  // Handle row click to open modal
+  const handleRowClick = (item) => {
+    setSelectedSubmission({ ...item });
+    setModalOpen(true);
+  };
+
+  // Handle modal input change
+  const handleModalChange = (field, value) => {
+    setSelectedSubmission((prev) => ({ ...prev, [field]: value }));
+  };
+
+  // Handle modal save
+  const handleSave = () => {
+    console.log('Updated submission:', selectedSubmission);
+
+    // TODO: send to API if needed
+    setModalOpen(false);
+  };
 
   const rows = filteredSubmissions.map((item, index) => (
     <IndexTable.Row
       id={item.id || index.toString()}
       key={item.id || index}
       position={index}
+      onClick={() => handleRowClick(item)}
     >
-      <IndexTable.Cell>
-        <Box paddingBlock="300">
-          <Text as="span" variant="bodyLg">{item.full_name || '—'}</Text>
-        </Box>
-      </IndexTable.Cell>
-      <IndexTable.Cell>
-        <Box paddingBlock="300">
-          <Text as="span" variant="bodyLg">{item.email || '—'}</Text>
-        </Box>
-      </IndexTable.Cell>
-      <IndexTable.Cell>
-        <Box paddingBlock="300">
-          <Text as="span" variant="bodyLg">{item.selected_product || '—'}</Text>
-        </Box>
-      </IndexTable.Cell>
-      <IndexTable.Cell>
-        <Box paddingBlock="300">
-          <Text as="span" variant="bodyLg">{item.phone || '—'}</Text>
-        </Box>
-      </IndexTable.Cell>
-      <IndexTable.Cell>
-        <Box paddingBlock="300">
-          <Text as="span" variant="bodyLg">{item.address || '—'}</Text>
-        </Box>
-      </IndexTable.Cell>
+      <IndexTable.Cell><Text variant="bodyLg">{item.full_name || '—'}</Text></IndexTable.Cell>
+      <IndexTable.Cell><Text variant="bodyLg">{item.email || '—'}</Text></IndexTable.Cell>
+      <IndexTable.Cell><Text variant="bodyLg">{item.selected_product || '—'}</Text></IndexTable.Cell>
+      <IndexTable.Cell><Text variant="bodyLg">{item.phone || '—'}</Text></IndexTable.Cell>
+      <IndexTable.Cell><Text variant="bodyLg">{item.address || '—'}</Text></IndexTable.Cell>
     </IndexTable.Row>
   ));
 
   return (
     <AppProvider i18n={enTranslations}>
-      <Page fullWidth>
-        <Box display="flex" alignItems="center" justifyContent="space-between" paddingBlockEnd="4">
-          <Text variant="headingMd" as="h1">Warranty Registration</Text>
-          <Button primary onClick={exportToCSV}>Export</Button>
-        </Box>
+      <Page fullWidth title="Warranty Registration">
+        <div style={{ display: 'flex', justifyContent: 'flex-end', paddingBottom: '16px' }}>
+          <Button onClick={exportToCSV}>Export</Button>
+        </div>
 
         <Box paddingBottom="4">
           <TextField
@@ -287,7 +286,7 @@ const ViewWarranty = () => {
 
         {!loading && filteredSubmissions.length === 0 ? (
           <Box display="flex" justifyContent="center">
-            <Text variant="bodyLg" as="p">No warranty submissions found.</Text>
+            <Text variant="bodyLg">No warranty submissions found.</Text>
           </Box>
         ) : (
           <IndexTable
@@ -304,12 +303,62 @@ const ViewWarranty = () => {
             {rows}
           </IndexTable>
         )}
+
+        {/* Edit Modal */}
+        {selectedSubmission && (
+          <Modal
+            open={modalOpen}
+            onClose={() => setModalOpen(false)}
+            title="Edit Submission"
+            primaryAction={{
+              content: 'Save',
+              onAction: handleSave,
+            }}
+            secondaryActions={[
+              {
+                content: 'Cancel',
+                onAction: () => setModalOpen(false),
+              },
+            ]}
+          >
+            <Modal.Section>
+              <FormLayout>
+                <TextField
+                  label="Full Name"
+                  value={selectedSubmission.full_name}
+                  onChange={(value) => handleModalChange('full_name', value)}
+                />
+                <TextField
+                  label="Email"
+                  value={selectedSubmission.email}
+                  onChange={(value) => handleModalChange('email', value)}
+                />
+                <TextField
+                  label="Product"
+                  value={selectedSubmission.selected_product}
+                  onChange={(value) => handleModalChange('selected_product', value)}
+                />
+                <TextField
+                  label="Phone"
+                  value={selectedSubmission.phone}
+                  onChange={(value) => handleModalChange('phone', value)}
+                />
+                <TextField
+                  label="Address"
+                  value={selectedSubmission.address}
+                  onChange={(value) => handleModalChange('address', value)}
+                />
+              </FormLayout>
+            </Modal.Section>
+          </Modal>
+        )}
       </Page>
     </AppProvider>
   );
 };
 
 export default ViewWarranty;
+
 
 
 
