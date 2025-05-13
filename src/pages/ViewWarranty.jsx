@@ -253,24 +253,28 @@ const ViewWarranty = () => {
     setModalOpen(false);
   };
 
-  const rows = filteredSubmissions.map((item, index) => (
-    <IndexTable.Row
-      id={item.id || index.toString()}
-      key={item.id || index}
-      position={index}
-      onClick={() => handleRowClick(item)}
-    >
-      <IndexTable.Cell><Text variant="bodyLg">{item.full_name || '—'}</Text></IndexTable.Cell>
-      <IndexTable.Cell><Text variant="bodyLg">{item.email || '—'}</Text></IndexTable.Cell>
-      <IndexTable.Cell><Text variant="bodyLg">{item.selected_product || '—'}</Text></IndexTable.Cell>
-      <IndexTable.Cell><Text variant="bodyLg">{item.phone || '—'}</Text></IndexTable.Cell>
-      <IndexTable.Cell><Text variant="bodyLg">{item.address || '—'}</Text></IndexTable.Cell>
-    </IndexTable.Row>
-  ));
+ const rows = filteredSubmissions.map((item, index) => (
+  <IndexTable.Row
+    id={item.id || index.toString()}
+    key={item.id || index}
+    position={index}
+  >
+    <IndexTable.Cell>
+      <Text as="a" variant="bodyLg" onClick={() => handleRowClick(item)} style={{ cursor: 'pointer', color: '#2c6ecb' }}>
+        {item.full_name || '—'}
+      </Text>
+    </IndexTable.Cell>
+    <IndexTable.Cell><Text variant="bodyLg">{item.email || '—'}</Text></IndexTable.Cell>
+    <IndexTable.Cell><Text variant="bodyLg">{item.selected_product || '—'}</Text></IndexTable.Cell>
+    <IndexTable.Cell><Text variant="bodyLg">{item.phone || '—'}</Text></IndexTable.Cell>
+    <IndexTable.Cell><Text variant="bodyLg">{item.address || '—'}</Text></IndexTable.Cell>
+  </IndexTable.Row>
+));
+
 
   return (
     <AppProvider i18n={enTranslations}>
-      <Page fullWidth title="Warranty Registration">
+      <Page fullWidth>
         <div style={{ display: 'flex', justifyContent: 'flex-end', paddingBottom: '16px' }}>
           <Button onClick={exportToCSV}>Export</Button>
         </div>
