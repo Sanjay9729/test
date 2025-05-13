@@ -1,6 +1,5 @@
 const { createClient } = require("@supabase/supabase-js");
 
-
 exports.handler = async function (event, context) {
   console.log("▶️ getSubmissions triggered");
 
@@ -10,11 +9,9 @@ exports.handler = async function (event, context) {
   if (!supabaseUrl || !supabaseKey) {
     console.error("❌ Missing environment variables");
     return {
-        statusCode: 200,
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
-      };
-      
+      statusCode: 500,
+      body: JSON.stringify({ error: "Missing Supabase credentials" }),
+    };
   }
 
   const supabase = createClient(supabaseUrl, supabaseKey);

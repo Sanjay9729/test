@@ -186,7 +186,6 @@ const ViewWarranty = () => {
   const [selectedSubmission, setSelectedSubmission] = useState(null);
   const [modalOpen, setModalOpen] = useState(false);
 
-  // Fetch submissions
   useEffect(() => {
     fetch('/.netlify/functions/getSubmissions')
       .then((res) => res.json())
@@ -200,12 +199,10 @@ const ViewWarranty = () => {
       });
   }, []);
 
-  // Search filter
   const handleSearchChange = (value) => {
     setSearchTerm(value);
   };
 
-  // CSV Export
   const exportToCSV = () => {
     const data = submissions.map((item) => ({
       full_name: item.full_name,
@@ -234,23 +231,44 @@ const ViewWarranty = () => {
     );
   });
 
-  // Handle row click to open modal
   const handleRowClick = (item) => {
     setSelectedSubmission({ ...item });
     setModalOpen(true);
   };
 
-  // Handle modal input change
   const handleModalChange = (field, value) => {
     setSelectedSubmission((prev) => ({ ...prev, [field]: value }));
   };
 
-  // Handle modal save
-  const handleSave = () => {
-    console.log('Updated submission:', selectedSubmission);
+  const handleSave = async () => {
+    try {
+      const { id, ...fieldsToUpdate } = selectedSubmission;
 
-    // TODO: send to API if needed
-    setModalOpen(false);
+      const response = await fetch('/.netlify/functions/updateSubmission', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, ...fieldsToUpdate }),
+      });
+
+      const result = await response.json();
+
+      if (result.error) {
+        console.error("Update failed:", result.error);
+        alert("❌ Update failed");
+        return;
+      }
+
+      const updated = submissions.map((item) =>
+        item.id === selectedSubmission.id ? selectedSubmission : item
+      );
+      setSubmissions(updated);
+
+      alert("✅ Submission updated!");
+      setModalOpen(false);
+    } catch (err) {
+      console.error("Update error:", err);
+      alert("❌ Error while updating");
+    }
   };
 
   const rows = filteredSubmissions.map((item, index) => (
@@ -304,7 +322,6 @@ const ViewWarranty = () => {
           </IndexTable>
         )}
 
-        {/* Edit Modal */}
         {selectedSubmission && (
           <Modal
             open={modalOpen}
@@ -358,6 +375,7 @@ const ViewWarranty = () => {
 };
 
 export default ViewWarranty;
+
 
 
 
