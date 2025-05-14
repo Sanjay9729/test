@@ -175,7 +175,9 @@ import {
   Button,
   Modal,
   FormLayout,
+  Icon
 } from '@shopify/polaris';
+import { SearchIcon } from '@shopify/polaris-icons';
 import enTranslations from '@shopify/polaris/locales/en.json';
 import Papa from 'papaparse';
 
@@ -195,7 +197,9 @@ const ViewWarranty = () => {
       });
   }, []);
 
-  const handleSearchChange = (value) => setSearchTerm(value);
+  const handleSearchChange = (value) => {
+    setSearchTerm(value);
+  };
 
   const exportToCSV = () => {
     const data = submissions.map(({ full_name, email, selected_product, phone, address, created_at }) => ({
@@ -274,13 +278,15 @@ const ViewWarranty = () => {
     }
   };
 
+  // ✅ Improved search logic with trim and address support
   const filteredSubmissions = submissions.filter((item) => {
-    const lower = searchTerm.toLowerCase();
+    const lower = searchTerm.trim().toLowerCase();
     return (
       item.full_name?.toLowerCase().includes(lower) ||
       item.email?.toLowerCase().includes(lower) ||
       item.selected_product?.toLowerCase().includes(lower) ||
-      item.phone?.toLowerCase().includes(lower)
+      item.phone?.toLowerCase().includes(lower) ||
+      item.address?.toLowerCase().includes(lower)
     );
   });
 
@@ -302,8 +308,7 @@ const ViewWarranty = () => {
   return (
     <AppProvider i18n={enTranslations}>
       <Page fullWidth>
-
-        {/* ✅ RIGHT-ALIGNED BUTTONS with BOTTOM PADDING */}
+        {/* Export & Import Buttons */}
         <div style={{
           display: 'flex',
           justifyContent: 'flex-end',
@@ -325,14 +330,18 @@ const ViewWarranty = () => {
         </div>
 
         {/* Search Input */}
-        <TextField
-          label="Search by Name or Details"
-          value={searchTerm}
-          onChange={handleSearchChange}
-          placeholder="Enter name, email, or product"
-        />
+        <div style={{ marginBottom: '16px' }}>
+          <TextField
+            placeholder="Search by Name, Email, Product, Phone or Address"
+            value={searchTerm}
+            onChange={handleSearchChange}
+            clearButton
+            autoComplete="off"
+            prefix={<Icon source={SearchIcon} color="subdued" />}
+          />
+        </div>
 
-        {/* Table or empty message */}
+        {/* Table or Message */}
         {!loading && filteredSubmissions.length === 0 ? (
           <Box display="flex" justifyContent="center" padding="8">
             <Text>No warranty submissions found.</Text>
@@ -364,11 +373,31 @@ const ViewWarranty = () => {
           >
             <Modal.Section>
               <FormLayout>
-                <TextField label="Full Name" value={selectedSubmission.full_name} onChange={(val) => handleModalChange('full_name', val)} />
-                <TextField label="Email" value={selectedSubmission.email} onChange={(val) => handleModalChange('email', val)} />
-                <TextField label="Product" value={selectedSubmission.selected_product} onChange={(val) => handleModalChange('selected_product', val)} />
-                <TextField label="Phone" value={selectedSubmission.phone} onChange={(val) => handleModalChange('phone', val)} />
-                <TextField label="Address" value={selectedSubmission.address} onChange={(val) => handleModalChange('address', val)} />
+                <TextField
+                  label="Full Name"
+                  value={selectedSubmission.full_name}
+                  onChange={(val) => handleModalChange('full_name', val)}
+                />
+                <TextField
+                  label="Email"
+                  value={selectedSubmission.email}
+                  onChange={(val) => handleModalChange('email', val)}
+                />
+                <TextField
+                  label="Product"
+                  value={selectedSubmission.selected_product}
+                  onChange={(val) => handleModalChange('selected_product', val)}
+                />
+                <TextField
+                  label="Phone"
+                  value={selectedSubmission.phone}
+                  onChange={(val) => handleModalChange('phone', val)}
+                />
+                <TextField
+                  label="Address"
+                  value={selectedSubmission.address}
+                  onChange={(val) => handleModalChange('address', val)}
+                />
               </FormLayout>
             </Modal.Section>
           </Modal>
@@ -379,6 +408,7 @@ const ViewWarranty = () => {
 };
 
 export default ViewWarranty;
+
 
 
 
