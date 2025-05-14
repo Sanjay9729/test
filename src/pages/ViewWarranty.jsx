@@ -175,11 +175,11 @@ import {
   Button,
   Modal,
   FormLayout,
-  Icon,
 } from '@shopify/polaris';
-import { SearchIcon } from '@shopify/polaris-icons';
 import enTranslations from '@shopify/polaris/locales/en.json';
 import Papa from 'papaparse';
+import { Icon } from '@shopify/polaris';
+import { SearchIcon } from '@shopify/polaris-icons';
 
 const ViewWarranty = () => {
   const [submissions, setSubmissions] = useState([]);
@@ -197,9 +197,7 @@ const ViewWarranty = () => {
       });
   }, []);
 
-  const handleSearchChange = (value) => {
-    setSearchTerm(value);
-  };
+  const handleSearchChange = (value) => setSearchTerm(value);
 
   const exportToCSV = () => {
     const data = submissions.map(({ full_name, email, selected_product, phone, address, created_at }) => ({
@@ -278,20 +276,14 @@ const ViewWarranty = () => {
     }
   };
 
-  // ✅ Fixed: Full word match for full_name only
   const filteredSubmissions = submissions.filter((item) => {
     const lower = searchTerm.trim().toLowerCase();
-    if (!lower) return true;
-
-    const fullNameWords = item.full_name?.toLowerCase().split(/\s+/) || [];
-    const fullNameMatch = fullNameWords.includes(lower);
-
-    const emailMatch = item.email?.toLowerCase().includes(lower);
-    const productMatch = item.selected_product?.toLowerCase().includes(lower);
-    const phoneMatch = item.phone?.toLowerCase().includes(lower);
-    const addressMatch = item.address?.toLowerCase().includes(lower);
-
-    return fullNameMatch || emailMatch || productMatch || phoneMatch || addressMatch;
+    return (
+      item.full_name?.toLowerCase().trim().includes(lower) ||
+      item.email?.toLowerCase().trim().includes(lower) ||
+      item.selected_product?.toLowerCase().trim().includes(lower) ||
+      item.phone?.toLowerCase().trim().includes(lower)
+    );
   });
 
   const rows = filteredSubmissions.map((item, index) => (
@@ -312,7 +304,8 @@ const ViewWarranty = () => {
   return (
     <AppProvider i18n={enTranslations}>
       <Page fullWidth>
-        {/* Buttons */}
+
+        {/* ✅ RIGHT-ALIGNED BUTTONS with BOTTOM PADDING */}
         <div style={{
           display: 'flex',
           justifyContent: 'flex-end',
@@ -336,7 +329,7 @@ const ViewWarranty = () => {
         {/* Search Input */}
         <div style={{ marginBottom: '16px' }}>
           <TextField
-            placeholder="Search by Name, Email, Product, Phone or Address"
+            placeholder="Search by Name, Email, Product or Phone"
             value={searchTerm}
             onChange={handleSearchChange}
             clearButton
@@ -345,7 +338,7 @@ const ViewWarranty = () => {
           />
         </div>
 
-        {/* Table or Empty Message */}
+        {/* Table or empty message */}
         {!loading && filteredSubmissions.length === 0 ? (
           <Box display="flex" justifyContent="center" padding="8">
             <Text>No warranty submissions found.</Text>
@@ -366,7 +359,7 @@ const ViewWarranty = () => {
           </IndexTable>
         )}
 
-        {/* Modal */}
+        {/* Edit Modal */}
         {selectedSubmission && (
           <Modal
             open={modalOpen}
@@ -377,31 +370,11 @@ const ViewWarranty = () => {
           >
             <Modal.Section>
               <FormLayout>
-                <TextField
-                  label="Full Name"
-                  value={selectedSubmission.full_name}
-                  onChange={(val) => handleModalChange('full_name', val)}
-                />
-                <TextField
-                  label="Email"
-                  value={selectedSubmission.email}
-                  onChange={(val) => handleModalChange('email', val)}
-                />
-                <TextField
-                  label="Product"
-                  value={selectedSubmission.selected_product}
-                  onChange={(val) => handleModalChange('selected_product', val)}
-                />
-                <TextField
-                  label="Phone"
-                  value={selectedSubmission.phone}
-                  onChange={(val) => handleModalChange('phone', val)}
-                />
-                <TextField
-                  label="Address"
-                  value={selectedSubmission.address}
-                  onChange={(val) => handleModalChange('address', val)}
-                />
+                <TextField label="Full Name" value={selectedSubmission.full_name} onChange={(val) => handleModalChange('full_name', val)} />
+                <TextField label="Email" value={selectedSubmission.email} onChange={(val) => handleModalChange('email', val)} />
+                <TextField label="Product" value={selectedSubmission.selected_product} onChange={(val) => handleModalChange('selected_product', val)} />
+                <TextField label="Phone" value={selectedSubmission.phone} onChange={(val) => handleModalChange('phone', val)} />
+                <TextField label="Address" value={selectedSubmission.address} onChange={(val) => handleModalChange('address', val)} />
               </FormLayout>
             </Modal.Section>
           </Modal>
