@@ -296,11 +296,11 @@ const ViewWarranty = () => {
       position={index}
       onClick={() => handleRowClick(item)}
     >
-      <IndexTable.Cell><Text>{item.full_name || '—'}</Text></IndexTable.Cell>
-      <IndexTable.Cell><Text>{item.email || '—'}</Text></IndexTable.Cell>
-      <IndexTable.Cell><Text>{item.selected_product || '—'}</Text></IndexTable.Cell>
-      <IndexTable.Cell><Text>{item.phone || '—'}</Text></IndexTable.Cell>
-      <IndexTable.Cell><Text>{item.address || '—'}</Text></IndexTable.Cell>
+      <IndexTable.Cell><Box paddingBlock="3"><Text>{item.full_name || '—'}</Text></Box></IndexTable.Cell>
+      <IndexTable.Cell><Box paddingBlock="3"><Text>{item.email || '—'}</Text></Box></IndexTable.Cell>
+      <IndexTable.Cell><Box paddingBlock="3"><Text>{item.selected_product || '—'}</Text></Box></IndexTable.Cell>
+      <IndexTable.Cell><Box paddingBlock="3"><Text>{item.phone || '—'}</Text></Box></IndexTable.Cell>
+      <IndexTable.Cell><Box paddingBlock="3"><Text>{item.address || '—'}</Text></Box></IndexTable.Cell>
     </IndexTable.Row>
   ));
 
@@ -313,7 +313,6 @@ const ViewWarranty = () => {
           justifyContent: 'flex-end',
           gap: '10px',
           marginBottom: '10px',
-          marginTop: '10px'
         }}>
           <Button onClick={exportToCSV}>Export</Button>
           <Button onClick={() => document.getElementById('csvFileInput').click()}>
@@ -331,7 +330,7 @@ const ViewWarranty = () => {
         {/* Search Input */}
         <div style={{ marginBottom: '16px' }}>
           <TextField
-            placeholder="Search by Name, Email, Product or Phone"
+            placeholder="Search by Name"
             value={searchTerm}
             onChange={handleSearchChange}
             clearButton
@@ -387,6 +386,8 @@ const ViewWarranty = () => {
 };
 
 export default ViewWarranty;
+
+
 
 
 
