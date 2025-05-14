@@ -173,20 +173,18 @@ import {
   Box,
   TextField,
   Button,
-  Modal,
-  FormLayout,
   Icon,
 } from '@shopify/polaris';
 import enTranslations from '@shopify/polaris/locales/en.json';
 import Papa from 'papaparse';
 import { SearchIcon } from '@shopify/polaris-icons';
+import { useNavigate } from 'react-router-dom'; // 👈 NEW import
 
 const ViewWarranty = () => {
   const [submissions, setSubmissions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const [modalOpen, setModalOpen] = useState(false);
-  const [selectedSubmission, setSelectedSubmission] = useState(null);
+  const navigate = useNavigate(); // 👈 NEW hook
 
   useEffect(() => {
     fetch('/.netlify/functions/getSubmissions')
@@ -249,31 +247,9 @@ const ViewWarranty = () => {
     });
   };
 
+  // 👉 Navigates to edit page
   const handleRowClick = (item) => {
-    setSelectedSubmission(item);
-    setModalOpen(true);
-  };
-
-  const handleModalChange = (field, value) => {
-    setSelectedSubmission((prev) => ({ ...prev, [field]: value }));
-  };
-
-  const handleSave = async () => {
-    const { id, ...fieldsToUpdate } = selectedSubmission;
-    const response = await fetch("/.netlify/functions/updateSubmission", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id, ...fieldsToUpdate }),
-    });
-    const result = await response.json();
-    if (!result.error) {
-      alert("✅ Saved!");
-      setModalOpen(false);
-      const refreshed = await fetch("/.netlify/functions/getSubmissions");
-      setSubmissions(await refreshed.json());
-    } else {
-      alert("❌ Failed");
-    }
+    navigate(`/edit/${item.id}`);
   };
 
   // ✅ Smart Search Logic
@@ -294,7 +270,7 @@ const ViewWarranty = () => {
       id={item.id?.toString() || index.toString()}
       key={item.id || index}
       position={index}
-      onClick={() => handleRowClick(item)}
+      onClick={() => handleRowClick(item)} // 👈 Row click to navigate
     >
       <IndexTable.Cell><Box paddingBlock="3"><Text>{item.full_name || '—'}</Text></Box></IndexTable.Cell>
       <IndexTable.Cell><Box paddingBlock="3"><Text>{item.email || '—'}</Text></Box></IndexTable.Cell>
@@ -359,33 +335,13 @@ const ViewWarranty = () => {
             {rows}
           </IndexTable>
         )}
-
-        {/* Edit Modal */}
-        {selectedSubmission && (
-          <Modal
-            open={modalOpen}
-            onClose={() => setModalOpen(false)}
-            title="Edit Submission"
-            primaryAction={{ content: 'Save', onAction: handleSave }}
-            secondaryActions={[{ content: 'Cancel', onAction: () => setModalOpen(false) }]}
-          >
-            <Modal.Section>
-              <FormLayout>
-                <TextField label="Full Name" value={selectedSubmission.full_name} onChange={(val) => handleModalChange('full_name', val)} />
-                <TextField label="Email" value={selectedSubmission.email} onChange={(val) => handleModalChange('email', val)} />
-                <TextField label="Product" value={selectedSubmission.selected_product} onChange={(val) => handleModalChange('selected_product', val)} />
-                <TextField label="Phone" value={selectedSubmission.phone} onChange={(val) => handleModalChange('phone', val)} />
-                <TextField label="Address" value={selectedSubmission.address} onChange={(val) => handleModalChange('address', val)} />
-              </FormLayout>
-            </Modal.Section>
-          </Modal>
-        )}
       </Page>
     </AppProvider>
   );
 };
 
 export default ViewWarranty;
+
 
 
 

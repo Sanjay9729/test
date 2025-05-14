@@ -3,6 +3,7 @@ import { Route, BrowserRouter as Router, Routes } from 'react-router-dom';
 import Auth from './pages/Auth';
 import Home from './pages/Home';
 import ViewWarranty from './pages/ViewWarranty';
+import EditWarranty from './pages/EditWarranty';
 
 
 function App() {
@@ -12,6 +13,7 @@ function App() {
         <Route path="/login" element={<Auth />} />
         <Route path="/submission" element={<ViewWarranty />} />
         <Route path="/" element={<Home />} />
+         <Route path="/edit/:id" element={<EditWarranty />} />
       </Routes>
     </Router>
   );
