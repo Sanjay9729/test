@@ -1,20 +1,22 @@
 import React, { useState, useEffect } from "react";
-import { supabase } from "../supabaseClient"; // Assuming supabaseClient is set up correctly
+import { supabase } from "../supabaseClient";
 import "./Authentication.css";
 
 const Authe = () => {
   const [step, setStep] = useState(1);
   const [selectedProduct, setSelectedProduct] = useState("");
-  const [fullName, setFullName] = useState(""); // Full name state
+  const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [address, setAddress] = useState("");
   const [fieldErrors, setFieldErrors] = useState({});
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [loadingProducts, setLoadingProducts] = useState(true);
   const [productSearch, setProductSearch] = useState("");
   const [products, setProducts] = useState([]);
   const [filteredProducts, setFilteredProducts] = useState([]);
+  const [otpSentMessage, setOtpSentMessage] = useState("");
+  const [loginSuccessMessage, setLoginSuccessMessage] = useState("");
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -24,7 +26,7 @@ const Authe = () => {
         setProducts(data);
         setFilteredProducts(data);
       } catch (err) {
-        // Silent error - no global message
+        console.error("Product fetch error:", err);
       } finally {
         setLoadingProducts(false);
       }
@@ -45,12 +47,18 @@ const Authe = () => {
 
   useEffect(() => {
     const getSession = async () => {
-      await supabase.auth.getSession(); // No message set
+      await supabase.auth.getSession();
       setLoading(false);
     };
     getSession();
 
-    const { data: authListener } = supabase.auth.onAuthStateChange(() => {});
+    const { data: authListener } = supabase.auth.onAuthStateChange((event) => {
+      if (event === "SIGNED_IN") {
+        setOtpSentMessage(""); // ✅ clear "please check email" message
+        setLoginSuccessMessage("✅ Login successful.");
+      }
+    });
+
     return () => {
       authListener?.subscription?.unsubscribe();
     };
@@ -58,19 +66,21 @@ const Authe = () => {
 
   const sendOtp = async () => {
     if (!email || !validateEmail(email)) {
-      setFieldErrors({ email: "❌ Please enter a valid email." });
+      setFieldErrors({ email: "Please enter a valid email." });
       return;
     }
 
     setLoading(true);
     setFieldErrors({});
+    setOtpSentMessage("");
+    setLoginSuccessMessage("");
 
     try {
       await supabase.auth.signOut();
       await supabase.auth.signInWithOtp({ email });
-      // Silent success
+      setOtpSentMessage("📧 Please check your email and login.");
     } catch (err) {
-      // Silent failure
+      console.error("OTP Send Error:", err.message);
     } finally {
       setLoading(false);
     }
@@ -86,19 +96,18 @@ const Authe = () => {
     setFieldErrors({});
 
     try {
-      // Insert data into Supabase
       await supabase.from("submissions").insert([
         {
-          full_name: fullName || null,  // Ensure fullName is included
+          full_name: fullName || null,
           email: email || null,
           phone: phone || null,
           address: address || null,
           selected_product: selectedProduct || null,
         },
       ]);
-      setStep(6); // Success step
+      setStep(6);
     } catch (err) {
-      console.error("Error submitting data:", err); // Log error if any
+      console.error("Submission error:", err);
     } finally {
       setLoading(false);
     }
@@ -106,10 +115,9 @@ const Authe = () => {
 
   const nextStep = () => {
     const errors = {};
-
-    // Validation for each step
     if (step === 1 && !fullName) errors.fullName = "Please enter your full name.";
-    if (step === 2 && (!email || !validateEmail(email))) errors.email = "Please enter a valid email.";
+    if (step === 2 && (!email || !validateEmail(email)))
+      errors.email = "Please enter a valid email.";
     if (step === 3 && !phone) errors.phone = "Please enter your phone number.";
     if (step === 4 && !address) errors.address = "Please enter your address.";
     if (step === 5 && !selectedProduct) errors.selectedProduct = "Please select a product.";
@@ -148,7 +156,6 @@ const Authe = () => {
 
           {!loading && (
             <>
-              {/* Step 1: Full Name */}
               {step === 1 && (
                 <div className="form-group">
                   <label>Full Name</label>
@@ -165,7 +172,6 @@ const Authe = () => {
                 </div>
               )}
 
-              {/* Step 2: Email */}
               {step === 2 && (
                 <div className="form-group">
                   <label>Email</label>
@@ -177,6 +183,8 @@ const Authe = () => {
                       onChange={(e) => {
                         setEmail(e.target.value);
                         setFieldErrors({});
+                        setOtpSentMessage("");
+                        setLoginSuccessMessage("");
                       }}
                     />
                     <button onClick={sendOtp} disabled={loading} className="otp-btn">
@@ -184,10 +192,17 @@ const Authe = () => {
                     </button>
                   </div>
                   {fieldErrors.email && <p className="error">{fieldErrors.email}</p>}
+
+                  {/* Message Box */}
+                  {(otpSentMessage || loginSuccessMessage) && (
+                    <div className="message-box">
+                      {otpSentMessage && <p className="info-message">{otpSentMessage}</p>}
+                      {loginSuccessMessage && <p className="success-message">{loginSuccessMessage}</p>}
+                    </div>
+                  )}
                 </div>
               )}
 
-              {/* Step 3: Phone Number */}
               {step === 3 && (
                 <div className="form-group">
                   <label>Phone Number</label>
@@ -204,7 +219,6 @@ const Authe = () => {
                 </div>
               )}
 
-              {/* Step 4: Address */}
               {step === 4 && (
                 <div className="form-group">
                   <label>Physical Address</label>
@@ -221,7 +235,6 @@ const Authe = () => {
                 </div>
               )}
 
-              {/* Step 5: Product Selection */}
               {step === 5 && (
                 <div className="form-group">
                   <label>Search & Select Product (optional)</label>
@@ -242,7 +255,9 @@ const Authe = () => {
                         filteredProducts.map((product) => (
                           <li
                             key={product.id}
-                            className={`product-item ${selectedProduct === product.title ? "selected" : ""}`}
+                            className={`product-item ${
+                              selectedProduct === product.title ? "selected" : ""
+                            }`}
                             onClick={() => {
                               setSelectedProduct(product.title);
                               setFieldErrors({});
@@ -272,7 +287,6 @@ const Authe = () => {
                 </div>
               )}
 
-              {/* Step 6: Completion */}
               {step === 6 && (
                 <div className="form-group">
                   <h2>Thank You!</h2>

@@ -32,17 +32,30 @@ const Home = () => {
   }
 
   return (
-    <div style={{ padding: 20 }}>
-      {user ? (
-        <>
-          <h2>Welcome! {formatDisplayName(user.email)}</h2>
-          <p>Email: {user.email}</p>
-          <button onClick={handleLogout}>Logout</button>
-        </>
-      ) : (
-        <p>Loading...</p>
-      )}
-    </div>
+     <div style={{ padding: 20 }}>
+    {user ? (
+      <>
+        <h2 style={{ fontSize: "20px", marginBottom: "10px" }}>
+          Welcome! {formatDisplayName(user.email)}
+        </h2>
+        <p style={{ fontSize: "16px", marginBottom: "20px" }}>
+          Email: {user.email}
+        </p>
+        <button style={{
+          background: "black",
+          color: "white",
+          padding: "10px 16px",
+          fontSize: "16px",
+          border: "none",
+          cursor: "pointer"
+        }} onClick={handleLogout}>
+          Logout
+        </button>
+      </>
+    ) : (
+      <p>Loading...</p>
+    )}
+  </div>
   )
 }
 
