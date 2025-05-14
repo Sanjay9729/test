@@ -175,10 +175,10 @@ import {
   Button,
   Modal,
   FormLayout,
+  Icon,
 } from '@shopify/polaris';
 import enTranslations from '@shopify/polaris/locales/en.json';
 import Papa from 'papaparse';
-import { Icon } from '@shopify/polaris';
 import { SearchIcon } from '@shopify/polaris-icons';
 
 const ViewWarranty = () => {
@@ -276,14 +276,17 @@ const ViewWarranty = () => {
     }
   };
 
+  // ✅ Smart Search Logic
   const filteredSubmissions = submissions.filter((item) => {
-    const lower = searchTerm.trim().toLowerCase();
-    return (
-      item.full_name?.toLowerCase().trim().includes(lower) ||
-      item.email?.toLowerCase().trim().includes(lower) ||
-      item.selected_product?.toLowerCase().trim().includes(lower) ||
-      item.phone?.toLowerCase().trim().includes(lower)
-    );
+    const searchWords = searchTerm.trim().toLowerCase().split(/\s+/);
+    const fieldsToSearch = [
+      item.full_name || '',
+      item.email || '',
+      item.selected_product || '',
+      item.phone || '',
+    ];
+    const fieldText = fieldsToSearch.join(' ').toLowerCase();
+    return searchWords.every((word) => fieldText.includes(word));
   });
 
   const rows = filteredSubmissions.map((item, index) => (
@@ -304,8 +307,7 @@ const ViewWarranty = () => {
   return (
     <AppProvider i18n={enTranslations}>
       <Page fullWidth>
-
-        {/* ✅ RIGHT-ALIGNED BUTTONS with BOTTOM PADDING */}
+        {/* Buttons */}
         <div style={{
           display: 'flex',
           justifyContent: 'flex-end',
@@ -338,7 +340,7 @@ const ViewWarranty = () => {
           />
         </div>
 
-        {/* Table or empty message */}
+        {/* Table or empty state */}
         {!loading && filteredSubmissions.length === 0 ? (
           <Box display="flex" justifyContent="center" padding="8">
             <Text>No warranty submissions found.</Text>
@@ -385,6 +387,7 @@ const ViewWarranty = () => {
 };
 
 export default ViewWarranty;
+
 
 
 
