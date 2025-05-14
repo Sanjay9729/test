@@ -278,21 +278,20 @@ const ViewWarranty = () => {
     }
   };
 
-  // ✅ Fixed search logic (no partial match for full_name)
+  // ✅ Fixed: Full word match for full_name only
   const filteredSubmissions = submissions.filter((item) => {
     const lower = searchTerm.trim().toLowerCase();
     if (!lower) return true;
 
-    const fullNameWords = item.full_name?.toLowerCase().split(' ') || [];
+    const fullNameWords = item.full_name?.toLowerCase().split(/\s+/) || [];
     const fullNameMatch = fullNameWords.includes(lower);
 
-    return (
-      fullNameMatch ||
-      item.email?.toLowerCase().includes(lower) ||
-      item.selected_product?.toLowerCase().includes(lower) ||
-      item.phone?.toLowerCase().includes(lower) ||
-      item.address?.toLowerCase().includes(lower)
-    );
+    const emailMatch = item.email?.toLowerCase().includes(lower);
+    const productMatch = item.selected_product?.toLowerCase().includes(lower);
+    const phoneMatch = item.phone?.toLowerCase().includes(lower);
+    const addressMatch = item.address?.toLowerCase().includes(lower);
+
+    return fullNameMatch || emailMatch || productMatch || phoneMatch || addressMatch;
   });
 
   const rows = filteredSubmissions.map((item, index) => (
@@ -313,7 +312,7 @@ const ViewWarranty = () => {
   return (
     <AppProvider i18n={enTranslations}>
       <Page fullWidth>
-        {/* Export & Import Buttons */}
+        {/* Buttons */}
         <div style={{
           display: 'flex',
           justifyContent: 'flex-end',
@@ -346,7 +345,7 @@ const ViewWarranty = () => {
           />
         </div>
 
-        {/* Table or Empty State */}
+        {/* Table or Empty Message */}
         {!loading && filteredSubmissions.length === 0 ? (
           <Box display="flex" justifyContent="center" padding="8">
             <Text>No warranty submissions found.</Text>
@@ -367,7 +366,7 @@ const ViewWarranty = () => {
           </IndexTable>
         )}
 
-        {/* Edit Modal */}
+        {/* Modal */}
         {selectedSubmission && (
           <Modal
             open={modalOpen}
@@ -413,6 +412,7 @@ const ViewWarranty = () => {
 };
 
 export default ViewWarranty;
+
 
 
 
