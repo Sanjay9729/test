@@ -278,11 +278,16 @@ const ViewWarranty = () => {
     }
   };
 
-  // ✅ Robust case-insensitive, trimmed search filter
+  // ✅ Fixed search logic (no partial match for full_name)
   const filteredSubmissions = submissions.filter((item) => {
     const lower = searchTerm.trim().toLowerCase();
+    if (!lower) return true;
+
+    const fullNameWords = item.full_name?.toLowerCase().split(' ') || [];
+    const fullNameMatch = fullNameWords.includes(lower);
+
     return (
-      item.full_name?.toLowerCase().includes(lower) ||
+      fullNameMatch ||
       item.email?.toLowerCase().includes(lower) ||
       item.selected_product?.toLowerCase().includes(lower) ||
       item.phone?.toLowerCase().includes(lower) ||
@@ -329,7 +334,7 @@ const ViewWarranty = () => {
           />
         </div>
 
-        {/* Search Field */}
+        {/* Search Input */}
         <div style={{ marginBottom: '16px' }}>
           <TextField
             placeholder="Search by Name, Email, Product, Phone or Address"
@@ -408,6 +413,7 @@ const ViewWarranty = () => {
 };
 
 export default ViewWarranty;
+
 
 
 
