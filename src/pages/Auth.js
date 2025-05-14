@@ -21,7 +21,7 @@ const Authe = () => {
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        const res = await fetch("https://brilliant-kashata-1d4944.netlify.app/.netlify/functions/products");
+        const res = await fetch("https://warranty-registration.netlify.app/.netlify/functions/products");
         const data = await res.json();
         setProducts(data);
         setFilteredProducts(data);
