@@ -175,7 +175,7 @@ import {
   Button,
   Modal,
   FormLayout,
-  Icon
+  Icon,
 } from '@shopify/polaris';
 import { SearchIcon } from '@shopify/polaris-icons';
 import enTranslations from '@shopify/polaris/locales/en.json';
@@ -278,7 +278,7 @@ const ViewWarranty = () => {
     }
   };
 
-  // ✅ Improved search logic with trim and address support
+  // ✅ Robust case-insensitive, trimmed search filter
   const filteredSubmissions = submissions.filter((item) => {
     const lower = searchTerm.trim().toLowerCase();
     return (
@@ -329,7 +329,7 @@ const ViewWarranty = () => {
           />
         </div>
 
-        {/* Search Input */}
+        {/* Search Field */}
         <div style={{ marginBottom: '16px' }}>
           <TextField
             placeholder="Search by Name, Email, Product, Phone or Address"
@@ -341,7 +341,7 @@ const ViewWarranty = () => {
           />
         </div>
 
-        {/* Table or Message */}
+        {/* Table or Empty State */}
         {!loading && filteredSubmissions.length === 0 ? (
           <Box display="flex" justifyContent="center" padding="8">
             <Text>No warranty submissions found.</Text>
@@ -408,6 +408,7 @@ const ViewWarranty = () => {
 };
 
 export default ViewWarranty;
+
 
 
 
