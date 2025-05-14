@@ -408,3 +408,18 @@ img.image-preview {
   align-items: center;
 }
 
+.info-message {
+  color: #007bff;
+  font-size: 16px;
+  margin-top: 8px;
+}
+
+.success-message {
+  color: green;
+  font-size: 16px;
+  margin-top: 8px;
+}
+
+.message-box {
+  margin-top: 12px;
+}

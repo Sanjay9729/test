@@ -183,8 +183,8 @@ const ViewWarranty = () => {
   const [submissions, setSubmissions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedSubmission, setSelectedSubmission] = useState(null);
   const [modalOpen, setModalOpen] = useState(false);
+  const [selectedSubmission, setSelectedSubmission] = useState(null);
 
   useEffect(() => {
     fetch('/.netlify/functions/getSubmissions')
@@ -192,25 +192,19 @@ const ViewWarranty = () => {
       .then((data) => {
         setSubmissions(data);
         setLoading(false);
-      })
-      .catch((error) => {
-        console.error('Error fetching submissions:', error);
-        setLoading(false);
       });
   }, []);
 
-  const handleSearchChange = (value) => {
-    setSearchTerm(value);
-  };
+  const handleSearchChange = (value) => setSearchTerm(value);
 
   const exportToCSV = () => {
-    const data = submissions.map((item) => ({
-      full_name: item.full_name,
-      email: item.email,
-      product: item.selected_product,
-      phone: item.phone,
-      address: item.address,
-      created_at: item.created_at,
+    const data = submissions.map(({ full_name, email, selected_product, phone, address, created_at }) => ({
+      full_name,
+      email,
+      product: selected_product,
+      phone,
+      address,
+      created_at,
     }));
 
     const csv = Papa.unparse(data);
@@ -219,6 +213,65 @@ const ViewWarranty = () => {
     link.href = URL.createObjectURL(blob);
     link.download = 'warranty_submissions.csv';
     link.click();
+  };
+
+  const handleCSVImport = (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    Papa.parse(file, {
+      header: true,
+      skipEmptyLines: true,
+      complete: async (results) => {
+        try {
+          const response = await fetch("/.netlify/functions/importCSVToSupabase", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ data: results.data }),
+          });
+
+          const result = await response.json();
+
+          if (result.success) {
+            alert("✅ Import successful");
+            const refreshed = await fetch("/.netlify/functions/getSubmissions");
+            setSubmissions(await refreshed.json());
+          } else {
+            alert("❌ Import failed");
+          }
+        } catch (err) {
+          console.error("Import Error:", err);
+          alert("❌ Unexpected error");
+        }
+      },
+    });
+  };
+
+  const handleRowClick = (item) => {
+    setSelectedSubmission(item);
+    setModalOpen(true);
+  };
+
+  const handleModalChange = (field, value) => {
+    setSelectedSubmission((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const handleSave = async () => {
+    const { id, ...fieldsToUpdate } = selectedSubmission;
+    const response = await fetch("/.netlify/functions/updateSubmission", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id, ...fieldsToUpdate }),
+    });
+    const result = await response.json();
+    if (!result.error) {
+      alert("✅ Saved!");
+      setModalOpen(false);
+      const refreshed = await fetch("/.netlify/functions/getSubmissions");
+      setSubmissions(await refreshed.json());
+    } else {
+      alert("❌ Failed");
+    }
   };
 
   const filteredSubmissions = submissions.filter((item) => {
@@ -231,82 +284,58 @@ const ViewWarranty = () => {
     );
   });
 
-  const handleRowClick = (item) => {
-    setSelectedSubmission({ ...item });
-    setModalOpen(true);
-  };
-
-  const handleModalChange = (field, value) => {
-    setSelectedSubmission((prev) => ({ ...prev, [field]: value }));
-  };
-
-const handleSave = async () => {
-  try {
-    const { id, ...fieldsToUpdate } = selectedSubmission;
-
-    const response = await fetch("/.netlify/functions/updateSubmission", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id, ...fieldsToUpdate }),
-    });
-
-    const result = await response.json();
-
-    if (result.error) {
-      console.error("Update failed:", result.error);
-      alert("❌ Update failed");
-      return;
-    }
-
-    alert("✅ Saved!");
-    setModalOpen(false);
-
-    // Optional: reload from server to be sure it's synced
-    const res = await fetch("/.netlify/functions/getSubmissions");
-    const freshData = await res.json();
-    setSubmissions(freshData);
-
-  } catch (err) {
-    console.error("Unexpected error:", err);
-    alert("❌ Unexpected error during save");
-  }
-};
-
-
   const rows = filteredSubmissions.map((item, index) => (
     <IndexTable.Row
-      id={item.id || index.toString()}
+      id={item.id?.toString() || index.toString()}
       key={item.id || index}
       position={index}
       onClick={() => handleRowClick(item)}
     >
-      <IndexTable.Cell><Text variant="bodyLg">{item.full_name || '—'}</Text></IndexTable.Cell>
-      <IndexTable.Cell><Text variant="bodyLg">{item.email || '—'}</Text></IndexTable.Cell>
-      <IndexTable.Cell><Text variant="bodyLg">{item.selected_product || '—'}</Text></IndexTable.Cell>
-      <IndexTable.Cell><Text variant="bodyLg">{item.phone || '—'}</Text></IndexTable.Cell>
-      <IndexTable.Cell><Text variant="bodyLg">{item.address || '—'}</Text></IndexTable.Cell>
+      <IndexTable.Cell><Text>{item.full_name || '—'}</Text></IndexTable.Cell>
+      <IndexTable.Cell><Text>{item.email || '—'}</Text></IndexTable.Cell>
+      <IndexTable.Cell><Text>{item.selected_product || '—'}</Text></IndexTable.Cell>
+      <IndexTable.Cell><Text>{item.phone || '—'}</Text></IndexTable.Cell>
+      <IndexTable.Cell><Text>{item.address || '—'}</Text></IndexTable.Cell>
     </IndexTable.Row>
   ));
 
   return (
     <AppProvider i18n={enTranslations}>
       <Page fullWidth>
-        <div style={{ display: 'flex', justifyContent: 'flex-end', paddingBottom: '16px' }}>
+
+        {/* ✅ RIGHT-ALIGNED BUTTONS with BOTTOM PADDING */}
+        <div style={{
+          display: 'flex',
+          justifyContent: 'flex-end',
+          gap: '10px',
+          marginBottom: '10px',
+          marginTop: '10px'
+        }}>
           <Button onClick={exportToCSV}>Export</Button>
+          <Button onClick={() => document.getElementById('csvFileInput').click()}>
+            Import CSV
+          </Button>
+          <input
+            id="csvFileInput"
+            type="file"
+            accept=".csv"
+            style={{ display: 'none' }}
+            onChange={handleCSVImport}
+          />
         </div>
 
-        <Box paddingBottom="4">
-          <TextField
-            label="Search by Name or Details"
-            value={searchTerm}
-            onChange={handleSearchChange}
-            placeholder="Enter name, email, or product"
-          />
-        </Box>
+        {/* Search Input */}
+        <TextField
+          label="Search by Name or Details"
+          value={searchTerm}
+          onChange={handleSearchChange}
+          placeholder="Enter name, email, or product"
+        />
 
+        {/* Table or empty message */}
         {!loading && filteredSubmissions.length === 0 ? (
-          <Box display="flex" justifyContent="center">
-            <Text variant="bodyLg">No warranty submissions found.</Text>
+          <Box display="flex" justifyContent="center" padding="8">
+            <Text>No warranty submissions found.</Text>
           </Box>
         ) : (
           <IndexTable
@@ -324,49 +353,22 @@ const handleSave = async () => {
           </IndexTable>
         )}
 
+        {/* Edit Modal */}
         {selectedSubmission && (
           <Modal
             open={modalOpen}
             onClose={() => setModalOpen(false)}
             title="Edit Submission"
-            primaryAction={{
-              content: 'Save',
-              onAction: handleSave,
-            }}
-            secondaryActions={[
-              {
-                content: 'Cancel',
-                onAction: () => setModalOpen(false),
-              },
-            ]}
+            primaryAction={{ content: 'Save', onAction: handleSave }}
+            secondaryActions={[{ content: 'Cancel', onAction: () => setModalOpen(false) }]}
           >
             <Modal.Section>
               <FormLayout>
-                <TextField
-                  label="Full Name"
-                  value={selectedSubmission.full_name}
-                  onChange={(value) => handleModalChange('full_name', value)}
-                />
-                <TextField
-                  label="Email"
-                  value={selectedSubmission.email}
-                  onChange={(value) => handleModalChange('email', value)}
-                />
-                <TextField
-                  label="Product"
-                  value={selectedSubmission.selected_product}
-                  onChange={(value) => handleModalChange('selected_product', value)}
-                />
-                <TextField
-                  label="Phone"
-                  value={selectedSubmission.phone}
-                  onChange={(value) => handleModalChange('phone', value)}
-                />
-                <TextField
-                  label="Address"
-                  value={selectedSubmission.address}
-                  onChange={(value) => handleModalChange('address', value)}
-                />
+                <TextField label="Full Name" value={selectedSubmission.full_name} onChange={(val) => handleModalChange('full_name', val)} />
+                <TextField label="Email" value={selectedSubmission.email} onChange={(val) => handleModalChange('email', val)} />
+                <TextField label="Product" value={selectedSubmission.selected_product} onChange={(val) => handleModalChange('selected_product', val)} />
+                <TextField label="Phone" value={selectedSubmission.phone} onChange={(val) => handleModalChange('phone', val)} />
+                <TextField label="Address" value={selectedSubmission.address} onChange={(val) => handleModalChange('address', val)} />
               </FormLayout>
             </Modal.Section>
           </Modal>
@@ -379,6 +381,207 @@ const handleSave = async () => {
 export default ViewWarranty;
 
 
+
+
+
+
+// static 14-05-25
+
+// import React, { useState } from 'react';
+// import {
+//   AppProvider,
+//   Page,
+//   IndexTable,
+//   Text,
+//   Box,
+//   TextField,
+//   Button,
+//   Modal,
+//   FormLayout,
+// } from '@shopify/polaris';
+// import enTranslations from '@shopify/polaris/locales/en.json';
+// import Papa from 'papaparse';
+
+// const ViewWarranty = () => {
+//   const [submissions, setSubmissions] = useState([
+//     {
+//       id: '1',
+//       full_name: 'John Doe',
+//       email: 'john@example.com',
+//       selected_product: 'Toaster Model X',
+//       phone: '123-456-7890',
+//       address: '123 Main St, Cityville',
+//       created_at: '2024-05-01',
+//     },
+//     {
+//       id: '2',
+//       full_name: 'Jane Smith',
+//       email: 'jane@example.com',
+//       selected_product: 'Blender Pro 9000',
+//       phone: '987-654-3210',
+//       address: '456 Elm St, Townsville',
+//       created_at: '2024-04-20',
+//     },
+//   ]);
+
+//   const [searchTerm, setSearchTerm] = useState('');
+//   const [selectedSubmission, setSelectedSubmission] = useState(null);
+//   const [modalOpen, setModalOpen] = useState(false);
+
+//   const handleSearchChange = (value) => {
+//     setSearchTerm(value);
+//   };
+
+//   const exportToCSV = () => {
+//     const data = submissions.map((item) => ({
+//       full_name: item.full_name,
+//       email: item.email,
+//       product: item.selected_product,
+//       phone: item.phone,
+//       address: item.address,
+//       created_at: item.created_at,
+//     }));
+
+//     const csv = Papa.unparse(data);
+//     const blob = new Blob([csv], { type: 'text/csv' });
+//     const link = document.createElement('a');
+//     link.href = URL.createObjectURL(blob);
+//     link.download = 'warranty_submissions.csv';
+//     link.click();
+//   };
+
+//   const filteredSubmissions = submissions.filter((item) => {
+//     const lower = searchTerm.toLowerCase();
+//     return (
+//       item.full_name?.toLowerCase().includes(lower) ||
+//       item.email?.toLowerCase().includes(lower) ||
+//       item.selected_product?.toLowerCase().includes(lower) ||
+//       item.phone?.toLowerCase().includes(lower)
+//     );
+//   });
+
+//   const handleRowClick = (item) => {
+//     setSelectedSubmission({ ...item });
+//     setModalOpen(true);
+//   };
+
+//   const handleModalChange = (field, value) => {
+//     setSelectedSubmission((prev) => ({ ...prev, [field]: value }));
+//   };
+
+//   const handleSave = () => {
+//     const updated = submissions.map((sub) =>
+//       sub.id === selectedSubmission.id ? selectedSubmission : sub
+//     );
+//     setSubmissions(updated);
+//     setModalOpen(false);
+//     alert('✅ Saved!');
+//   };
+
+//   const rows = filteredSubmissions.map((item, index) => (
+//     <IndexTable.Row
+//       id={item.id}
+//       key={item.id}
+//       position={index}
+//       onClick={() => handleRowClick(item)}
+//     >
+//       <IndexTable.Cell><Text variant="bodyLg">{item.full_name || '—'}</Text></IndexTable.Cell>
+//       <IndexTable.Cell><Text variant="bodyLg">{item.email || '—'}</Text></IndexTable.Cell>
+//       <IndexTable.Cell><Text variant="bodyLg">{item.selected_product || '—'}</Text></IndexTable.Cell>
+//       <IndexTable.Cell><Text variant="bodyLg">{item.phone || '—'}</Text></IndexTable.Cell>
+//       <IndexTable.Cell><Text variant="bodyLg">{item.address || '—'}</Text></IndexTable.Cell>
+//     </IndexTable.Row>
+//   ));
+
+//   return (
+//     <AppProvider i18n={enTranslations}>
+//       <Page fullWidth>
+//         <div style={{ display: 'flex', justifyContent: 'flex-end', paddingBottom: '16px' }}>
+//           <Button onClick={exportToCSV}>Export</Button>
+//         </div>
+
+//         <Box paddingBottom="4">
+//           <TextField
+//             label="Search by Name or Details"
+//             value={searchTerm}
+//             onChange={handleSearchChange}
+//             placeholder="Enter name, email, or product"
+//           />
+//         </Box>
+
+//         {filteredSubmissions.length === 0 ? (
+//           <Box display="flex" justifyContent="center">
+//             <Text variant="bodyLg">No warranty submissions found.</Text>
+//           </Box>
+//         ) : (
+//           <IndexTable
+//             itemCount={filteredSubmissions.length}
+//             selectable={false}
+//             headings={[
+//               { title: 'Full Name' },
+//               { title: 'Email' },
+//               { title: 'Product' },
+//               { title: 'Phone' },
+//               { title: 'Address' },
+//             ]}
+//           >
+//             {rows}
+//           </IndexTable>
+//         )}
+
+//         {selectedSubmission && (
+//           <Modal
+//             open={modalOpen}
+//             onClose={() => setModalOpen(false)}
+//             title="Edit Submission"
+//             primaryAction={{
+//               content: 'Save',
+//               onAction: handleSave,
+//             }}
+//             secondaryActions={[
+//               {
+//                 content: 'Cancel',
+//                 onAction: () => setModalOpen(false),
+//               },
+//             ]}
+//           >
+//             <Modal.Section>
+//               <FormLayout>
+//                 <TextField
+//                   label="Full Name"
+//                   value={selectedSubmission.full_name}
+//                   onChange={(value) => handleModalChange('full_name', value)}
+//                 />
+//                 <TextField
+//                   label="Email"
+//                   value={selectedSubmission.email}
+//                   onChange={(value) => handleModalChange('email', value)}
+//                 />
+//                 <TextField
+//                   label="Product"
+//                   value={selectedSubmission.selected_product}
+//                   onChange={(value) => handleModalChange('selected_product', value)}
+//                 />
+//                 <TextField
+//                   label="Phone"
+//                   value={selectedSubmission.phone}
+//                   onChange={(value) => handleModalChange('phone', value)}
+//                 />
+//                 <TextField
+//                   label="Address"
+//                   value={selectedSubmission.address}
+//                   onChange={(value) => handleModalChange('address', value)}
+//                 />
+//               </FormLayout>
+//             </Modal.Section>
+//           </Modal>
+//         )}
+//       </Page>
+//     </AppProvider>
+//   );
+// };
+
+// export default ViewWarranty;
 
 
 
