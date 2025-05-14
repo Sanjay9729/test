@@ -13,7 +13,7 @@ function App() {
         <Route path="/login" element={<Auth />} />
         <Route path="/submission" element={<ViewWarranty />} />
         <Route path="/" element={<Home />} />
-         <Route path="/edit/:id" element={<EditWarranty />} />
+        <Route path="/admin/edit/:id" element={<EditWarranty />} />
       </Routes>
     </Router>
   );
