@@ -10,7 +10,7 @@ exports.handler = async (event) => {
   }
 
   const { data, error } = await supabase
-    .from('email_otps')
+    .from('submissions')
     .select('*')
     .eq('email', email)
     .eq('otp', otp)

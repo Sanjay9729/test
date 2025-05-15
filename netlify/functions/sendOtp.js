@@ -35,7 +35,7 @@ exports.handler = async (event) => {
     const expiresAt = new Date(Date.now() + 10 * 60000).toISOString();
 
     const { error } = await supabase
-      .from('email_otps')
+      .from('submissions')
       .insert({ email, otp, expires_at: expiresAt });
 
     if (error) {
