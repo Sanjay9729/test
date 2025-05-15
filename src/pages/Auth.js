@@ -21,6 +21,7 @@ const Authe = () => {
   const [otpSentMessage, setOtpSentMessage] = useState("");
   const [loginSuccessMessage, setLoginSuccessMessage] = useState("");
 
+  // Fetch product list
   useEffect(() => {
     const fetchProducts = async () => {
       try {
@@ -37,6 +38,7 @@ const Authe = () => {
     fetchProducts();
   }, []);
 
+  // Filter products based on search
   useEffect(() => {
     if (productSearch.trim() === "") {
       setFilteredProducts(products);
@@ -48,11 +50,9 @@ const Authe = () => {
     }
   }, [productSearch, products]);
 
-  const validateEmail = (email) => {
-    const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return regex.test(email);
-  };
+  const validateEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 
+  // Send OTP
   const sendOtpCustom = async () => {
     setLoading(true);
     setOtpSentMessage("");
@@ -69,40 +69,31 @@ const Authe = () => {
         method: "POST",
         body: JSON.stringify({ email }),
       });
-
       const data = await res.json();
-      console.log("OTP Response Data:", data);
-
       if (!res.ok) {
-        console.error("OTP error:", data);
-        setFieldErrors({
-          email: data.error || "OTP sending failed. Try again.",
-        });
+        setFieldErrors({ email: data.error || "OTP send failed" });
       } else {
         setOtpSent(true);
         setOtpSentMessage("📧 OTP sent to your email.");
       }
     } catch (err) {
       console.error("Send OTP Error:", err);
-      setFieldErrors({ email: "Network error. Please try again." });
+      setFieldErrors({ email: "Network error while sending OTP." });
     } finally {
       setLoading(false);
     }
   };
 
+  // Verify OTP
   const verifyOtpCustom = async () => {
-    setFieldErrors({});
     setLoading(true);
-
+    setFieldErrors({});
     try {
       const res = await fetch("/.netlify/functions/verifyOtp", {
         method: "POST",
         body: JSON.stringify({ email, otp }),
       });
-
       const data = await res.json();
-      console.log("OTP Verify Response:", data);
-
       if (!res.ok) {
         setFieldErrors({ email: data.error || "OTP verification failed" });
       } else {
@@ -111,18 +102,18 @@ const Authe = () => {
       }
     } catch (err) {
       console.error("Verify OTP Error:", err);
-      setFieldErrors({ email: "Verification error. Try again." });
+      setFieldErrors({ email: "OTP verification failed." });
     } finally {
       setLoading(false);
     }
   };
 
+  // Submit to Supabase
   const handleSubmit = async () => {
     setLoading(true);
     setFieldErrors({});
-
     try {
-      await supabase.from("submissions").insert([
+      const { error } = await supabase.from("submissions").insert([
         {
           full_name: fullName,
           email: email,
@@ -131,6 +122,7 @@ const Authe = () => {
           selected_product: selectedProduct,
         },
       ]);
+      if (error) throw error;
       setStep(6);
     } catch (err) {
       console.error("Submission error:", err);
@@ -139,25 +131,20 @@ const Authe = () => {
     }
   };
 
-  const nextStep = async () => {
+  const nextStep = () => {
     const errors = {};
 
-    if (step === 1 && !fullName) {
-      errors.fullName = "Please enter your full name.";
-    }
-
+    if (step === 1 && !fullName) errors.fullName = "Please enter your full name.";
     if (step === 2) {
       if (!email || !validateEmail(email)) {
-        errors.email = "Please enter a valid email format.";
+        errors.email = "Enter a valid email address.";
       } else if (!otpVerified) {
         errors.email = "Please verify the OTP sent to your email.";
       }
     }
-
     if (step === 3 && !phone) errors.phone = "Please enter your phone number.";
     if (step === 4 && !address) errors.address = "Please enter your address.";
-    if (step === 5 && !selectedProduct)
-      errors.selectedProduct = "Please select a product.";
+    if (step === 5 && !selectedProduct) errors.selectedProduct = "Please select a product.";
 
     if (Object.keys(errors).length > 0) {
       setFieldErrors(errors);
@@ -172,16 +159,15 @@ const Authe = () => {
     setStep(step - 1);
   };
 
-  const steps = [1, 2, 3, 4, 5, 6];
-
   return (
     <div className="auth-background">
       <div className="container">
         <div className="card">
           <h2 className="title">Warranty Registration</h2>
 
+          {/* Step Indicator */}
           <div className="steps">
-            {steps.map((s) => (
+            {[1, 2, 3, 4, 5, 6].map((s) => (
               <div
                 key={s}
                 className={`step-circle ${s === step ? "active" : s < step ? "completed" : ""}`}
@@ -191,6 +177,7 @@ const Authe = () => {
             ))}
           </div>
 
+          {/* Step Form */}
           {!loading && (
             <>
               {step === 1 && (
@@ -200,14 +187,9 @@ const Authe = () => {
                     type="text"
                     placeholder="Full Name"
                     value={fullName}
-                    onChange={(e) => {
-                      setFullName(e.target.value);
-                      setFieldErrors({});
-                    }}
+                    onChange={(e) => setFullName(e.target.value)}
                   />
-                  {fieldErrors.fullName && (
-                    <p className="error">{fieldErrors.fullName}</p>
-                  )}
+                  {fieldErrors.fullName && <p className="error">{fieldErrors.fullName}</p>}
                 </div>
               )}
 
@@ -222,35 +204,29 @@ const Authe = () => {
                       onChange={(e) => {
                         setEmail(e.target.value);
                         setOtp("");
-                        setOtpSent(false);
                         setOtpVerified(false);
-                        setFieldErrors({});
+                        setOtpSent(false);
                         setOtpSentMessage("");
                         setLoginSuccessMessage("");
                       }}
                     />
-                    <button onClick={sendOtpCustom} disabled={loading} className="otp-btn">
-                      {loading ? "Sending..." : "Send OTP"}
-                    </button>
+                    <button onClick={sendOtpCustom} className="otp-btn">Send OTP</button>
                   </div>
-
-                  {fieldErrors.email && <p className="error">{fieldErrors.email}</p>}
 
                   {otpSent && !otpVerified && (
                     <>
                       <label>Enter OTP</label>
                       <input
                         type="text"
-                        placeholder="6-digit OTP"
+                        placeholder="Enter 6-digit OTP"
                         value={otp}
                         onChange={(e) => setOtp(e.target.value)}
                       />
-                      <button onClick={verifyOtpCustom} className="otp-btn">
-                        Verify OTP
-                      </button>
+                      <button onClick={verifyOtpCustom} className="otp-btn">Verify OTP</button>
                     </>
                   )}
 
+                  {fieldErrors.email && <p className="error">{fieldErrors.email}</p>}
                   {otpSentMessage && <p className="info-message">{otpSentMessage}</p>}
                   {loginSuccessMessage && <p className="success-message">{loginSuccessMessage}</p>}
                 </div>
@@ -263,10 +239,7 @@ const Authe = () => {
                     type="tel"
                     placeholder="Phone Number"
                     value={phone}
-                    onChange={(e) => {
-                      setPhone(e.target.value);
-                      setFieldErrors({});
-                    }}
+                    onChange={(e) => setPhone(e.target.value)}
                   />
                   {fieldErrors.phone && <p className="error">{fieldErrors.phone}</p>}
                 </div>
@@ -274,15 +247,12 @@ const Authe = () => {
 
               {step === 4 && (
                 <div className="form-group">
-                  <label>Physical Address</label>
+                  <label>Address</label>
                   <textarea
                     rows={3}
-                    placeholder="Enter your address"
+                    placeholder="Your address"
                     value={address}
-                    onChange={(e) => {
-                      setAddress(e.target.value);
-                      setFieldErrors({});
-                    }}
+                    onChange={(e) => setAddress(e.target.value)}
                   />
                   {fieldErrors.address && <p className="error">{fieldErrors.address}</p>}
                 </div>
@@ -290,16 +260,13 @@ const Authe = () => {
 
               {step === 5 && (
                 <div className="form-group">
-                  <label>Search & Select Product (optional)</label>
+                  <label>Select Product</label>
                   <input
                     type="text"
-                    placeholder="Type product name..."
+                    placeholder="Search products..."
                     value={productSearch}
                     onChange={(e) => setProductSearch(e.target.value)}
                   />
-                  {selectedProduct && (
-                    <p className="selected-product">✅ Selected: {selectedProduct}</p>
-                  )}
                   <div className="product-list-container">
                     <ul className="product-list">
                       {loadingProducts ? (
@@ -309,10 +276,7 @@ const Authe = () => {
                           <li
                             key={product.id}
                             className={`product-item ${selectedProduct === product.title ? "selected" : ""}`}
-                            onClick={() => {
-                              setSelectedProduct(product.title);
-                              setFieldErrors({});
-                            }}
+                            onClick={() => setSelectedProduct(product.title)}
                           >
                             {product.images?.[0]?.src && (
                               <img
@@ -321,48 +285,36 @@ const Authe = () => {
                                 className="product-image"
                               />
                             )}
-                            <span className="product-title">{product.title}</span>
+                            <span>{product.title}</span>
                           </li>
                         ))
                       ) : (
-                        <li className="no-products">No products found</li>
+                        <li>No products found</li>
                       )}
                     </ul>
                   </div>
-                  {fieldErrors.selectedProduct && (
-                    <p className="error">{fieldErrors.selectedProduct}</p>
-                  )}
-                  <button className="submit-btn" onClick={handleSubmit}>
-                    Submit
-                  </button>
+                  {fieldErrors.selectedProduct && <p className="error">{fieldErrors.selectedProduct}</p>}
+                  <button className="submit-btn" onClick={handleSubmit}>Submit</button>
                 </div>
               )}
 
               {step === 6 && (
                 <div className="form-group text-center">
-                  <h2 className="text-3xl font-semibold mb-2">Thank You!</h2>
-                  <p className="text-lg capitalize mb-4">
-                    Your Warranty Registration Is Completed.
-                  </p>
-                  <a
-                    href="https://wholesale.ellastein.com/"
-                    className="text-blue-600 underline text-lg"
-                  >
-                    Ellastein.com
+                  <h2>Thank You!</h2>
+                  <p>Your Warranty Registration is complete.</p>
+                  <a href="https://wholesale.ellastein.com/" className="text-blue-600 underline">
+                    Go to Ellastein.com
                   </a>
                 </div>
               )}
 
+              {/* Navigation Buttons */}
               <div className="btn-group">
                 {step > 1 && step < 6 && (
-                  <button className="prev-btn" onClick={prevStep}>
-                    Previous
-                  </button>
+                  <button className="prev-btn" onClick={prevStep}>Previous</button>
                 )}
                 {step < 5 && (
-                  <button onClick={nextStep}>
-                    Next
-                  </button>
+                  <button onClick={nextStep}>Next</button>
                 )}
               </div>
             </>
