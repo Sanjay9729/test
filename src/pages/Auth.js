@@ -24,9 +24,7 @@ const Authe = () => {
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        const res = await fetch(
-          "https://warranty-registration.netlify.app/.netlify/functions/products"
-        );
+        const res = await fetch("/.netlify/functions/products");
         const data = await res.json();
         setProducts(data);
         setFilteredProducts(data);
@@ -51,7 +49,7 @@ const Authe = () => {
   }, [productSearch, products]);
 
   const validateEmail = (email) => {
-    const regex = /^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/;
+    const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return regex.test(email);
   };
 
@@ -61,7 +59,7 @@ const Authe = () => {
     setFieldErrors({});
 
     if (!email || !validateEmail(email)) {
-      setFieldErrors({ email: "Please enter a valid email." });
+      setFieldErrors({ email: "Please enter a valid email format." });
       setLoading(false);
       return;
     }
@@ -73,17 +71,20 @@ const Authe = () => {
       });
 
       const data = await res.json();
-      console.log("OTP Send Response:", data); // DEBUGGING LINE
+      console.log("OTP Response Data:", data);
 
       if (!res.ok) {
-        setFieldErrors({ email: data.error || "Failed to send OTP" });
+        console.error("OTP error:", data);
+        setFieldErrors({
+          email: data.error || "OTP sending failed. Try again.",
+        });
       } else {
         setOtpSent(true);
         setOtpSentMessage("📧 OTP sent to your email.");
       }
     } catch (err) {
-      console.error("Send OTP Error:", err); // DEBUGGING LINE
-      setFieldErrors({ email: "Something went wrong." });
+      console.error("Send OTP Error:", err);
+      setFieldErrors({ email: "Network error. Please try again." });
     } finally {
       setLoading(false);
     }
@@ -100,7 +101,7 @@ const Authe = () => {
       });
 
       const data = await res.json();
-      console.log("OTP Verify Response:", data); // DEBUGGING LINE
+      console.log("OTP Verify Response:", data);
 
       if (!res.ok) {
         setFieldErrors({ email: data.error || "OTP verification failed" });
@@ -109,7 +110,7 @@ const Authe = () => {
         setLoginSuccessMessage("✅ OTP Verified!");
       }
     } catch (err) {
-      console.error("Verify OTP Error:", err); // DEBUGGING LINE
+      console.error("Verify OTP Error:", err);
       setFieldErrors({ email: "Verification error. Try again." });
     } finally {
       setLoading(false);
@@ -123,11 +124,11 @@ const Authe = () => {
     try {
       await supabase.from("submissions").insert([
         {
-          full_name: fullName || null,
-          email: email || null,
-          phone: phone || null,
-          address: address || null,
-          selected_product: selectedProduct || null,
+          full_name: fullName,
+          email: email,
+          phone: phone,
+          address: address,
+          selected_product: selectedProduct,
         },
       ]);
       setStep(6);
@@ -147,7 +148,7 @@ const Authe = () => {
 
     if (step === 2) {
       if (!email || !validateEmail(email)) {
-        errors.email = "Please enter a valid email.";
+        errors.email = "Please enter a valid email format.";
       } else if (!otpVerified) {
         errors.email = "Please verify the OTP sent to your email.";
       }
@@ -162,13 +163,13 @@ const Authe = () => {
       setFieldErrors(errors);
     } else {
       setFieldErrors({});
-      if (step < 6) setStep(step + 1);
+      setStep(step + 1);
     }
   };
 
   const prevStep = () => {
     setFieldErrors({});
-    if (step > 1) setStep(step - 1);
+    setStep(step - 1);
   };
 
   const steps = [1, 2, 3, 4, 5, 6];
@@ -220,10 +221,10 @@ const Authe = () => {
                       value={email}
                       onChange={(e) => {
                         setEmail(e.target.value);
-                        setFieldErrors({});
                         setOtp("");
                         setOtpSent(false);
                         setOtpVerified(false);
+                        setFieldErrors({});
                         setOtpSentMessage("");
                         setLoginSuccessMessage("");
                       }}
@@ -251,9 +252,7 @@ const Authe = () => {
                   )}
 
                   {otpSentMessage && <p className="info-message">{otpSentMessage}</p>}
-                  {loginSuccessMessage && (
-                    <p className="success-message">{loginSuccessMessage}</p>
-                  )}
+                  {loginSuccessMessage && <p className="success-message">{loginSuccessMessage}</p>}
                 </div>
               )}
 
