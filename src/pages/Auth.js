@@ -15,9 +15,9 @@ const Authe = () => {
   const [productSearch, setProductSearch] = useState("");
   const [products, setProducts] = useState([]);
   const [filteredProducts, setFilteredProducts] = useState([]);
+  const [fieldErrors, setFieldErrors] = useState({});
   const [loading, setLoading] = useState(false);
   const [loadingProducts, setLoadingProducts] = useState(true);
-  const [fieldErrors, setFieldErrors] = useState({});
   const [otpSentMessage, setOtpSentMessage] = useState("");
   const [loginSuccessMessage, setLoginSuccessMessage] = useState("");
 
@@ -54,6 +54,7 @@ const Authe = () => {
     setLoading(true);
     setOtpSentMessage("");
     setFieldErrors({});
+
     if (!email || !validateEmail(email)) {
       setFieldErrors({ email: "Please enter a valid email format." });
       setLoading(false);
@@ -65,16 +66,17 @@ const Authe = () => {
         method: "POST",
         body: JSON.stringify({ email }),
       });
+
       const data = await res.json();
       if (!res.ok) {
-        setFieldErrors({ email: data.error || "OTP send failed" });
+        setFieldErrors({ email: data.error || "OTP sending failed." });
       } else {
         setOtpSent(true);
         setOtpSentMessage("📧 OTP sent to your email.");
       }
     } catch (err) {
       console.error("Send OTP Error:", err);
-      setFieldErrors({ email: "Network error while sending OTP." });
+      setFieldErrors({ email: "Network error. Try again." });
     } finally {
       setLoading(false);
     }
@@ -83,11 +85,13 @@ const Authe = () => {
   const verifyOtpCustom = async () => {
     setLoading(true);
     setFieldErrors({});
+
     try {
       const res = await fetch("/.netlify/functions/verifyOtp", {
         method: "POST",
         body: JSON.stringify({ email, otp }),
       });
+
       const data = await res.json();
       if (!res.ok) {
         setFieldErrors({ email: data.error || "OTP verification failed" });
@@ -97,29 +101,31 @@ const Authe = () => {
       }
     } catch (err) {
       console.error("Verify OTP Error:", err);
-      setFieldErrors({ email: "OTP verification failed." });
+      setFieldErrors({ email: "Verification error. Try again." });
     } finally {
       setLoading(false);
     }
   };
 
   const handleSubmit = async () => {
-    console.log("Submitting:", {
-      fullName, email, phone, address, selectedProduct,
-    });
+    if (!selectedProduct) {
+      setFieldErrors({ selectedProduct: "Please select a product." });
+      return;
+    }
+
     setLoading(true);
     setFieldErrors({});
+
     try {
-      const { error } = await supabase.from("submissions").insert([
+      await supabase.from("submissions").insert([
         {
           full_name: fullName,
-          email,
-          phone,
-          address,
+          email: email,
+          phone: phone,
+          address: address,
           selected_product: selectedProduct,
         },
       ]);
-      if (error) throw error;
       setStep(6);
     } catch (err) {
       console.error("Submission error:", err);
@@ -133,21 +139,18 @@ const Authe = () => {
     if (step === 1 && !fullName) errors.fullName = "Please enter your full name.";
     if (step === 2) {
       if (!email || !validateEmail(email)) {
-        errors.email = "Enter a valid email address.";
+        errors.email = "Enter a valid email.";
       } else if (!otpVerified) {
         errors.email = "Please verify the OTP.";
       }
     }
-    if (step === 3 && !phone) errors.phone = "Please enter your phone number.";
-    if (step === 4 && !address) errors.address = "Please enter your address.";
-    if (step === 5 && !selectedProduct) errors.selectedProduct = "Please select a product.";
+    if (step === 3 && !phone) errors.phone = "Enter your phone number.";
+    if (step === 4 && !address) errors.address = "Enter your address.";
 
     if (Object.keys(errors).length > 0) {
       setFieldErrors(errors);
     } else {
-      if (step < 5) {
-        setStep(step + 1);
-      }
+      if (step < 5) setStep(step + 1);
     }
   };
 
@@ -201,9 +204,10 @@ const Authe = () => {
                     }}
                   />
                   <button onClick={sendOtpCustom} className="otp-btn">Send OTP</button>
+
                   {otpSent && !otpVerified && (
                     <>
-                      <label>OTP</label>
+                      <label>Enter OTP</label>
                       <input
                         type="text"
                         value={otp}
@@ -212,6 +216,7 @@ const Authe = () => {
                       <button onClick={verifyOtpCustom} className="otp-btn">Verify OTP</button>
                     </>
                   )}
+
                   {fieldErrors.email && <p className="error">{fieldErrors.email}</p>}
                   {otpSentMessage && <p className="info-message">{otpSentMessage}</p>}
                   {loginSuccessMessage && <p className="success-message">{loginSuccessMessage}</p>}
@@ -247,7 +252,6 @@ const Authe = () => {
                   <label>Select Product</label>
                   <input
                     type="text"
-                    placeholder="Search products..."
                     value={productSearch}
                     onChange={(e) => setProductSearch(e.target.value)}
                   />
