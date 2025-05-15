@@ -42,7 +42,7 @@ const Authe = () => {
       setFilteredProducts(products);
     } else {
       const filtered = products.filter((p) =>
-        p.title.toLowerCase().includes(productSearch.toLowerCase())
+        p.title.toLowerCase().includes(productSearch.toLowerCase().trim())
       );
       setFilteredProducts(filtered);
     }
@@ -54,7 +54,6 @@ const Authe = () => {
     setLoading(true);
     setOtpSentMessage("");
     setFieldErrors({});
-
     if (!email || !validateEmail(email)) {
       setFieldErrors({ email: "Please enter a valid email format." });
       setLoading(false);
@@ -67,7 +66,6 @@ const Authe = () => {
         body: JSON.stringify({ email }),
       });
       const data = await res.json();
-
       if (!res.ok) {
         setFieldErrors({ email: data.error || "OTP send failed" });
       } else {
@@ -106,6 +104,9 @@ const Authe = () => {
   };
 
   const handleSubmit = async () => {
+    console.log("Submitting:", {
+      fullName, email, phone, address, selectedProduct,
+    });
     setLoading(true);
     setFieldErrors({});
     try {
@@ -144,7 +145,9 @@ const Authe = () => {
     if (Object.keys(errors).length > 0) {
       setFieldErrors(errors);
     } else {
-      if (step < 5) setStep(step + 1);
+      if (step < 5) {
+        setStep(step + 1);
+      }
     }
   };
 
