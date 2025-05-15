@@ -115,31 +115,34 @@ const Authe = () => {
   };
 
   const handleSubmit = async () => {
-    setLoading(true);
-    setFieldErrors({});
+  setLoading(true);
+  setFieldErrors({});
 
-    try {
-      const { error } = await supabase.from("submissions").insert([
-        {
-          full_name: fullName,
-          email: email,
-          phone: phone,
-          address: address,
-          selected_product: selectedProduct,
-        },
-      ]);
-      if (error) {
-        console.error("Submission error:", error);
-        setFieldErrors({ selectedProduct: "Submission failed." });
-      } else {
-        setStep(6);
-      }
-    } catch (err) {
-      console.error("Submission error:", err);
-    } finally {
+  try {
+    const { error } = await supabase.from('submissions').insert([
+      {
+        full_name: fullName,
+        email,
+        phone,
+        address,
+        selected_product: selectedProduct,
+      },
+    ]);
+
+    if (error) {
+      setFieldErrors({ submit: error.message });
       setLoading(false);
+      return;
     }
-  };
+
+    setStep(6);
+  } catch (err) {
+    setFieldErrors({ submit: 'Submission failed. Try again.' });
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   const nextStep = () => {
     const errors = {};
