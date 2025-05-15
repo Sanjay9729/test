@@ -50,11 +50,10 @@ const Authe = () => {
     }
   }, [productSearch, products]);
 
- const validateEmail = (email) => {
-  const regex = /^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/;
-  return regex.test(email);
-};
-
+  const validateEmail = (email) => {
+    const regex = /^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/;
+    return regex.test(email);
+  };
 
   const sendOtpCustom = async () => {
     setLoading(true);
@@ -74,6 +73,7 @@ const Authe = () => {
       });
 
       const data = await res.json();
+      console.log("OTP Send Response:", data); // DEBUGGING LINE
 
       if (!res.ok) {
         setFieldErrors({ email: data.error || "Failed to send OTP" });
@@ -82,6 +82,7 @@ const Authe = () => {
         setOtpSentMessage("📧 OTP sent to your email.");
       }
     } catch (err) {
+      console.error("Send OTP Error:", err); // DEBUGGING LINE
       setFieldErrors({ email: "Something went wrong." });
     } finally {
       setLoading(false);
@@ -99,6 +100,7 @@ const Authe = () => {
       });
 
       const data = await res.json();
+      console.log("OTP Verify Response:", data); // DEBUGGING LINE
 
       if (!res.ok) {
         setFieldErrors({ email: data.error || "OTP verification failed" });
@@ -107,6 +109,7 @@ const Authe = () => {
         setLoginSuccessMessage("✅ OTP Verified!");
       }
     } catch (err) {
+      console.error("Verify OTP Error:", err); // DEBUGGING LINE
       setFieldErrors({ email: "Verification error. Try again." });
     } finally {
       setLoading(false);
