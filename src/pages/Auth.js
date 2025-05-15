@@ -24,7 +24,7 @@ const Authe = () => {
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        const res = await fetch("https://warranty-registration.netlify.app/.netlify/functions/products");
+        const res = await fetch("/.netlify/functions/products");
         const data = await res.json();
         setProducts(data);
         setFilteredProducts(data);
@@ -64,7 +64,14 @@ const Authe = () => {
     try {
       const res = await fetch("/.netlify/functions/sendOtp", {
         method: "POST",
-        body: JSON.stringify({ email }),
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email,
+          full_name: fullName,
+          phone,
+          address,
+          selected_product: selectedProduct,
+        }),
       });
 
       const data = await res.json();
@@ -108,16 +115,11 @@ const Authe = () => {
   };
 
   const handleSubmit = async () => {
-    if (!selectedProduct) {
-      setFieldErrors({ selectedProduct: "Please select a product." });
-      return;
-    }
-
     setLoading(true);
     setFieldErrors({});
 
     try {
-      await supabase.from("submissions").insert([
+      const { error } = await supabase.from("submissions").insert([
         {
           full_name: fullName,
           email: email,
@@ -126,7 +128,12 @@ const Authe = () => {
           selected_product: selectedProduct,
         },
       ]);
-      setStep(6);
+      if (error) {
+        console.error("Submission error:", error);
+        setFieldErrors({ selectedProduct: "Submission failed." });
+      } else {
+        setStep(6);
+      }
     } catch (err) {
       console.error("Submission error:", err);
     } finally {

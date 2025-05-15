@@ -14,6 +14,15 @@ exports.handler = async (event) => {
     'Content-Type': 'application/json',
   };
 
+  // Handle CORS preflight
+  if (event.httpMethod === 'OPTIONS') {
+    return {
+      statusCode: 200,
+      headers,
+      body: '',
+    };
+  }
+
   try {
     const { email, full_name, phone, address, selected_product } = JSON.parse(event.body || '{}');
 
@@ -26,8 +35,9 @@ exports.handler = async (event) => {
     }
 
     const otp = generateOTP();
-    const expiresAt = new Date(Date.now() + 10 * 60000).toISOString();
+    const expiresAt = new Date(Date.now() + 10 * 60 * 1000).toISOString(); // 10 minutes
 
+    // Insert OTP and user info into Supabase
     const { error } = await supabase.from('email_otps').insert([
       {
         email,
@@ -41,7 +51,7 @@ exports.handler = async (event) => {
     ]);
 
     if (error) {
-      console.error("Supabase insert error:", error.message);
+      console.error('❌ Supabase insert error:', error.message);
       return {
         statusCode: 500,
         headers,
@@ -49,19 +59,30 @@ exports.handler = async (event) => {
       };
     }
 
-    await fetch('https://api.resend.com/emails', {
+    // Send OTP email using Resend
+    const resendResponse = await fetch('https://api.resend.com/emails', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${process.env.RESEND_API_KEY}`,
+        Authorization: `Bearer ${process.env.RESEND_API_KEY}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
         from: 'Warranty App <onboarding@resend.dev>',
         to: email,
         subject: 'Your OTP Code',
-        html: `<h3>Your OTP is: <strong>${otp}</strong></h3>`,
+        html: `<h2>Your OTP is: <strong>${otp}</strong></h2><p>It will expire in 10 minutes.</p>`,
       }),
     });
+
+    if (!resendResponse.ok) {
+      const errText = await resendResponse.text();
+      console.error("❌ Resend API error:", errText);
+      return {
+        statusCode: 500,
+        headers,
+        body: JSON.stringify({ error: 'Failed to send OTP email' }),
+      };
+    }
 
     return {
       statusCode: 200,
@@ -69,7 +90,7 @@ exports.handler = async (event) => {
       body: JSON.stringify({ message: 'OTP sent successfully' }),
     };
   } catch (err) {
-    console.error("Unhandled error:", err);
+    console.error("❌ Unhandled error:", err);
     return {
       statusCode: 500,
       headers,
