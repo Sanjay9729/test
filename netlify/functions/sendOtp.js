@@ -1,12 +1,14 @@
 const { createClient } = require('@supabase/supabase-js');
 const fetch = require('node-fetch');
 
-const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
+const supabase = createClient(
+  process.env.SUPABASE_URL,
+  process.env.SUPABASE_SERVICE_ROLE_KEY
+);
 
 const generateOTP = () => Math.floor(100000 + Math.random() * 900000).toString();
 
 exports.handler = async (event) => {
-  // CORS preflight request
   if (event.httpMethod === 'OPTIONS') {
     return {
       statusCode: 200,
@@ -25,7 +27,7 @@ exports.handler = async (event) => {
   };
 
   try {
-    const { email } = JSON.parse(event.body || '{}');
+    const { email, full_name, phone, address, selected_product } = JSON.parse(event.body || '{}');
 
     if (!email) {
       return { statusCode: 400, headers, body: JSON.stringify({ error: 'Email is required' }) };
@@ -35,8 +37,16 @@ exports.handler = async (event) => {
     const expiresAt = new Date(Date.now() + 10 * 60000).toISOString();
 
     const { error } = await supabase
-      .from('submissions')
-      .insert({ email, otp, expires_at: expiresAt });
+      .from('email_otps')
+      .insert({
+        email,
+        otp,
+        expires_at: expiresAt,
+        full_name: full_name || null,
+        phone: phone || null,
+        address: address || null,
+        selected_product: selected_product || null
+      });
 
     if (error) {
       return { statusCode: 500, headers, body: JSON.stringify({ error: 'Database error' }) };

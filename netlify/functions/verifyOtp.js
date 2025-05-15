@@ -1,6 +1,9 @@
 const { createClient } = require('@supabase/supabase-js');
 
-const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
+const supabase = createClient(
+  process.env.SUPABASE_URL,
+  process.env.SUPABASE_SERVICE_ROLE_KEY
+);
 
 exports.handler = async (event) => {
   const { email, otp } = JSON.parse(event.body || '{}');
@@ -10,7 +13,7 @@ exports.handler = async (event) => {
   }
 
   const { data, error } = await supabase
-    .from('submissions')
+    .from('email_otps')
     .select('*')
     .eq('email', email)
     .eq('otp', otp)
@@ -26,9 +29,16 @@ exports.handler = async (event) => {
     return { statusCode: 401, body: JSON.stringify({ error: 'OTP expired' }) };
   }
 
-  // You can create a custom JWT here if needed or just return success
   return {
     statusCode: 200,
-    body: JSON.stringify({ message: 'OTP verified' }),
+    body: JSON.stringify({
+      message: 'OTP verified',
+      user_data: {
+        full_name: data[0].full_name,
+        phone: data[0].phone,
+        address: data[0].address,
+        selected_product: data[0].selected_product
+      }
+    }),
   };
 };

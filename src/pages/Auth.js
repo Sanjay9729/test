@@ -64,7 +64,13 @@ const Authe = () => {
     try {
       const res = await fetch("/.netlify/functions/sendOtp", {
         method: "POST",
-        body: JSON.stringify({ email }),
+        body: JSON.stringify({
+          email,
+          full_name: fullName,
+          phone,
+          address,
+          selected_product: selectedProduct,
+        }),
       });
 
       const data = await res.json();
