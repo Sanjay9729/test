@@ -14,7 +14,6 @@ exports.handler = async (event) => {
     'Content-Type': 'application/json',
   };
 
-  // Handle CORS preflight
   if (event.httpMethod === 'OPTIONS') {
     return {
       statusCode: 200,
@@ -35,10 +34,9 @@ exports.handler = async (event) => {
     }
 
     const otp = generateOTP();
-    const expiresAt = new Date(Date.now() + 10 * 60 * 1000).toISOString(); // 10 minutes
+    const expiresAt = new Date(Date.now() + 10 * 60 * 1000).toISOString();
 
-    // Insert OTP and user info into Supabase
-    const { error } = await supabase.from('email_otps').insert([
+    const { error } = await supabase.from('submissions').insert([
       {
         email,
         otp,
@@ -59,8 +57,7 @@ exports.handler = async (event) => {
       };
     }
 
-    // Send OTP email using Resend
-    const resendResponse = await fetch('https://api.resend.com/emails', {
+    await fetch('https://api.resend.com/emails', {
       method: 'POST',
       headers: {
         Authorization: `Bearer ${process.env.RESEND_API_KEY}`,
@@ -70,19 +67,9 @@ exports.handler = async (event) => {
         from: 'Warranty App <onboarding@resend.dev>',
         to: email,
         subject: 'Your OTP Code',
-        html: `<h2>Your OTP is: <strong>${otp}</strong></h2><p>It will expire in 10 minutes.</p>`,
+        html: `<h2>Your OTP is: <strong>${otp}</strong></h2><p>This code expires in 10 minutes.</p>`,
       }),
     });
-
-    if (!resendResponse.ok) {
-      const errText = await resendResponse.text();
-      console.error("❌ Resend API error:", errText);
-      return {
-        statusCode: 500,
-        headers,
-        body: JSON.stringify({ error: 'Failed to send OTP email' }),
-      };
-    }
 
     return {
       statusCode: 200,
@@ -90,7 +77,7 @@ exports.handler = async (event) => {
       body: JSON.stringify({ message: 'OTP sent successfully' }),
     };
   } catch (err) {
-    console.error("❌ Unhandled error:", err);
+    console.error('❌ Unexpected error:', err);
     return {
       statusCode: 500,
       headers,
