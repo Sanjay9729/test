@@ -50,10 +50,11 @@ const Authe = () => {
     }
   }, [productSearch, products]);
 
-  const validateEmail = (email) => {
-    const regex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,6}$/;
-    return regex.test(email);
-  };
+ const validateEmail = (email) => {
+  const regex = /^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/;
+  return regex.test(email);
+};
+
 
   const sendOtpCustom = async () => {
     setLoading(true);
