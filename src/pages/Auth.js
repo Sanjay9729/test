@@ -24,7 +24,7 @@ const Authe = () => {
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        const res = await fetch("/.netlify/functions/products");
+        const res = await fetch("https://warranty-registration.netlify.app/.netlify/functions/products");
         const data = await res.json();
         setProducts(data);
         setFilteredProducts(data);
@@ -64,13 +64,7 @@ const Authe = () => {
     try {
       const res = await fetch("/.netlify/functions/sendOtp", {
         method: "POST",
-        body: JSON.stringify({
-          email,
-          full_name: fullName,
-          phone,
-          address,
-          selected_product: selectedProduct,
-        }),
+        body: JSON.stringify({ email }),
       });
 
       const data = await res.json();

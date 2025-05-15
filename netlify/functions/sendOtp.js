@@ -9,18 +9,6 @@ const supabase = createClient(
 const generateOTP = () => Math.floor(100000 + Math.random() * 900000).toString();
 
 exports.handler = async (event) => {
-  if (event.httpMethod === 'OPTIONS') {
-    return {
-      statusCode: 200,
-      headers: {
-        'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Headers': 'Content-Type',
-        'Access-Control-Allow-Methods': 'POST, OPTIONS',
-      },
-      body: '',
-    };
-  }
-
   const headers = {
     'Access-Control-Allow-Origin': '*',
     'Content-Type': 'application/json',
@@ -30,7 +18,11 @@ exports.handler = async (event) => {
     const { email, full_name, phone, address, selected_product } = JSON.parse(event.body || '{}');
 
     if (!email) {
-      return { statusCode: 400, headers, body: JSON.stringify({ error: 'Email is required' }) };
+      return {
+        statusCode: 400,
+        headers,
+        body: JSON.stringify({ error: 'Email is required' }),
+      };
     }
 
     const otp = generateOTP();
@@ -85,5 +77,3 @@ exports.handler = async (event) => {
     };
   }
 };
-
-
