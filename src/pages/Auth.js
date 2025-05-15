@@ -54,7 +54,8 @@ const Authe = () => {
 
     const { data: authListener } = supabase.auth.onAuthStateChange((event) => {
       if (event === "SIGNED_IN") {
-        setOtpSentMessage(""); // ✅ clear "please check email" message
+        setFieldErrors({});
+        setOtpSentMessage("");
         setLoginSuccessMessage("✅ Login successful.");
       }
     });
@@ -64,31 +65,38 @@ const Authe = () => {
     };
   }, []);
 
+  const validateEmail = (email) => {
+    const regex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/;
+    return regex.test(email);
+  };
+
   const sendOtp = async () => {
+    setFieldErrors({});
+    setOtpSentMessage("");
+    setLoginSuccessMessage("");
+
     if (!email || !validateEmail(email)) {
       setFieldErrors({ email: "Please enter a valid email." });
       return;
     }
 
     setLoading(true);
-    setFieldErrors({});
-    setOtpSentMessage("");
-    setLoginSuccessMessage("");
 
     try {
       await supabase.auth.signOut();
-      await supabase.auth.signInWithOtp({ email });
-      setOtpSentMessage("📧 Please check your email and login.");
+      const { error } = await supabase.auth.signInWithOtp({ email });
+
+      if (error) {
+        setFieldErrors({ email: error.message || "Failed to send OTP." });
+      } else {
+        setOtpSentMessage("📧 Please check your email and login.");
+      }
     } catch (err) {
+      setFieldErrors({ email: "An unexpected error occurred. Please try again." });
       console.error("OTP Send Error:", err.message);
     } finally {
       setLoading(false);
     }
-  };
-
-  const validateEmail = (email) => {
-    const regex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/;
-    return regex.test(email);
   };
 
   const handleSubmit = async () => {
@@ -113,11 +121,24 @@ const Authe = () => {
     }
   };
 
-  const nextStep = () => {
+  const nextStep = async () => {
     const errors = {};
-    if (step === 1 && !fullName) errors.fullName = "Please enter your full name.";
-    if (step === 2 && (!email || !validateEmail(email)))
-      errors.email = "Please enter a valid email.";
+
+    if (step === 1 && !fullName) {
+      errors.fullName = "Please enter your full name.";
+    }
+
+    if (step === 2) {
+      if (!email || !validateEmail(email)) {
+        errors.email = "Please enter a valid email.";
+      } else {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) {
+          errors.email = "Please login using the OTP sent to your email.";
+        }
+      }
+    }
+
     if (step === 3 && !phone) errors.phone = "Please enter your phone number.";
     if (step === 4 && !address) errors.address = "Please enter your address.";
     if (step === 5 && !selectedProduct) errors.selectedProduct = "Please select a product.";
@@ -188,13 +209,15 @@ const Authe = () => {
                       }}
                     />
                     <button onClick={sendOtp} disabled={loading} className="otp-btn">
-                      {loading ? "Sending..." : "Send OTP"}
+                      {loading ? "Sending..." : "Send Login Link"}
                     </button>
                   </div>
-                  {fieldErrors.email && <p className="error">{fieldErrors.email}</p>}
 
-                  {/* Message Box */}
-                  {(otpSentMessage || loginSuccessMessage) && (
+                  {fieldErrors.email && (
+                    <p className="error">{fieldErrors.email}</p>
+                  )}
+
+                  {!fieldErrors.email && (otpSentMessage || loginSuccessMessage) && (
                     <div className="message-box">
                       {otpSentMessage && <p className="info-message">{otpSentMessage}</p>}
                       {loginSuccessMessage && <p className="success-message">{loginSuccessMessage}</p>}
@@ -255,9 +278,7 @@ const Authe = () => {
                         filteredProducts.map((product) => (
                           <li
                             key={product.id}
-                            className={`product-item ${
-                              selectedProduct === product.title ? "selected" : ""
-                            }`}
+                            className={`product-item ${selectedProduct === product.title ? "selected" : ""}`}
                             onClick={() => {
                               setSelectedProduct(product.title);
                               setFieldErrors({});
@@ -287,15 +308,19 @@ const Authe = () => {
                 </div>
               )}
 
-              {step === 6 && (
-                <div className="form-group">
-                  <h2>Thank You!</h2>
-                  <p className="capitalize">Your Warranty Registration Is Completed.</p>
-                  <a href="https://wholesale.ellastein.com/" className="back-btn">
-                    Ellastein.com
-                  </a>
-                </div>
-              )}
+          {step === 6 && (
+  <div className="form-group text-center">
+    <h2 className="text-3xl font-semibold mb-2">Thank You!</h2>
+    <p className="text-lg capitalize mb-4">Your Warranty Registration Is Completed.</p>
+    <a
+      href="https://wholesale.ellastein.com/"
+      className="text-blue-600 underline text-lg"
+    >
+      Ellastein.com
+    </a>
+  </div>
+)}
+
 
               <div className="btn-group">
                 {step > 1 && step < 6 && (
