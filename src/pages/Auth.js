@@ -258,45 +258,61 @@ const Authe = () => {
                 </div>
               )}
 
-              {step === 5 && (
-                <div className="form-group">
-                  <label>Select Product</label>
-                  <input
-                    type="text"
-                    placeholder="Search products..."
-                    value={productSearch}
-                    onChange={(e) => setProductSearch(e.target.value)}
-                  />
-                  <div className="product-list-container">
-                    <ul className="product-list">
-                      {loadingProducts ? (
-                        <li>Loading products...</li>
-                      ) : filteredProducts.length > 0 ? (
-                        filteredProducts.map((product) => (
-                          <li
-                            key={product.id}
-                            className={`product-item ${selectedProduct === product.title ? "selected" : ""}`}
-                            onClick={() => setSelectedProduct(product.title)}
-                          >
-                            {product.images?.[0]?.src && (
-                              <img
-                                src={product.images[0].src}
-                                alt={product.title}
-                                className="product-image"
-                              />
-                            )}
-                            <span>{product.title}</span>
-                          </li>
-                        ))
-                      ) : (
-                        <li>No products found</li>
-                      )}
-                    </ul>
-                  </div>
-                  {fieldErrors.selectedProduct && <p className="error">{fieldErrors.selectedProduct}</p>}
-                  <button className="submit-btn" onClick={handleSubmit}>Submit</button>
-                </div>
+            {step === 5 && (
+  <div className="form-group">
+    <label>Select Product</label>
+    <input
+      type="text"
+      placeholder="Search products..."
+      value={productSearch}
+      onChange={(e) => setProductSearch(e.target.value)}
+    />
+
+    {selectedProduct && (
+      <p className="selected-product">✅ Selected: {selectedProduct}</p>
+    )}
+
+    <div className="product-list-container">
+      <ul className="product-list">
+        {loadingProducts ? (
+          <li>Loading products...</li>
+        ) : filteredProducts.length > 0 ? (
+          filteredProducts.map((product) => (
+            <li
+              key={product.id}
+              className={`product-item ${
+                selectedProduct === product.title ? "selected" : ""
+              }`}
+              onClick={() => {
+                setSelectedProduct(product.title);
+                setFieldErrors({});
+              }}
+            >
+              {product.images?.[0]?.src && (
+                <img
+                  src={product.images[0].src}
+                  alt={product.title}
+                  className="product-image"
+                />
               )}
+              <span className="product-title">{product.title}</span>
+            </li>
+          ))
+        ) : (
+          <li className="no-products">No products found</li>
+        )}
+      </ul>
+    </div>
+
+    {fieldErrors.selectedProduct && (
+      <p className="error">{fieldErrors.selectedProduct}</p>
+    )}
+
+    <button className="submit-btn" onClick={handleSubmit}>
+      Submit
+    </button>
+  </div>
+)}
 
               {step === 6 && (
                 <div className="form-group text-center">
