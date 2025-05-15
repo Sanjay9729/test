@@ -36,20 +36,25 @@ exports.handler = async (event) => {
     const otp = generateOTP();
     const expiresAt = new Date(Date.now() + 10 * 60000).toISOString();
 
-    const { error } = await supabase
-      .from('email_otps')
-      .insert({
+    const { error } = await supabase.from('email_otps').insert([
+      {
         email,
         otp,
         expires_at: expiresAt,
-        full_name: full_name || null,
-        phone: phone || null,
-        address: address || null,
-        selected_product: selected_product || null
-      });
+        full_name,
+        phone,
+        address,
+        selected_product,
+      },
+    ]);
 
     if (error) {
-      return { statusCode: 500, headers, body: JSON.stringify({ error: 'Database error' }) };
+      console.error("Supabase insert error:", error.message);
+      return {
+        statusCode: 500,
+        headers,
+        body: JSON.stringify({ error: 'Database error' }),
+      };
     }
 
     await fetch('https://api.resend.com/emails', {
