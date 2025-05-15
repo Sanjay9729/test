@@ -13,7 +13,7 @@ exports.handler = async (event) => {
   }
 
   const { data, error } = await supabase
-    .from('submissions')
+    .from('submissions')   // change here from 'email_otps' to 'submissions'
     .select('*')
     .eq('email', email)
     .eq('otp', otp)
@@ -38,7 +38,8 @@ exports.handler = async (event) => {
         phone: data[0].phone,
         address: data[0].address,
         selected_product: data[0].selected_product,
-      },
+      }
     }),
   };
 };
+

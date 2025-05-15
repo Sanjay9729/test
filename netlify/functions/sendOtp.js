@@ -15,46 +15,25 @@ exports.handler = async (event) => {
   };
 
   if (event.httpMethod === 'OPTIONS') {
-    return {
-      statusCode: 200,
-      headers,
-      body: '',
-    };
+    return { statusCode: 200, headers, body: '' };
   }
 
   try {
     const { email, full_name, phone, address, selected_product } = JSON.parse(event.body || '{}');
 
     if (!email) {
-      return {
-        statusCode: 400,
-        headers,
-        body: JSON.stringify({ error: 'Email is required' }),
-      };
+      return { statusCode: 400, headers, body: JSON.stringify({ error: 'Email is required' }) };
     }
 
     const otp = generateOTP();
     const expiresAt = new Date(Date.now() + 10 * 60 * 1000).toISOString();
 
     const { error } = await supabase.from('submissions').insert([
-      {
-        email,
-        otp,
-        expires_at: expiresAt,
-        full_name,
-        phone,
-        address,
-        selected_product,
-      },
+      { email, otp, expires_at: expiresAt, full_name, phone, address, selected_product }
     ]);
 
     if (error) {
-      console.error('❌ Supabase insert error:', error.message);
-      return {
-        statusCode: 500,
-        headers,
-        body: JSON.stringify({ error: 'Database error' }),
-      };
+      return { statusCode: 500, headers, body: JSON.stringify({ error: 'Database error' }) };
     }
 
     await fetch('https://api.resend.com/emails', {
@@ -71,17 +50,8 @@ exports.handler = async (event) => {
       }),
     });
 
-    return {
-      statusCode: 200,
-      headers,
-      body: JSON.stringify({ message: 'OTP sent successfully' }),
-    };
+    return { statusCode: 200, headers, body: JSON.stringify({ message: 'OTP sent successfully' }) };
   } catch (err) {
-    console.error('❌ Unexpected error:', err);
-    return {
-      statusCode: 500,
-      headers,
-      body: JSON.stringify({ error: 'Internal Server Error' }),
-    };
+    return { statusCode: 500, headers, body: JSON.stringify({ error: 'Internal Server Error' }) };
   }
 };
