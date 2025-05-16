@@ -416,16 +416,8 @@ const Authe = () => {
     }
 
     try {
-      let userId = localStorage.getItem('userId');
-      if (!userId) {
-        userId = ID.unique();
-        localStorage.setItem('userId', userId);
-      }
-
       localStorage.setItem('email', email);
-
-      await account.createEmailToken(userId, email);
-
+      await account.createEmailToken(email); // ✅ No userId
       setAuthMessage('📧 OTP sent to your email. Check your inbox or spam folder.');
     } catch (err) {
       console.error('Send OTP Error:', err);
@@ -433,6 +425,10 @@ const Authe = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const resendOtp = async () => {
+    await sendOtp();
   };
 
   const verifyOtp = async () => {
@@ -446,15 +442,14 @@ const Authe = () => {
     }
 
     try {
-      const userId = localStorage.getItem('userId');
-      if (!userId) {
-        setFieldErrors({ otp: 'User ID missing. Please send OTP again.' });
+      const emailStored = localStorage.getItem('email');
+      if (!emailStored) {
+        setFieldErrors({ otp: 'Email not found. Please send OTP again.' });
         setLoading(false);
         return;
       }
 
-      await account.createSession(userId, otp);
-
+      await account.createEmailSession(emailStored, otp); // ✅ Correct method
       setIsAuthenticated(true);
       setAuthMessage('✅ Email verified successfully!');
       nextStep();
@@ -468,10 +463,6 @@ const Authe = () => {
     } finally {
       setLoading(false);
     }
-  };
-
-  const resendOtp = async () => {
-    await sendOtp();
   };
 
   const nextStep = () => {
@@ -544,7 +535,6 @@ const Authe = () => {
       setIsAuthenticated(false);
       setAuthMessage('');
       setOtp('');
-      localStorage.removeItem('userId');
       localStorage.removeItem('email');
     } catch (err) {
       console.error('Sign out error:', err);
@@ -742,6 +732,7 @@ const Authe = () => {
 };
 
 export default Authe;
+
 
 
 
