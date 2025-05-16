@@ -10,21 +10,32 @@ exports.handler = async (event) => {
 
   try {
     const { email } = JSON.parse(event.body || '{}');
+
     if (!email) {
-      return { statusCode: 400, headers, body: JSON.stringify({ error: 'Email is required' }) };
+      return {
+        statusCode: 400,
+        headers,
+        body: JSON.stringify({ error: 'Email is required' }),
+      };
     }
 
     const otp = generateOTP();
     const expiresAt = new Date(Date.now() + 10 * 60000).toISOString();
 
-    const { error } = await supabase.from('email_otps').insert([{ email, otp, expires_at: expiresAt }]);
+    const { error } = await supabase
+      .from('email_otps')
+      .insert([{ email, otp, expires_at: expiresAt }]);
 
     if (error) {
-      console.error('Supabase Insert Error:', error);
-      return { statusCode: 500, headers, body: JSON.stringify({ error: error.message }) };
+      console.error("Supabase insert error:", error.message);
+      return {
+        statusCode: 500,
+        headers,
+        body: JSON.stringify({ error: error.message }),
+      };
     }
 
-    await fetch('https://api.resend.com/emails', {
+    const emailRes = await fetch('https://api.resend.com/emails', {
       method: 'POST',
       headers: {
         Authorization: `Bearer ${process.env.RESEND_API_KEY}`,
@@ -32,15 +43,34 @@ exports.handler = async (event) => {
       },
       body: JSON.stringify({
         from: 'Warranty App <onboarding@resend.dev>',
-        to: email,
+        to: 'sanjayvaghela.029@gmail.com',
         subject: 'Your OTP Code',
         html: `<h3>Your OTP is: <strong>${otp}</strong></h3>`,
       }),
     });
 
-    return { statusCode: 200, headers, body: JSON.stringify({ message: 'OTP sent successfully' }) };
+    const emailData = await emailRes.json();
+
+    if (!emailRes.ok) {
+      console.error("Email send error:", emailData);
+      return {
+        statusCode: 500,
+        headers,
+        body: JSON.stringify({ error: "Email sending failed", detail: emailData }),
+      };
+    }
+
+    return {
+      statusCode: 200,
+      headers,
+      body: JSON.stringify({ message: 'OTP sent successfully' }),
+    };
   } catch (err) {
-    console.error('Unhandled error:', err);
-    return { statusCode: 500, headers, body: JSON.stringify({ error: 'Internal Server Error' }) };
+    console.error("Unexpected error:", err.message);
+    return {
+      statusCode: 500,
+      headers,
+      body: JSON.stringify({ error: 'Server error', detail: err.message }),
+    };
   }
 };
