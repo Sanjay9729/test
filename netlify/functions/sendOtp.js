@@ -246,7 +246,7 @@ exports.handler = async (event) => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        from: 'sanjay.vaghela@appunik.com', // Replace with your verified domain
+        from: 'onboarding@resend.dev', // Replace with your verified domain
         to: email,
         subject: 'Your OTP Code',
         html: `<h3>Your OTP is: <strong>${otp}</strong></h3><p>It is valid for 10 minutes.</p>`,
