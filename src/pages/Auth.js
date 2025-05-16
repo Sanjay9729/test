@@ -115,34 +115,40 @@ const Authe = () => {
   };
 
   const handleSubmit = async () => {
-  setLoading(true);
-  setFieldErrors({});
+    setLoading(true);
+    setFieldErrors({});
 
-  try {
-    const { error } = await supabase.from('submissions').insert([
-      {
-        full_name: fullName,
-        email,
-        phone,
-        address,
-        selected_product: selectedProduct,
-      },
-    ]);
-
-    if (error) {
-      setFieldErrors({ submit: error.message });
+    if (!selectedProduct) {
+      setFieldErrors({ selectedProduct: "Please select a product." });
       setLoading(false);
       return;
     }
 
-    setStep(6);
-  } catch (err) {
-    setFieldErrors({ submit: 'Submission failed. Try again.' });
-  } finally {
-    setLoading(false);
-  }
-};
+    try {
+      const { data, error } = await supabase.from('submissions').insert([
+        {
+          full_name: fullName,
+          email,
+          phone,
+          address,
+          selected_product: selectedProduct,
+        },
+      ]);
 
+      if (error) {
+        console.error("Supabase insert error:", error);
+        setFieldErrors({ submit: error.message });
+        return;
+      }
+
+      setStep(6); // Thank you screen
+    } catch (err) {
+      console.error("Unexpected submit error:", err);
+      setFieldErrors({ submit: "Submission failed. Try again." });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const nextStep = () => {
     const errors = {};
@@ -156,6 +162,7 @@ const Authe = () => {
     }
     if (step === 3 && !phone) errors.phone = "Enter your phone number.";
     if (step === 4 && !address) errors.address = "Enter your address.";
+    if (step === 5 && !selectedProduct) errors.selectedProduct = "Please select a product.";
 
     if (Object.keys(errors).length > 0) {
       setFieldErrors(errors);
@@ -289,6 +296,7 @@ const Authe = () => {
                     )}
                   </ul>
                   {fieldErrors.selectedProduct && <p className="error">{fieldErrors.selectedProduct}</p>}
+                  {fieldErrors.submit && <p className="error">{fieldErrors.submit}</p>}
                   <button className="submit-btn" onClick={handleSubmit}>Submit</button>
                 </div>
               )}

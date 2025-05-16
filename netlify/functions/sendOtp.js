@@ -10,7 +10,6 @@ exports.handler = async (event) => {
 
   try {
     const { email } = JSON.parse(event.body || '{}');
-
     if (!email) {
       return { statusCode: 400, headers, body: JSON.stringify({ error: 'Email is required' }) };
     }
@@ -21,7 +20,8 @@ exports.handler = async (event) => {
     const { error } = await supabase.from('email_otps').insert([{ email, otp, expires_at: expiresAt }]);
 
     if (error) {
-      return { statusCode: 500, headers, body: JSON.stringify({ error: 'Database error' }) };
+      console.error('Supabase Insert Error:', error);
+      return { statusCode: 500, headers, body: JSON.stringify({ error: error.message }) };
     }
 
     await fetch('https://api.resend.com/emails', {
