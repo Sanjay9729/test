@@ -127,10 +127,10 @@ const Authe = () => {
     try {
       const { data, error } = await supabase.from('submissions').insert([
         {
-          full_name: fullName,
-          email,
-          phone,
           address,
+          email,
+          full_name: fullName,
+          phone,
           selected_product: selectedProduct,
         },
       ]);
