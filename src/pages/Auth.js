@@ -977,7 +977,7 @@ console.log('OTP being sent:', trimmedOtp);
 };
 const sendDataToShopify = async (document) => {
   try {
-    const response = await fetch('./DataWarranty', {
+    const response = await fetch('DataWarranty', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(document),
