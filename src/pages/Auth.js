@@ -791,10 +791,7 @@
 // 19/05/25
 
 
-
-
-
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Client, Account, Databases, ID } from 'appwrite';
 import './Authentication.css';
 
@@ -819,13 +816,11 @@ const Authe = () => {
   const APPWRITE_PROJECT_ID = '68271c3c000854f08575';
   const APPWRITE_DATABASE_ID = '68271db80016565f6882';
 
-  const { account, database } = useMemo(() => {
-    const client = new Client().setEndpoint(APPWRITE_URL).setProject(APPWRITE_PROJECT_ID);
-    return {
-      account: new Account(client),
-      database: new Databases(client),
-    };
-  }, []);
+  const client = new Client()
+    .setEndpoint(APPWRITE_URL)
+    .setProject(APPWRITE_PROJECT_ID);
+  const account = new Account(client);
+  const database = new Databases(client);
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -855,6 +850,25 @@ const Authe = () => {
     }
   }, [productSearch, products]);
 
+  useEffect(() => {
+    const checkSession = async () => {
+      try {
+        const session = await account.get();
+        if (session) {
+          setIsAuthenticated(true);
+          setAuthMessage('✅ You are logged in');
+          setEmail(session.email);
+        }
+      } catch (err) {
+        // Only log non-401 errors, as 401 is expected when no session exists
+        if (err.code !== 401) {
+          console.error('Check session error:', err);
+        }
+      }
+    };
+    checkSession();
+  }, [account]);
+
   const validateEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 
   const sendOtp = async () => {
@@ -869,21 +883,18 @@ const Authe = () => {
     }
 
     try {
-      const res = await fetch('/.netlify/functions/sendOtp', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email }),
-      });
-      const data = await res.json();
-
-      if (res.ok) {
-        localStorage.setItem('email', email);
-        setAuthMessage('📧 OTP sent to your email. Check your inbox or spam folder.');
-      } else {
-        throw new Error(data.error);
+      // Use existing userId from localStorage if available, otherwise generate new
+      let userId = localStorage.getItem('userId');
+      if (!userId) {
+        userId = `user-${Date.now()}`;
+        localStorage.setItem('userId', userId);
       }
+      localStorage.setItem('email', email);
+
+      console.log('Sending OTP for:', { userId, email });
+      await account.createEmailToken(userId, email);
+
+      setAuthMessage('📧 OTP sent to your email. Check your inbox or spam folder.');
     } catch (err) {
       console.error('Send OTP Error:', err);
       setFieldErrors({ email: 'Failed to send OTP. Please try again.' });
@@ -892,53 +903,84 @@ const Authe = () => {
     }
   };
 
-  const verifyOtp = async () => {
+  const resendOtp = async () => {
     setLoading(true);
-    setFieldErrors({});
     setAuthMessage('');
-
-    const trimmedOtp = otp.trim();
-    if (!trimmedOtp || trimmedOtp.length !== 6 || !/^\d{6}$/.test(trimmedOtp)) {
-      setFieldErrors({ otp: 'Please enter a valid 6-digit OTP.' });
-      setLoading(false);
-      return;
-    }
-
-    const email = localStorage.getItem('email');
-    if (!email) {
-      setFieldErrors({ otp: 'Email not found. Please resend OTP.' });
-      setLoading(false);
-      return;
-    }
+    setFieldErrors({});
 
     try {
-      const res = await fetch('/.netlify/functions/verifyOtp', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email, otp: trimmedOtp }),
-      });
-      const data = await res.json();
-
-      if (res.ok) {
-        setIsAuthenticated(true);
-        setAuthMessage('✅ Email verified successfully!');
-        nextStep();
-      } else {
-        throw new Error(data.error);
+      const userId = localStorage.getItem('userId');
+      if (!userId) {
+        setFieldErrors({ email: 'User ID not found. Please send OTP again.' });
+        setLoading(false);
+        return;
       }
+
+      console.log('Resending OTP for:', { userId, email });
+      await account.createEmailToken(userId, email);
+
+      setAuthMessage('📧 OTP resent successfully.');
     } catch (err) {
-      console.error('Verify OTP Error:', err);
-      setFieldErrors({ otp: err.message || 'Failed to verify OTP. Please try again.' });
+      console.error('Resend OTP Error:', err);
+      setFieldErrors({ email: 'Failed to resend OTP. Please try again.' });
     } finally {
       setLoading(false);
     }
   };
 
-  const resendOtp = async () => {
-    await sendOtp();
-  };
+const verifyOtp = async () => {
+  setLoading(true);
+  setFieldErrors({});
+  setAuthMessage('');
+
+  // Trim and validate OTP
+  const trimmedOtp = otp.trim();
+  if (!trimmedOtp || trimmedOtp.length !== 6 || !/^\d{6}$/.test(trimmedOtp)) {
+    setFieldErrors({ otp: 'Please enter a valid 6-digit OTP.' });
+    setLoading(false);
+    return;
+  }
+console.log('OTP being sent:', trimmedOtp);
+  // Retrieve userId and email
+  const userId = localStorage.getItem('userId');
+  const email = localStorage.getItem('email');
+  if (!userId || !email) {
+    setFieldErrors({ otp: 'User ID or email not found. Please send OTP again.' });
+    setLoading(false);
+    return;
+  }
+
+  try {
+    console.log('Verifying OTP with:', { userId, email, otp: trimmedOtp });
+
+    // Check for existing sessions
+    try {
+      const session = await account.getSession('current');
+      console.log('Existing session found, deleting:', session);
+      await account.deleteSession('current');
+    } catch (err) {
+      console.log('No existing session or error:', err);
+    }
+
+    // Verify OTP and create session
+    await account.createSession(userId, trimmedOtp);
+    console.log('Session created successfully');
+    setIsAuthenticated(true);
+    setAuthMessage('✅ Email verified successfully!');
+    nextStep();
+  } catch (err) {
+    console.error('Verify OTP Error:', {
+      code: err.code,
+      message: err.message,
+      response: err.response,
+      type: err.type,
+      fullError: JSON.stringify(err, null, 2),
+    });
+    setFieldErrors({ otp: err.message || 'Failed to verify OTP. Please try again.' });
+  } finally {
+    setLoading(false);
+  }
+};
 
   const handleSubmit = async () => {
     setLoading(true);
@@ -952,6 +994,12 @@ const Authe = () => {
 
     try {
       const session = await account.get();
+      if (!session) {
+        setFieldErrors({ submit: 'User not authenticated.' });
+        setLoading(false);
+        return;
+      }
+
       await database.createDocument(
         APPWRITE_DATABASE_ID,
         'submissions',
@@ -962,13 +1010,13 @@ const Authe = () => {
           full_name: fullName,
           phone,
           selected_product: selectedProduct,
-          user_id: session?.$id || 'anonymous',
+          user_id: session.$id,
         }
       );
 
       setStep(6);
     } catch (err) {
-      console.error('Submit Error:', err);
+      console.error('Unexpected submit error:', err);
       setFieldErrors({ submit: 'Submission failed. Please try again.' });
     } finally {
       setLoading(false);
@@ -1004,6 +1052,7 @@ const Authe = () => {
       setIsAuthenticated(false);
       setAuthMessage('');
       setOtp('');
+      localStorage.removeItem('userId');
       localStorage.removeItem('email');
     } catch (err) {
       console.error('Sign out error:', err);
@@ -1058,6 +1107,7 @@ const Authe = () => {
                     }}
                     disabled={isAuthenticated}
                   />
+                  
                   {!isAuthenticated ? (
                     <>
                       <button onClick={sendOtp} className="otp-btn" disabled={loading}>
@@ -1090,11 +1140,7 @@ const Authe = () => {
 
                   {fieldErrors.email && <p className="error">{fieldErrors.email}</p>}
                   {fieldErrors.otp && <p className="error">{fieldErrors.otp}</p>}
-                  {authMessage && (
-                    <p className={isAuthenticated ? 'success-message' : 'info-message'}>
-                      {authMessage}
-                    </p>
-                  )}
+                  {authMessage && <p className={isAuthenticated ? "success-message" : "info-message"}>{authMessage}</p>}
                 </div>
               )}
 
@@ -1141,9 +1187,7 @@ const Authe = () => {
                       filteredProducts.map((product) => (
                         <li
                           key={product.id}
-                          className={`product-item ${
-                            selectedProduct === product.title ? 'selected' : ''
-                          }`}
+                          className={`product-item ${selectedProduct === product.title ? 'selected' : ''}`}
                           onClick={() => setSelectedProduct(product.title)}
                         >
                           {product.images?.[0]?.src && (
@@ -1202,6 +1246,9 @@ const Authe = () => {
 };
 
 export default Authe;
+
+
+
 
 
 

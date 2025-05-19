@@ -32,39 +32,4 @@
 // };
 
 
-exports.handler = async (event) => {
-  try {
-    const { email, otp } = JSON.parse(event.body);
 
-    global.otpStore = global.otpStore || {};
-    const storedOtp = global.otpStore[email];
-
-    if (!storedOtp) {
-      return {
-        statusCode: 400,
-        body: JSON.stringify({ error: 'No OTP found for this email. Please resend OTP.' }),
-      };
-    }
-
-    if (storedOtp.toString() === otp.toString()) {
-      // OTP is correct – clear it so it can’t be reused
-      delete global.otpStore[email];
-
-      return {
-        statusCode: 200,
-        body: JSON.stringify({ success: true, message: 'OTP verified successfully.' }),
-      };
-    } else {
-      return {
-        statusCode: 401,
-        body: JSON.stringify({ error: 'Invalid OTP. Please try again.' }),
-      };
-    }
-  } catch (err) {
-    console.error('OTP verification error:', err);
-    return {
-      statusCode: 500,
-      body: JSON.stringify({ error: 'Something went wrong verifying OTP.' }),
-    };
-  }
-};

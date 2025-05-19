@@ -290,41 +290,4 @@
 
 
 
-const nodemailer = require('nodemailer');
 
-exports.handler = async (event) => {
-  const { email } = JSON.parse(event.body);
-  const otp = Math.floor(100000 + Math.random() * 900000);
-
-  global.otpStore = global.otpStore || {};
-  global.otpStore[email] = otp;
-
-  const transporter = nodemailer.createTransport({
-    service: 'Gmail',
-    auth: {
-      user: process.env.EMAIL_USER,
-      pass: process.env.EMAIL_PASS,
-    },
-  });
-
-  const mailOptions = {
-    from: process.env.EMAIL_USER,
-    to: email,
-    subject: 'Your OTP Code',
-    text: `Your OTP is: ${otp}`,
-  };
-
-  try {
-    await transporter.sendMail(mailOptions);
-    return {
-      statusCode: 200,
-      body: JSON.stringify({ message: 'OTP sent' }),
-    };
-  } catch (error) {
-    console.error(error);
-    return {
-      statusCode: 500,
-      body: JSON.stringify({ error: 'Failed to send OTP' }),
-    };
-  }
-};
