@@ -975,7 +975,24 @@ console.log('OTP being sent:', trimmedOtp);
     setLoading(false);
   }
 };
-
+const sendDataToShopify = async (document) => {
+  try {
+    const response = await fetch('/.netlify/functions/DataWarranty', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(document),
+    });
+    const result = await response.json();
+    if (!response.ok) {
+      throw new Error(result.error || 'Failed to send data to Shopify');
+    }
+    console.log('Shopify response:', result);
+    return result;
+  } catch (error) {
+    console.error('Error sending data to Shopify:', error);
+    throw error;
+  }
+};
   const handleSubmit = async () => {
     setLoading(true);
     setFieldErrors({});
@@ -1007,6 +1024,14 @@ console.log('OTP being sent:', trimmedOtp);
           user_id: session.$id,
         }
       );
+ await sendDataToShopify({
+      address,
+      email,
+      full_name: fullName,
+      phone,
+      selected_product: selectedProduct,
+      user_id: session.$id,
+    });
 
       setStep(6);
     } catch (err) {
