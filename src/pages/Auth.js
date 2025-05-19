@@ -870,36 +870,51 @@ const Authe = () => {
 
   const validateEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 
-  const sendOtp = async () => {
-    setLoading(true);
-    setAuthMessage('');
-    setFieldErrors({});
+const sendOtp = async () => {
+  setLoading(true);
+  setAuthMessage('');
+  setFieldErrors({});
 
-    if (!email || !validateEmail(email)) {
-      setFieldErrors({ email: 'Please enter a valid email format.' });
-      setLoading(false);
-      return;
-    }
+  if (!email || !validateEmail(email)) {
+    setFieldErrors({ email: 'Please enter a valid email format.' });
+    setLoading(false);
+    return;
+  }
 
-    try {
-      let userId = localStorage.getItem('userId');
-      if (!userId) {
-        userId = `user-${Date.now()}`;
-        localStorage.setItem('userId', userId);
+  try {
+    let userId = localStorage.getItem('userId');
+    let userExists = false;
+
+    // Check if userId exists and is valid
+    if (userId) {
+      try {
+        await account.get(userId); // Verify user exists
+        userExists = true;
+      } catch (err) {
+        userExists = false;
       }
-      localStorage.setItem('email', email);
-
-      console.log('Sending OTP for:', { userId, email });
-      await account.createEmailToken(userId, email);
-
-      setAuthMessage('📧 OTP sent to your email. Check your inbox or spam folder.');
-    } catch (err) {
-      console.error('Send OTP Error:', err);
-      setFieldErrors({ email: 'Failed to send OTP. Please try again.' });
-    } finally {
-      setLoading(false);
     }
-  };
+
+    // If no valid userId, create a new user
+    if (!userId || !userExists) {
+      const user = await account.create('unique()', email, undefined, undefined);
+      userId = user.$id;
+      localStorage.setItem('userId', userId);
+    }
+
+    localStorage.setItem('email', email);
+
+    console.log('Sending OTP for:', { userId, email });
+    await account.createEmailToken(userId, email);
+
+    setAuthMessage('📧 OTP sent to your email. Check your inbox or spam folder.');
+  } catch (err) {
+    console.error('Send OTP Error:', err);
+    setFieldErrors({ email: `Failed to send OTP: ${err.message}` });
+  } finally {
+    setLoading(false);
+  }
+};
 
   const resendOtp = async () => {
     setLoading(true);
@@ -977,7 +992,7 @@ console.log('OTP being sent:', trimmedOtp);
 };
 const sendDataToShopify = async (document) => {
   try {
-    const response = await fetch('DataWarranty', {
+    const response = await fetch('/.netlify/functions/DataWarranty', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(document),
