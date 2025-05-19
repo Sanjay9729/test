@@ -289,5 +289,30 @@
 
 
 
+const sdk = require('node-appwrite');
+
+exports.handler = async function(event, context) {
+  const client = new sdk.Client()
+    .setEndpoint(process.env.APPWRITE_ENDPOINT)
+    .setProject(process.env.APPWRITE_PROJECT_ID)
+    .setKey(process.env.APPWRITE_API_KEY);
+
+  const account = new sdk.Account(client);
+  const { userId, email } = JSON.parse(event.body);
+
+  try {
+    await account.createEmailToken(userId, email);
+    return {
+      statusCode: 200,
+      body: JSON.stringify({ success: true }),
+    };
+  } catch (error) {
+    console.error('Send OTP Error:', error.message);
+    return {
+      statusCode: 500,
+      body: JSON.stringify({ error: error.message }),
+    };
+  }
+};
 
 

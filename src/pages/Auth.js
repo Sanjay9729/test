@@ -816,9 +816,7 @@ const Authe = () => {
   const APPWRITE_PROJECT_ID = '68271c3c000854f08575';
   const APPWRITE_DATABASE_ID = '68271db80016565f6882';
 
-  const client = new Client()
-    .setEndpoint(APPWRITE_URL)
-    .setProject(APPWRITE_PROJECT_ID);
+  const client = new Client().setEndpoint(APPWRITE_URL).setProject(APPWRITE_PROJECT_ID);
   const account = new Account(client);
   const database = new Databases(client);
 
@@ -860,14 +858,13 @@ const Authe = () => {
           setEmail(session.email);
         }
       } catch (err) {
-        // Only log non-401 errors, as 401 is expected when no session exists
         if (err.code !== 401) {
           console.error('Check session error:', err);
         }
       }
     };
     checkSession();
-  }, [account]);
+  }, []);
 
   const validateEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 
@@ -883,7 +880,6 @@ const Authe = () => {
     }
 
     try {
-      // Use existing userId from localStorage if available, otherwise generate new
       let userId = localStorage.getItem('userId');
       if (!userId) {
         userId = `user-${Date.now()}`;
@@ -891,96 +887,61 @@ const Authe = () => {
       }
       localStorage.setItem('email', email);
 
-      console.log('Sending OTP for:', { userId, email });
-      await account.createEmailToken(userId, email);
+      const response = await fetch('/.netlify/functions/sendOtp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId, email }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to send OTP.');
+      }
 
       setAuthMessage('📧 OTP sent to your email. Check your inbox or spam folder.');
     } catch (err) {
       console.error('Send OTP Error:', err);
-      setFieldErrors({ email: 'Failed to send OTP. Please try again.' });
+      setFieldErrors({ email: err.message || 'Failed to send OTP. Please try again.' });
     } finally {
       setLoading(false);
     }
   };
 
-  const resendOtp = async () => {
+  const resendOtp = sendOtp; // Same logic as sendOtp
+
+  const verifyOtp = async () => {
     setLoading(true);
-    setAuthMessage('');
     setFieldErrors({});
+    setAuthMessage('');
+
+    const trimmedOtp = otp.trim();
+    if (!trimmedOtp || trimmedOtp.length !== 6 || !/^\d{6}$/.test(trimmedOtp)) {
+      setFieldErrors({ otp: 'Please enter a valid 6-digit OTP.' });
+      setLoading(false);
+      return;
+    }
+
+    const userId = localStorage.getItem('userId');
+    const storedEmail = localStorage.getItem('email');
+    if (!userId || !storedEmail) {
+      setFieldErrors({ otp: 'User ID or email not found. Please send OTP again.' });
+      setLoading(false);
+      return;
+    }
 
     try {
-      const userId = localStorage.getItem('userId');
-      if (!userId) {
-        setFieldErrors({ email: 'User ID not found. Please send OTP again.' });
-        setLoading(false);
-        return;
-      }
-
-      console.log('Resending OTP for:', { userId, email });
-      await account.createEmailToken(userId, email);
-
-      setAuthMessage('📧 OTP resent successfully.');
+      await account.createSession(userId, trimmedOtp);
+      setIsAuthenticated(true);
+      setAuthMessage('✅ Email verified successfully!');
+      nextStep();
     } catch (err) {
-      console.error('Resend OTP Error:', err);
-      setFieldErrors({ email: 'Failed to resend OTP. Please try again.' });
+      console.error('Verify OTP Error:', err);
+      setFieldErrors({ otp: err.message || 'Failed to verify OTP. Please try again.' });
     } finally {
       setLoading(false);
     }
   };
-
-const verifyOtp = async () => {
-  setLoading(true);
-  setFieldErrors({});
-  setAuthMessage('');
-
-  // Trim and validate OTP
-  const trimmedOtp = otp.trim();
-  if (!trimmedOtp || trimmedOtp.length !== 6 || !/^\d{6}$/.test(trimmedOtp)) {
-    setFieldErrors({ otp: 'Please enter a valid 6-digit OTP.' });
-    setLoading(false);
-    return;
-  }
-console.log('OTP being sent:', trimmedOtp);
-  // Retrieve userId and email
-  const userId = localStorage.getItem('userId');
-  const email = localStorage.getItem('email');
-  if (!userId || !email) {
-    setFieldErrors({ otp: 'User ID or email not found. Please send OTP again.' });
-    setLoading(false);
-    return;
-  }
-
-  try {
-    console.log('Verifying OTP with:', { userId, email, otp: trimmedOtp });
-
-    // Check for existing sessions
-    try {
-      const session = await account.getSession('current');
-      console.log('Existing session found, deleting:', session);
-      await account.deleteSession('current');
-    } catch (err) {
-      console.log('No existing session or error:', err);
-    }
-
-    // Verify OTP and create session
-    await account.createSession(userId, trimmedOtp);
-    console.log('Session created successfully');
-    setIsAuthenticated(true);
-    setAuthMessage('✅ Email verified successfully!');
-    nextStep();
-  } catch (err) {
-    console.error('Verify OTP Error:', {
-      code: err.code,
-      message: err.message,
-      response: err.response,
-      type: err.type,
-      fullError: JSON.stringify(err, null, 2),
-    });
-    setFieldErrors({ otp: err.message || 'Failed to verify OTP. Please try again.' });
-  } finally {
-    setLoading(false);
-  }
-};
 
   const handleSubmit = async () => {
     setLoading(true);
@@ -1016,7 +977,7 @@ console.log('OTP being sent:', trimmedOtp);
 
       setStep(6);
     } catch (err) {
-      console.error('Unexpected submit error:', err);
+      console.error('Submit Error:', err);
       setFieldErrors({ submit: 'Submission failed. Please try again.' });
     } finally {
       setLoading(false);
@@ -1039,8 +1000,8 @@ console.log('OTP being sent:', trimmedOtp);
 
     if (Object.keys(errors).length > 0) {
       setFieldErrors(errors);
-    } else {
-      if (step < 5) setStep(step + 1);
+    } else if (step < 5) {
+      setStep(step + 1);
     }
   };
 
@@ -1083,11 +1044,7 @@ console.log('OTP being sent:', trimmedOtp);
               {step === 1 && (
                 <div className="form-group">
                   <label>Full Name</label>
-                  <input
-                    type="text"
-                    value={fullName}
-                    onChange={(e) => setFullName(e.target.value)}
-                  />
+                  <input type="text" value={fullName} onChange={(e) => setFullName(e.target.value)} />
                   {fieldErrors.fullName && <p className="error">{fieldErrors.fullName}</p>}
                 </div>
               )}
@@ -1107,34 +1064,21 @@ console.log('OTP being sent:', trimmedOtp);
                     }}
                     disabled={isAuthenticated}
                   />
-                  
+
                   {!isAuthenticated ? (
                     <>
-                      <button onClick={sendOtp} className="otp-btn" disabled={loading}>
-                        Send OTP
-                      </button>
-                      <button onClick={resendOtp} className="otp-btn" disabled={loading}>
-                        Resend OTP
-                      </button>
+                      <button onClick={sendOtp} className="otp-btn" disabled={loading}>Send OTP</button>
+                      <button onClick={resendOtp} className="otp-btn" disabled={loading}>Resend OTP</button>
                     </>
                   ) : (
-                    <button onClick={handleSignOut} className="otp-btn">
-                      Sign Out
-                    </button>
+                    <button onClick={handleSignOut} className="otp-btn">Sign Out</button>
                   )}
 
                   {!isAuthenticated && authMessage && (
                     <>
                       <label>Enter OTP</label>
-                      <input
-                        type="text"
-                        value={otp}
-                        onChange={(e) => setOtp(e.target.value)}
-                        maxLength={6}
-                      />
-                      <button onClick={verifyOtp} className="otp-btn" disabled={loading}>
-                        Verify OTP
-                      </button>
+                      <input type="text" value={otp} onChange={(e) => setOtp(e.target.value)} maxLength={6} />
+                      <button onClick={verifyOtp} className="otp-btn" disabled={loading}>Verify OTP</button>
                     </>
                   )}
 
@@ -1147,11 +1091,7 @@ console.log('OTP being sent:', trimmedOtp);
               {step === 3 && (
                 <div className="form-group">
                   <label>Phone Number</label>
-                  <input
-                    type="tel"
-                    value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
-                  />
+                  <input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} />
                   {fieldErrors.phone && <p className="error">{fieldErrors.phone}</p>}
                 </div>
               )}
@@ -1159,11 +1099,7 @@ console.log('OTP being sent:', trimmedOtp);
               {step === 4 && (
                 <div className="form-group">
                   <label>Address</label>
-                  <textarea
-                    rows={3}
-                    value={address}
-                    onChange={(e) => setAddress(e.target.value)}
-                  />
+                  <textarea rows={3} value={address} onChange={(e) => setAddress(e.target.value)} />
                   {fieldErrors.address && <p className="error">{fieldErrors.address}</p>}
                 </div>
               )}
@@ -1191,11 +1127,7 @@ console.log('OTP being sent:', trimmedOtp);
                           onClick={() => setSelectedProduct(product.title)}
                         >
                           {product.images?.[0]?.src && (
-                            <img
-                              src={product.images[0].src}
-                              alt={product.title}
-                              className="product-image"
-                            />
+                            <img src={product.images[0].src} alt={product.title} className="product-image" />
                           )}
                           <span>{product.title}</span>
                         </li>
@@ -1204,14 +1136,10 @@ console.log('OTP being sent:', trimmedOtp);
                       <li>No products found</li>
                     )}
                   </ul>
-                  {fieldErrors.selectedProduct && (
-                    <p className="error">{fieldErrors.selectedProduct}</p>
-                  )}
+                  {fieldErrors.selectedProduct && <p className="error">{fieldErrors.selectedProduct}</p>}
                   {fieldErrors.submit && <p className="error">{fieldErrors.submit}</p>}
                   {fieldErrors.products && <p className="error">{fieldErrors.products}</p>}
-                  <button className="submit-btn" onClick={handleSubmit} disabled={loading}>
-                    Submit
-                  </button>
+                  <button className="submit-btn" onClick={handleSubmit} disabled={loading}>Submit</button>
                 </div>
               )}
 
@@ -1227,14 +1155,10 @@ console.log('OTP being sent:', trimmedOtp);
 
               <div className="btn-group">
                 {step > 1 && step < 6 && (
-                  <button onClick={prevStep} disabled={loading}>
-                    Previous
-                  </button>
+                  <button onClick={prevStep} disabled={loading}>Previous</button>
                 )}
                 {step < 5 && (
-                  <button onClick={nextStep} disabled={loading}>
-                    Next
-                  </button>
+                  <button onClick={nextStep} disabled={loading}>Next</button>
                 )}
               </div>
             </>
