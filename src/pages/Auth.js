@@ -645,7 +645,7 @@
 //                     }}
 //                     disabled={isAuthenticated}
 //                   />
-
+                  
 //                   {!isAuthenticated ? (
 //                     <>
 //                       <button onClick={sendOtp} className="otp-btn" disabled={loading}>
@@ -804,6 +804,7 @@ const Authe = () => {
   const [selectedProduct, setSelectedProduct] = useState('');
   const [productSearch, setProductSearch] = useState('');
   const [products, setProducts] = useState([]);
+  const [data ,setData]=useState()
   const [filteredProducts, setFilteredProducts] = useState([]);
   const [fieldErrors, setFieldErrors] = useState({});
   const [loading, setLoading] = useState(false);
@@ -812,7 +813,6 @@ const Authe = () => {
   const [otp, setOtp] = useState('');
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
-  // Appwrite config
   const APPWRITE_ENDPOINT = 'https://appwrite.appunik-team.com/v1';
   const APPWRITE_PROJECT_ID = '68271c3c000854f08575';
   const APPWRITE_DATABASE_ID = '68271db80016565f6882';
@@ -821,15 +821,16 @@ const Authe = () => {
   const client = new Client().setEndpoint(APPWRITE_ENDPOINT).setProject(APPWRITE_PROJECT_ID);
   const account = new Account(client);
   const database = new Databases(client);
-
+  console.log("data" ,data)
   useEffect(() => {
     const fetchProducts = async () => {
+      
       try {
         const res = await fetch('/.netlify/functions/products');
         const data = await res.json();
         setProducts(data);
         setFilteredProducts(data);
-      } catch {
+      } catch (err) {
         setFieldErrors({ products: 'Failed to load products.' });
       } finally {
         setLoadingProducts(false);
@@ -837,14 +838,15 @@ const Authe = () => {
     };
     fetchProducts();
   }, []);
-
+  
   useEffect(() => {
-    const filtered = productSearch.trim()
-      ? products.filter(p =>
-        p.title.toLowerCase().includes(productSearch.toLowerCase().trim())
-      )
-      : products;
-    setFilteredProducts(filtered);
+    setFilteredProducts(
+      productSearch.trim() === ''
+        ? products
+        : products.filter((p) =>
+            p.title.toLowerCase().includes(productSearch.toLowerCase().trim())
+          )
+    );
   }, [productSearch, products]);
 
   useEffect(() => {
@@ -852,16 +854,16 @@ const Authe = () => {
       try {
         const session = await account.get();
         setIsAuthenticated(true);
-        setEmail(session.email);
         setAuthMessage(`✅ Logged in as ${session.email}`);
+        setEmail(session.email);
         localStorage.setItem('userId', session.$id);
         localStorage.setItem('email', session.email);
-      } catch { }
+      } catch {}
     };
     checkSession();
   }, []);
 
-  const validateEmail = email => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  const validateEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 
   const sendOtp = async () => {
     setLoading(true);
@@ -884,7 +886,6 @@ const Authe = () => {
       setLoading(false);
     }
   };
-
 
   const verifyOtp = async () => {
     setLoading(true);
@@ -909,13 +910,16 @@ const Authe = () => {
     }
   };
 
-  const sendDataToShopify = async data => {
+  const sendDataToShopify = async (data) => {
     const res = await fetch('/.netlify/functions/DataWarranty', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data),
     });
+
     const result = await res.json();
+    console.log('📦 Shopify response:', result);
+
     if (!res.ok) throw new Error(result.error || 'Shopify error');
   };
 
@@ -926,6 +930,12 @@ const Authe = () => {
 
     if (!selectedProduct) {
       setFieldErrors({ selectedProduct: 'Please select a product.' });
+      setLoading(false);
+      return;
+    }
+
+    if (!isAuthenticated) {
+      setFieldErrors({ email: 'Please verify your email before submitting.' });
       setLoading(false);
       return;
     }
@@ -945,7 +955,8 @@ const Authe = () => {
       await sendDataToShopify(document);
       setStep(6);
     } catch (err) {
-      setFieldErrors({ submit: err.message || 'Submission failed.' });
+      console.error('❌ Submit error:', err);
+      setFieldErrors({ submit: err.message || 'Submission failed. Please try again.' });
     } finally {
       setLoading(false);
     }
@@ -957,6 +968,8 @@ const Authe = () => {
     if (step === 2 && (!email || !isAuthenticated)) errors.email = 'Verify email with OTP.';
     if (step === 3 && !phone) errors.phone = 'Enter phone number.';
     if (step === 4 && !address) errors.address = 'Enter address.';
+    if (step === 5 && !selectedProduct) errors.selectedProduct = 'Select a product.';
+
     if (Object.keys(errors).length > 0) {
       setFieldErrors(errors);
     } else {
@@ -985,7 +998,7 @@ const Authe = () => {
           <h2 className="title">Warranty Registration</h2>
 
           <div className="steps">
-            {[1, 2, 3, 4, 5, 6].map(s => (
+            {[1, 2, 3, 4, 5, 6].map((s) => (
               <div
                 key={s}
                 className={`step-circle ${s === step ? 'active' : s < step ? 'completed' : ''}`}
@@ -1002,7 +1015,7 @@ const Authe = () => {
               {step === 1 && (
                 <div className="form-group">
                   <label>Full Name</label>
-                  <input value={fullName} onChange={e => setFullName(e.target.value)} />
+                  <input value={fullName} onChange={(e) => setFullName(e.target.value)} />
                   {fieldErrors.fullName && <p className="error">{fieldErrors.fullName}</p>}
                 </div>
               )}
@@ -1013,7 +1026,7 @@ const Authe = () => {
                   <input
                     type="email"
                     value={email}
-                    onChange={e => {
+                    onChange={(e) => {
                       setEmail(e.target.value);
                       setOtp('');
                       setIsAuthenticated(false);
@@ -1033,7 +1046,7 @@ const Authe = () => {
                       <input
                         placeholder="Enter OTP"
                         value={otp}
-                        onChange={e => setOtp(e.target.value)}
+                        onChange={(e) => setOtp(e.target.value)}
                         maxLength={6}
                       />
                       <button onClick={verifyOtp} className="otp-btn">Verify OTP</button>
@@ -1041,18 +1054,14 @@ const Authe = () => {
                   )}
                   {fieldErrors.email && <p className="error">{fieldErrors.email}</p>}
                   {fieldErrors.otp && <p className="error">{fieldErrors.otp}</p>}
-                  {authMessage && (
-                    <p className={isAuthenticated ? 'success-message' : 'info-message'}>
-                      {authMessage}
-                    </p>
-                  )}
+                  {authMessage && <p className={isAuthenticated ? 'success-message' : 'info-message'}>{authMessage}</p>}
                 </div>
               )}
 
               {step === 3 && (
                 <div className="form-group">
                   <label>Phone Number</label>
-                  <input value={phone} onChange={e => setPhone(e.target.value)} />
+                  <input value={phone} onChange={(e) => setPhone(e.target.value)} />
                   {fieldErrors.phone && <p className="error">{fieldErrors.phone}</p>}
                 </div>
               )}
@@ -1060,7 +1069,7 @@ const Authe = () => {
               {step === 4 && (
                 <div className="form-group">
                   <label>Address</label>
-                  <textarea value={address} onChange={e => setAddress(e.target.value)} />
+                  <textarea value={address} onChange={(e) => setAddress(e.target.value)} />
                   {fieldErrors.address && <p className="error">{fieldErrors.address}</p>}
                 </div>
               )}
@@ -1070,31 +1079,47 @@ const Authe = () => {
                   <label>Select Product</label>
                   <input
                     value={productSearch}
-                    onChange={e => setProductSearch(e.target.value)}
+                    onChange={(e) => setProductSearch(e.target.value)}
                     placeholder="Search products..."
                   />
+                  {selectedProduct && <p className="selected-product">✅ Selected: {selectedProduct}</p>}
                   <ul className="product-list">
                     {loadingProducts ? (
                       <li>Loading...</li>
                     ) : filteredProducts.length > 0 ? (
-                      filteredProducts.map(product => (
+                      filteredProducts.map((product) => (
                         <li
                           key={product.id}
                           className={`product-item ${selectedProduct === product.title ? 'selected' : ''}`}
                           onClick={() => setSelectedProduct(product.title)}
+                          style={{
+                            border: selectedProduct === product.title ? '2px solid #4CAF50' : '1px solid #ccc',
+                            background: selectedProduct === product.title ? '#eaffea' : '#fff',
+                            cursor: 'pointer',
+                            padding: '8px',
+                            marginBottom: '4px',
+                            display: 'flex',
+                            alignItems: 'center',
+                          }}
                         >
                           {product.images?.[0]?.src && (
-                            <img src={product.images[0].src} alt={product.title} className="product-image" />
+                            <img
+                              src={product.images[0].src}
+                              alt={product.title}
+                              className="product-image"
+                              style={{ width: '40px', height: '40px', marginRight: '10px' }}
+                            />
                           )}
                           <span>{product.title}</span>
                         </li>
                       ))
                     ) : (
-                      <li>No products found.</li>
+                      <li>No products found</li>
                     )}
                   </ul>
                   {fieldErrors.selectedProduct && <p className="error">{fieldErrors.selectedProduct}</p>}
                   {fieldErrors.submit && <p className="error">{fieldErrors.submit}</p>}
+                  <button className="submit-btn" onClick={handleSubmit} disabled={loading}>Submit</button>
                 </div>
               )}
 
@@ -1109,21 +1134,8 @@ const Authe = () => {
               )}
 
               <div className="btn-group">
-                {step > 1 && step < 6 && (
-                  <button onClick={prevStep} disabled={loading}>
-                    Previous
-                  </button>
-                )}
-                {step < 5 && (
-                  <button onClick={nextStep} disabled={loading}>
-                    Next
-                  </button>
-                )}
-                {step === 5 && (
-                  <button className="submit-btn" onClick={handleSubmit} disabled={loading}>
-                    Submit
-                  </button>
-                )}
+                {step > 1 && step < 6 && <button onClick={prevStep} disabled={loading}>Previous</button>}
+                {step < 5 && <button onClick={nextStep} disabled={loading}>Next</button>}
               </div>
             </>
           )}
