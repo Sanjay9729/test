@@ -815,10 +815,9 @@ const Authe = () => {
   const APPWRITE_ENDPOINT = 'https://appwrite.appunik-team.com/v1';
   const APPWRITE_PROJECT_ID = '68271c3c000854f08575';
   const APPWRITE_DATABASE_ID = '68271db80016565f6882';
+  const APPWRITE_COLLECTION_ID = '68271dcf002c6797363d';
 
-  const client = new Client()
-    .setEndpoint(APPWRITE_ENDPOINT)
-    .setProject(APPWRITE_PROJECT_ID);
+  const client = new Client().setEndpoint(APPWRITE_ENDPOINT).setProject(APPWRITE_PROJECT_ID);
   const account = new Account(client);
   const database = new Databases(client);
 
@@ -830,8 +829,7 @@ const Authe = () => {
         setProducts(data);
         setFilteredProducts(data);
       } catch (err) {
-        console.error('Product fetch error:', err);
-        setFieldErrors({ products: 'Failed to load products. Try again.' });
+        setFieldErrors({ products: 'Failed to load products.' });
       } finally {
         setLoadingProducts(false);
       }
@@ -840,159 +838,88 @@ const Authe = () => {
   }, []);
 
   useEffect(() => {
-    if (productSearch.trim() === '') {
-      setFilteredProducts(products);
-    } else {
-      const filtered = products.filter((p) =>
-        p.title.toLowerCase().includes(productSearch.toLowerCase().trim())
-      );
-      setFilteredProducts(filtered);
-    }
+    setFilteredProducts(
+      productSearch.trim() === ''
+        ? products
+        : products.filter((p) =>
+            p.title.toLowerCase().includes(productSearch.toLowerCase().trim())
+          )
+    );
   }, [productSearch, products]);
 
   useEffect(() => {
     const checkSession = async () => {
       try {
         const session = await account.get();
-        if (session) {
-          setIsAuthenticated(true);
-          setAuthMessage('✅ You are logged in');
-          setEmail(session.email);
-        }
-      } catch (err) {
-        if (err.code !== 401) {
-          console.error('Check session error:', err);
-        }
-      }
+        setIsAuthenticated(true);
+        setAuthMessage(`✅ Logged in as ${session.email}`);
+        setEmail(session.email);
+        localStorage.setItem('userId', session.$id);
+        localStorage.setItem('email', session.email);
+      } catch {}
     };
     checkSession();
-  }, [account]);
+  }, []);
 
   const validateEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 
-  const sendOtp = async () => {
-    setLoading(true);
-    setAuthMessage('');
-    setFieldErrors({});
-
-    if (!email || !validateEmail(email)) {
-      setFieldErrors({ email: 'Please enter a valid email format.' });
-      setLoading(false);
-      return;
-    }
-
-    try {
-      let userId = localStorage.getItem('userId');
-      if (!userId) {
-        userId = `user-${Date.now()}`;
-        localStorage.setItem('userId', userId);
-      }
-      localStorage.setItem('email', email);
-
-      console.log('Sending OTP for:', { userId, email });
-      await account.createEmailToken(userId, email);
-
-      setAuthMessage('📧 OTP sent to your email. Check your inbox or spam folder.');
-    } catch (err) {
-      console.error('Send OTP Error:', err);
-      setFieldErrors({ email: 'Failed to send OTP. Please try again.' });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const resendOtp = async () => {
-    setLoading(true);
-    setAuthMessage('');
-    setFieldErrors({});
-
-    try {
-      const userId = localStorage.getItem('userId');
-      if (!userId) {
-        setFieldErrors({ email: 'User ID not found. Please send OTP again.' });
-        setLoading(false);
-        return;
-      }
-
-      console.log('Resending OTP for:', { userId, email });
-      await account.createEmailToken(userId, email);
-
-      setAuthMessage('📧 OTP resent successfully.');
-    } catch (err) {
-      console.error('Resend OTP Error:', err);
-      setFieldErrors({ email: 'Failed to resend OTP. Please try again.' });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-const verifyOtp = async () => {
+ const sendOtp = async () => {
   setLoading(true);
   setFieldErrors({});
   setAuthMessage('');
 
-  const trimmedOtp = otp.trim();
-  if (!trimmedOtp || trimmedOtp.length !== 6 || !/^\d{6}$/.test(trimmedOtp)) {
-    setFieldErrors({ otp: 'Please enter a valid 6-digit OTP.' });
-    setLoading(false);
-    return;
-  }
-console.log('OTP being sent:', trimmedOtp);
-  const userId = localStorage.getItem('userId');
-  const email = localStorage.getItem('email');
-  if (!userId || !email) {
-    setFieldErrors({ otp: 'User ID or email not found. Please send OTP again.' });
+  if (!email || !validateEmail(email)) {
+    setFieldErrors({ email: 'Enter a valid email address.' });
     setLoading(false);
     return;
   }
 
   try {
-    console.log('Verifying OTP with:', { userId, email, otp: trimmedOtp });
-
-    try {
-      const session = await account.getSession('current');
-      console.log('Existing session found, deleting:', session);
-      await account.deleteSession('current');
-    } catch (err) {
-      console.log('No existing session or error:', err);
-    }
-
-    await account.createSession(userId, trimmedOtp);
-    console.log('Session created successfully');
-    setIsAuthenticated(true);
-    setAuthMessage('✅ Email verified successfully!');
-    nextStep();
+    const response = await account.createEmailToken(ID.unique(), email);
+    localStorage.setItem('userId', response.userId);
+    setAuthMessage('📧 OTP sent to your email.');
   } catch (err) {
-    console.error('Verify OTP Error:', {
-      code: err.code,
-      message: err.message,
-      response: err.response,
-      type: err.type,
-      fullError: JSON.stringify(err, null, 2),
-    });
-    setFieldErrors({ otp: err.message || 'Failed to verify OTP. Please try again.' });
+    setFieldErrors({ email: err.message || 'Failed to send OTP.' });
   } finally {
     setLoading(false);
   }
 };
-const sendDataToShopify = async (document) => {
+
+
+const verifyOtp = async () => {
+  setLoading(true);
+  const userId = localStorage.getItem('userId');
+  const secret = otp.trim();
+
+  if (!userId || !secret) {
+    setFieldErrors({ otp: 'Enter a valid OTP.' });
+    setLoading(false);
+    return;
+  }
+
   try {
-    const response = await fetch('DataWarranty', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(document),
-    });
-    const result = await response.json();
-    if (!response.ok) {
-      throw new Error(result.error || 'Failed to send data to Shopify');
-    }
-    console.log('Shopify response:', result);
-    return result;
-  } catch (error) {
-    console.error('Error sending data to Shopify:', error);
-    throw error;
+    await account.createSession(userId, secret);
+    setIsAuthenticated(true);
+    setAuthMessage('✅ Verified and logged in!');
+    nextStep();
+  } catch (err) {
+    setFieldErrors({ otp: 'Invalid OTP. Please try again.' });
+  } finally {
+    setLoading(false);
   }
 };
+
+
+  const sendDataToShopify = async (data) => {
+    const res = await fetch('/.netlify/functions/DataWarranty', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+    const result = await res.json();
+    if (!res.ok) throw new Error(result.error || 'Shopify error');
+  };
+
   const handleSubmit = async () => {
     if (loading) return;
     setLoading(true);
@@ -1004,45 +931,21 @@ const sendDataToShopify = async (document) => {
       return;
     }
 
-    if (!isAuthenticated) {
-      setFieldErrors({ email: 'Please verify your email before submitting.' });
-      setLoading(false);
-      return;
-    }
-
     try {
       const session = await account.get();
-      if (!session) {
-        setFieldErrors({ submit: 'User not authenticated.' });
-        setLoading(false);
-        return;
-      }
+      const document = {
+        full_name: fullName,
+        email,
+        phone,
+        address,
+        selected_product: selectedProduct,
+        user_id: session.$id,
+      };
 
-      await database.createDocument(
-        APPWRITE_DATABASE_ID,
-        '68271dcf002c6797363d',
-        ID.unique(),
-        {
-          address,
-          email,
-          full_name: fullName,
-          phone,
-          selected_product: selectedProduct,
-          user_id: session.$id,
-        }
-      );
- await sendDataToShopify({
-      address,
-      email,
-      full_name: fullName,
-      phone,
-      selected_product: selectedProduct,
-      user_id: session.$id,
-    });
-
+      await database.createDocument(APPWRITE_DATABASE_ID, APPWRITE_COLLECTION_ID, ID.unique(), document);
+      await sendDataToShopify(document);
       setStep(6);
     } catch (err) {
-      console.error('Unexpected submit error:', err);
       setFieldErrors({ submit: 'Submission failed. Please try again.' });
     } finally {
       setLoading(false);
@@ -1051,22 +954,16 @@ const sendDataToShopify = async (document) => {
 
   const nextStep = () => {
     const errors = {};
-    if (step === 1 && !fullName) errors.fullName = 'Please enter your full name.';
-    if (step === 2) {
-      if (!email || !validateEmail(email)) {
-        errors.email = 'Enter a valid email.';
-      } else if (!isAuthenticated) {
-        errors.email = 'Please verify your email with OTP.';
-      }
-    }
-    if (step === 3 && !phone) errors.phone = 'Enter your phone number.';
-    if (step === 4 && !address) errors.address = 'Enter your address.';
-    if (step === 5 && !selectedProduct) errors.selectedProduct = 'Please select a product.';
+    if (step === 1 && !fullName) errors.fullName = 'Enter your full name.';
+    if (step === 2 && (!email || !isAuthenticated)) errors.email = 'Verify email with OTP.';
+    if (step === 3 && !phone) errors.phone = 'Enter phone number.';
+    if (step === 4 && !address) errors.address = 'Enter address.';
+    if (step === 5 && !selectedProduct) errors.selectedProduct = 'Select a product.';
 
     if (Object.keys(errors).length > 0) {
       setFieldErrors(errors);
     } else {
-      if (step < 5) setStep(step + 1);
+      setStep(step + 1);
     }
   };
 
@@ -1078,8 +975,7 @@ const sendDataToShopify = async (document) => {
       setIsAuthenticated(false);
       setAuthMessage('');
       setOtp('');
-      localStorage.removeItem('userId');
-      localStorage.removeItem('email');
+      localStorage.clear();
     } catch (err) {
       console.error('Sign out error:', err);
     }
@@ -1109,11 +1005,7 @@ const sendDataToShopify = async (document) => {
               {step === 1 && (
                 <div className="form-group">
                   <label>Full Name</label>
-                  <input
-                    type="text"
-                    value={fullName}
-                    onChange={(e) => setFullName(e.target.value)}
-                  />
+                  <input value={fullName} onChange={(e) => setFullName(e.target.value)} />
                   {fieldErrors.fullName && <p className="error">{fieldErrors.fullName}</p>}
                 </div>
               )}
@@ -1133,51 +1025,33 @@ const sendDataToShopify = async (document) => {
                     }}
                     disabled={isAuthenticated}
                   />
-                  
-                  {!isAuthenticated ? (
+                  {isAuthenticated ? (
                     <>
-                      <button onClick={sendOtp} className="otp-btn" disabled={loading}>
-                        Send OTP
-                      </button>
-                      <button onClick={resendOtp} className="otp-btn" disabled={loading}>
-                        Resend OTP
-                      </button>
+                      <p className="success-message">{authMessage}</p>
+                      <button onClick={handleSignOut} className="otp-btn">Sign Out</button>
                     </>
                   ) : (
-                    <button onClick={handleSignOut} className="otp-btn">
-                      Sign Out
-                    </button>
-                  )}
-
-                  {!isAuthenticated && authMessage && (
                     <>
-                      <label>Enter OTP</label>
+                      <button onClick={sendOtp} className="otp-btn">Send OTP</button>
                       <input
-                        type="text"
+                        placeholder="Enter OTP"
                         value={otp}
                         onChange={(e) => setOtp(e.target.value)}
                         maxLength={6}
                       />
-                      <button onClick={verifyOtp} className="otp-btn" disabled={loading}>
-                        Verify OTP
-                      </button>
+                      <button onClick={verifyOtp} className="otp-btn">Verify OTP</button>
                     </>
                   )}
-
                   {fieldErrors.email && <p className="error">{fieldErrors.email}</p>}
                   {fieldErrors.otp && <p className="error">{fieldErrors.otp}</p>}
-                  {authMessage && <p className={isAuthenticated ? "success-message" : "info-message"}>{authMessage}</p>}
+                  {authMessage && <p className={isAuthenticated ? 'success-message' : 'info-message'}>{authMessage}</p>}
                 </div>
               )}
 
               {step === 3 && (
                 <div className="form-group">
                   <label>Phone Number</label>
-                  <input
-                    type="tel"
-                    value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
-                  />
+                  <input value={phone} onChange={(e) => setPhone(e.target.value)} />
                   {fieldErrors.phone && <p className="error">{fieldErrors.phone}</p>}
                 </div>
               )}
@@ -1185,11 +1059,7 @@ const sendDataToShopify = async (document) => {
               {step === 4 && (
                 <div className="form-group">
                   <label>Address</label>
-                  <textarea
-                    rows={3}
-                    value={address}
-                    onChange={(e) => setAddress(e.target.value)}
-                  />
+                  <textarea value={address} onChange={(e) => setAddress(e.target.value)} />
                   {fieldErrors.address && <p className="error">{fieldErrors.address}</p>}
                 </div>
               )}
@@ -1198,18 +1068,14 @@ const sendDataToShopify = async (document) => {
                 <div className="form-group">
                   <label>Select Product</label>
                   <input
-                    type="text"
                     value={productSearch}
                     onChange={(e) => setProductSearch(e.target.value)}
                     placeholder="Search products..."
                   />
-                  {selectedProduct && (
-                    <p className="selected-product">✅ Selected: {selectedProduct}</p>
-                  )}
                   <ul className="product-list">
                     {loadingProducts ? (
-                      <li>Loading products...</li>
-                    ) : filteredProducts.length > 0 ? (
+                      <li>Loading...</li>
+                    ) : (
                       filteredProducts.map((product) => (
                         <li
                           key={product.id}
@@ -1217,27 +1083,15 @@ const sendDataToShopify = async (document) => {
                           onClick={() => setSelectedProduct(product.title)}
                         >
                           {product.images?.[0]?.src && (
-                            <img
-                              src={product.images[0].src}
-                              alt={product.title}
-                              className="product-image"
-                            />
+                            <img src={product.images[0].src} alt={product.title} className="product-image" />
                           )}
                           <span>{product.title}</span>
                         </li>
                       ))
-                    ) : (
-                      <li>No products found</li>
                     )}
                   </ul>
-                  {fieldErrors.selectedProduct && (
-                    <p className="error">{fieldErrors.selectedProduct}</p>
-                  )}
+                  {fieldErrors.selectedProduct && <p className="error">{fieldErrors.selectedProduct}</p>}
                   {fieldErrors.submit && <p className="error">{fieldErrors.submit}</p>}
-                  {fieldErrors.products && <p className="error">{fieldErrors.products}</p>}
-                  <button className="submit-btn" onClick={handleSubmit} disabled={loading}>
-                    Submit
-                  </button>
                 </div>
               )}
 
@@ -1252,16 +1106,9 @@ const sendDataToShopify = async (document) => {
               )}
 
               <div className="btn-group">
-                {step > 1 && step < 6 && (
-                  <button onClick={prevStep} disabled={loading}>
-                    Previous
-                  </button>
-                )}
-                {step < 5 && (
-                  <button onClick={nextStep} disabled={loading}>
-                    Next
-                  </button>
-                )}
+                {step > 1 && step < 6 && <button onClick={prevStep}>Previous</button>}
+                {step < 5 && <button onClick={nextStep}>Next</button>}
+                {step === 5 && <button onClick={handleSubmit} className="submit-btn">Submit</button>}
               </div>
             </>
           )}
@@ -1272,6 +1119,11 @@ const sendDataToShopify = async (document) => {
 };
 
 export default Authe;
+
+
+
+
+
 
 
 
