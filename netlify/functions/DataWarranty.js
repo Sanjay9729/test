@@ -10,7 +10,7 @@ exports.handler = async (event) => {
     }
 
     const shop = process.env.SHOPIFY_STORE_NAME;
-    const token = process.env.SHOPIFY_ACCESS_TOKEN;
+    const token = process.env.SHOPIFY_API_TOKEN; // <-- using SHOPIFY_API_TOKEN now
 
     if (!shop || !token) {
       return {
@@ -41,23 +41,28 @@ exports.handler = async (event) => {
     // Step 1: Check if customer exists
     let customer;
     try {
-      const searchRes = await axios.get(`https://${shop}/admin/api/2023-10/customers/search.json?query=email:${email}`, {
-        headers,
-      });
+      const searchRes = await axios.get(
+        `https://${shop}/admin/api/2023-10/customers/search.json?query=email:${email}`,
+        { headers }
+      );
 
       if (searchRes.data.customers.length > 0) {
         customer = searchRes.data.customers[0];
       } else {
-        const createRes = await axios.post(`https://${shop}/admin/api/2023-10/customers.json`, {
-          customer: {
-            first_name: firstName,
-            last_name: lastName,
-            email,
-            phone: phone || null,
-            addresses: address ? [{ address1: address }] : [],
-            verified_email: true,
+        const createRes = await axios.post(
+          `https://${shop}/admin/api/2023-10/customers.json`,
+          {
+            customer: {
+              first_name: firstName,
+              last_name: lastName,
+              email,
+              phone: phone || null,
+              addresses: address ? [{ address1: address }] : [],
+              verified_email: true,
+            },
           },
-        }, { headers });
+          { headers }
+        );
 
         customer = createRes.data.customer;
       }
@@ -71,16 +76,20 @@ exports.handler = async (event) => {
 
     // Step 2: Add metafield
     try {
-      const metafieldRes = await axios.post(`https://${shop}/admin/api/2023-10/metafields.json`, {
-        metafield: {
-          owner_resource: 'customer',
-          owner_id: customer.id,
-          namespace: 'warranty',
-          key: `submission_${user_id}_${Date.now()}`,
-          type: 'json',
-          value: JSON.stringify({ full_name, email, phone, address, selected_product, user_id }),
+      const metafieldRes = await axios.post(
+        `https://${shop}/admin/api/2023-10/metafields.json`,
+        {
+          metafield: {
+            owner_resource: 'customer',
+            owner_id: customer.id,
+            namespace: 'warranty',
+            key: `submission_${user_id}_${Date.now()}`,
+            type: 'json',
+            value: JSON.stringify({ full_name, email, phone, address, selected_product, user_id }),
+          },
         },
-      }, { headers });
+        { headers }
+      );
 
       return {
         statusCode: 200,
