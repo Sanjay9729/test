@@ -47,12 +47,16 @@ exports.handler = async (event) => {
       };
     }
 
+    // Debug logs (optional)
+    console.log('🔍 Received data:', data);
+    console.log('🔐 Shopify Store:', shopName);
+
     // Split full name
     const nameParts = full_name.trim().split(' ');
     const firstName = nameParts[0] || 'Customer';
     const lastName = nameParts.slice(1).join(' ') || '';
 
-    // Step 1: Search for existing customer
+    // Step 1: Search for or create customer
     let customer = null;
     try {
       const searchResponse = await shopify.get({
@@ -75,13 +79,13 @@ exports.handler = async (event) => {
               verified_email: true,
             },
           },
-          type: Shopify.Context.API_TYPES.JSON,
+          type: 'application/json', // ✅ FIXED
         });
 
         customer = customerResponse.body.customer;
       }
     } catch (error) {
-      console.error('Customer lookup/creation error:', error);
+      console.error('❌ Customer lookup/creation error:', error);
       return {
         statusCode: 500,
         body: JSON.stringify({ error: `Failed to create/find customer: ${error.message}` }),
@@ -107,7 +111,7 @@ exports.handler = async (event) => {
             }),
           },
         },
-        type: Shopify.Context.API_TYPES.JSON,
+        type: 'application/json', // ✅ FIXED
       });
 
       return {
@@ -119,14 +123,14 @@ exports.handler = async (event) => {
         }),
       };
     } catch (error) {
-      console.error('Metafield creation error:', error);
+      console.error('❌ Metafield creation error:', error);
       return {
         statusCode: 500,
         body: JSON.stringify({ error: `Failed to create metafield: ${error.message}` }),
       };
     }
   } catch (error) {
-    console.error('Unexpected error:', error);
+    console.error('❌ Unexpected error:', error);
     return {
       statusCode: 500,
       body: JSON.stringify({ error: `Unexpected error: ${error.message}` }),

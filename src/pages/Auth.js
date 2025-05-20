@@ -863,52 +863,50 @@ const Authe = () => {
 
   const validateEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 
- const sendOtp = async () => {
-  setLoading(true);
-  setFieldErrors({});
-  setAuthMessage('');
+  const sendOtp = async () => {
+    setLoading(true);
+    setFieldErrors({});
+    setAuthMessage('');
 
-  if (!email || !validateEmail(email)) {
-    setFieldErrors({ email: 'Enter a valid email address.' });
-    setLoading(false);
-    return;
-  }
+    if (!email || !validateEmail(email)) {
+      setFieldErrors({ email: 'Enter a valid email address.' });
+      setLoading(false);
+      return;
+    }
 
-  try {
-    const response = await account.createEmailToken(ID.unique(), email);
-    localStorage.setItem('userId', response.userId);
-    setAuthMessage('📧 OTP sent to your email.');
-  } catch (err) {
-    setFieldErrors({ email: err.message || 'Failed to send OTP.' });
-  } finally {
-    setLoading(false);
-  }
-};
+    try {
+      const response = await account.createEmailToken(ID.unique(), email);
+      localStorage.setItem('userId', response.userId);
+      setAuthMessage('📧 OTP sent to your email.');
+    } catch (err) {
+      setFieldErrors({ email: err.message || 'Failed to send OTP.' });
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  const verifyOtp = async () => {
+    setLoading(true);
+    const userId = localStorage.getItem('userId');
+    const secret = otp.trim();
 
-const verifyOtp = async () => {
-  setLoading(true);
-  const userId = localStorage.getItem('userId');
-  const secret = otp.trim();
+    if (!userId || !secret) {
+      setFieldErrors({ otp: 'Enter a valid OTP.' });
+      setLoading(false);
+      return;
+    }
 
-  if (!userId || !secret) {
-    setFieldErrors({ otp: 'Enter a valid OTP.' });
-    setLoading(false);
-    return;
-  }
-
-  try {
-    await account.createSession(userId, secret);
-    setIsAuthenticated(true);
-    setAuthMessage('✅ Verified and logged in!');
-    nextStep();
-  } catch (err) {
-    setFieldErrors({ otp: 'Invalid OTP. Please try again.' });
-  } finally {
-    setLoading(false);
-  }
-};
-
+    try {
+      await account.createSession(userId, secret);
+      setIsAuthenticated(true);
+      setAuthMessage('✅ Verified and logged in!');
+      nextStep();
+    } catch (err) {
+      setFieldErrors({ otp: 'Invalid OTP. Please try again.' });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const sendDataToShopify = async (data) => {
     const res = await fetch('/.netlify/functions/DataWarranty', {
@@ -916,16 +914,26 @@ const verifyOtp = async () => {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data),
     });
+
     const result = await res.json();
+    console.log('📦 Shopify response:', result);
+
     if (!res.ok) throw new Error(result.error || 'Shopify error');
   };
 
   const handleSubmit = async () => {
+    if (loading) return;
     setLoading(true);
     setFieldErrors({});
 
     if (!selectedProduct) {
       setFieldErrors({ selectedProduct: 'Please select a product.' });
+      setLoading(false);
+      return;
+    }
+
+    if (!isAuthenticated) {
+      setFieldErrors({ email: 'Please verify your email before submitting.' });
       setLoading(false);
       return;
     }
@@ -945,7 +953,8 @@ const verifyOtp = async () => {
       await sendDataToShopify(document);
       setStep(6);
     } catch (err) {
-      setFieldErrors({ submit: 'Submission failed. Please try again.' });
+      console.error('❌ Submit error:', err);
+      setFieldErrors({ submit: err.message || 'Submission failed. Please try again.' });
     } finally {
       setLoading(false);
     }
@@ -1063,64 +1072,54 @@ const verifyOtp = async () => {
                 </div>
               )}
 
-             {step === 5 && (
-  <div className="form-group">
-    <label>Select Product</label>
-    <input
-      value={productSearch}
-      onChange={(e) => setProductSearch(e.target.value)}
-      placeholder="Search products..."
-    />
-    {selectedProduct && (
-      <p className="selected-product">✅ Selected: {selectedProduct}</p>
-    )}
-    <ul className="product-list">
-      {loadingProducts ? (
-        <li>Loading...</li>
-      ) : filteredProducts.length > 0 ? (
-        filteredProducts.map((product) => (
-          <li
-            key={product.id}
-            className={`product-item ${selectedProduct === product.title ? 'selected' : ''}`}
-            onClick={() => {
-              setSelectedProduct(product.title);
-              console.log('Product selected:', product.title); // debug
-            }}
-            style={{
-              border: selectedProduct === product.title ? '2px solid #4CAF50' : '1px solid #ccc',
-              background: selectedProduct === product.title ? '#eaffea' : '#fff',
-              cursor: 'pointer',
-              padding: '8px',
-              marginBottom: '4px',
-              display: 'flex',
-              alignItems: 'center',
-            }}
-          >
-            {product.images?.[0]?.src && (
-              <img
-                src={product.images[0].src}
-                alt={product.title}
-                className="product-image"
-                style={{ width: '40px', height: '40px', marginRight: '10px' }}
-              />
-            )}
-            <span>{product.title}</span>
-          </li>
-        ))
-      ) : (
-        <li>No products found</li>
-      )}
-    </ul>
-
-    {fieldErrors.selectedProduct && (
-      <p className="error">{fieldErrors.selectedProduct}</p>
-    )}
-    {fieldErrors.submit && <p className="error">{fieldErrors.submit}</p>}
-    <button className="submit-btn" onClick={handleSubmit} disabled={loading}>
-      Submit
-    </button>
-  </div>
-)}
+              {step === 5 && (
+                <div className="form-group">
+                  <label>Select Product</label>
+                  <input
+                    value={productSearch}
+                    onChange={(e) => setProductSearch(e.target.value)}
+                    placeholder="Search products..."
+                  />
+                  {selectedProduct && <p className="selected-product">✅ Selected: {selectedProduct}</p>}
+                  <ul className="product-list">
+                    {loadingProducts ? (
+                      <li>Loading...</li>
+                    ) : filteredProducts.length > 0 ? (
+                      filteredProducts.map((product) => (
+                        <li
+                          key={product.id}
+                          className={`product-item ${selectedProduct === product.title ? 'selected' : ''}`}
+                          onClick={() => setSelectedProduct(product.title)}
+                          style={{
+                            border: selectedProduct === product.title ? '2px solid #4CAF50' : '1px solid #ccc',
+                            background: selectedProduct === product.title ? '#eaffea' : '#fff',
+                            cursor: 'pointer',
+                            padding: '8px',
+                            marginBottom: '4px',
+                            display: 'flex',
+                            alignItems: 'center',
+                          }}
+                        >
+                          {product.images?.[0]?.src && (
+                            <img
+                              src={product.images[0].src}
+                              alt={product.title}
+                              className="product-image"
+                              style={{ width: '40px', height: '40px', marginRight: '10px' }}
+                            />
+                          )}
+                          <span>{product.title}</span>
+                        </li>
+                      ))
+                    ) : (
+                      <li>No products found</li>
+                    )}
+                  </ul>
+                  {fieldErrors.selectedProduct && <p className="error">{fieldErrors.selectedProduct}</p>}
+                  {fieldErrors.submit && <p className="error">{fieldErrors.submit}</p>}
+                  <button className="submit-btn" onClick={handleSubmit} disabled={loading}>Submit</button>
+                </div>
+              )}
 
               {step === 6 && (
                 <div className="form-group text-center">
@@ -1133,9 +1132,8 @@ const verifyOtp = async () => {
               )}
 
               <div className="btn-group">
-                {step > 1 && step < 6 && <button onClick={prevStep}>Previous</button>}
-                {step < 5 && <button onClick={nextStep}>Next</button>}
-                {step === 5 && <button onClick={handleSubmit} className="submit-btn">Submit</button>}
+                {step > 1 && step < 6 && <button onClick={prevStep} disabled={loading}>Previous</button>}
+                {step < 5 && <button onClick={nextStep} disabled={loading}>Next</button>}
               </div>
             </>
           )}
@@ -1146,6 +1144,7 @@ const verifyOtp = async () => {
 };
 
 export default Authe;
+
 
 
 
