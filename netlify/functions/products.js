@@ -6,6 +6,7 @@ const ACCESS_TOKEN = process.env.SHOPIFY_ACCESS_TOKEN;
 const API_VERSION = process.env.API_VERSION;
 
 async function fetchAllProducts() {
+    debugger
     let products = [];
     // let url = `https://${SHOP}/admin/api/${API_VERSION}/products.json?limit=250`;
     let url = "https://wholesale.ellastein.com/admin/api/2024-01/products.json?limit=250";
