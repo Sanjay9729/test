@@ -994,11 +994,18 @@ const sendDataToShopify = async (document) => {
   }
 };
   const handleSubmit = async () => {
+    if (loading) return;
     setLoading(true);
     setFieldErrors({});
 
     if (!selectedProduct) {
       setFieldErrors({ selectedProduct: 'Please select a product.' });
+      setLoading(false);
+      return;
+    }
+
+    if (!isAuthenticated) {
+      setFieldErrors({ email: 'Please verify your email before submitting.' });
       setLoading(false);
       return;
     }
