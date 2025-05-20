@@ -645,7 +645,7 @@
 //                     }}
 //                     disabled={isAuthenticated}
 //                   />
-                  
+
 //                   {!isAuthenticated ? (
 //                     <>
 //                       <button onClick={sendOtp} className="otp-btn" disabled={loading}>
@@ -841,8 +841,8 @@ const Authe = () => {
   useEffect(() => {
     const filtered = productSearch.trim()
       ? products.filter(p =>
-          p.title.toLowerCase().includes(productSearch.toLowerCase().trim())
-        )
+        p.title.toLowerCase().includes(productSearch.toLowerCase().trim())
+      )
       : products;
     setFilteredProducts(filtered);
   }, [productSearch, products]);
@@ -856,46 +856,46 @@ const Authe = () => {
         setAuthMessage(`✅ Logged in as ${session.email}`);
         localStorage.setItem('userId', session.$id);
         localStorage.setItem('email', session.email);
-      } catch {}
+      } catch { }
     };
     checkSession();
   }, []);
 
   const validateEmail = email => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 
- const sendOtp = async () => {
-  setLoading(true);
-  setFieldErrors({});
-  setAuthMessage('');
+  const sendOtp = async () => {
+    setLoading(true);
+    setFieldErrors({});
+    setAuthMessage('');
 
-  if (!email || !validateEmail(email)) {
-    setFieldErrors({ email: 'Enter a valid email address.' });
-    setLoading(false);
-    return;
-  }
+    if (!email || !validateEmail(email)) {
+      setFieldErrors({ email: 'Enter a valid email address.' });
+      setLoading(false);
+      return;
+    }
 
-  try {
-    const response = await account.createEmailToken(ID.unique(), email);
-    localStorage.setItem('userId', response.userId);
-    setAuthMessage('📧 OTP sent to your email.');
-  } catch (err) {
-    setFieldErrors({ email: err.message || 'Failed to send OTP.' });
-  } finally {
-    setLoading(false);
-  }
-};
+    try {
+      const response = await account.createEmailToken(ID.unique(), email);
+      localStorage.setItem('userId', response.userId);
+      setAuthMessage('📧 OTP sent to your email.');
+    } catch (err) {
+      setFieldErrors({ email: err.message || 'Failed to send OTP.' });
+    } finally {
+      setLoading(false);
+    }
+  };
 
 
-const verifyOtp = async () => {
-  setLoading(true);
-  const userId = localStorage.getItem('userId');
-  const secret = otp.trim();
+  const verifyOtp = async () => {
+    setLoading(true);
+    const userId = localStorage.getItem('userId');
+    const secret = otp.trim();
 
-  if (!userId || !secret) {
-    setFieldErrors({ otp: 'Enter a valid OTP.' });
-    setLoading(false);
-    return;
-  }
+    if (!userId || !secret) {
+      setFieldErrors({ otp: 'Enter a valid OTP.' });
+      setLoading(false);
+      return;
+    }
 
     try {
       await account.createSession(userId, secret);
@@ -1089,6 +1089,8 @@ const verifyOtp = async () => {
                           <span>{product.title}</span>
                         </li>
                       ))
+                    ) : (
+                      <li>No products found.</li>
                     )}
                   </ul>
                   {fieldErrors.selectedProduct && <p className="error">{fieldErrors.selectedProduct}</p>}
