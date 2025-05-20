@@ -423,3 +423,14 @@ img.image-preview {
 .message-box {
   margin-top: 12px;
 }
+.product-item.selected {
+  background-color: #eaffea;
+  border: 2px solid #4CAF50;
+}
+
+.product-list {
+  max-height: 200px;
+  overflow-y: auto;
+  padding-left: 0;
+  list-style: none;
+}

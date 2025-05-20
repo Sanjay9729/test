@@ -804,6 +804,7 @@ const Authe = () => {
   const [selectedProduct, setSelectedProduct] = useState('');
   const [productSearch, setProductSearch] = useState('');
   const [products, setProducts] = useState([]);
+  const [data ,setData]=useState()
   const [filteredProducts, setFilteredProducts] = useState([]);
   const [fieldErrors, setFieldErrors] = useState({});
   const [loading, setLoading] = useState(false);
@@ -820,9 +821,10 @@ const Authe = () => {
   const client = new Client().setEndpoint(APPWRITE_ENDPOINT).setProject(APPWRITE_PROJECT_ID);
   const account = new Account(client);
   const database = new Databases(client);
-
+  console.log("data" ,data)
   useEffect(() => {
     const fetchProducts = async () => {
+      
       try {
         const res = await fetch('/.netlify/functions/products');
         const data = await res.json();
@@ -836,7 +838,7 @@ const Authe = () => {
     };
     fetchProducts();
   }, []);
-
+  
   useEffect(() => {
     setFilteredProducts(
       productSearch.trim() === ''
