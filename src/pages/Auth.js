@@ -1063,36 +1063,64 @@ const verifyOtp = async () => {
                 </div>
               )}
 
-              {step === 5 && (
-                <div className="form-group">
-                  <label>Select Product</label>
-                  <input
-                    value={productSearch}
-                    onChange={(e) => setProductSearch(e.target.value)}
-                    placeholder="Search products..."
-                  />
-                  <ul className="product-list">
-                    {loadingProducts ? (
-                      <li>Loading...</li>
-                    ) : (
-                      filteredProducts.map((product) => (
-                        <li
-                          key={product.id}
-                          className={`product-item ${selectedProduct === product.title ? 'selected' : ''}`}
-                          onClick={() => setSelectedProduct(product.title)}
-                        >
-                          {product.images?.[0]?.src && (
-                            <img src={product.images[0].src} alt={product.title} className="product-image" />
-                          )}
-                          <span>{product.title}</span>
-                        </li>
-                      ))
-                    )}
-                  </ul>
-                  {fieldErrors.selectedProduct && <p className="error">{fieldErrors.selectedProduct}</p>}
-                  {fieldErrors.submit && <p className="error">{fieldErrors.submit}</p>}
-                </div>
-              )}
+             {step === 5 && (
+  <div className="form-group">
+    <label>Select Product</label>
+    <input
+      value={productSearch}
+      onChange={(e) => setProductSearch(e.target.value)}
+      placeholder="Search products..."
+    />
+    {selectedProduct && (
+      <p className="selected-product">✅ Selected: {selectedProduct}</p>
+    )}
+    <ul className="product-list">
+      {loadingProducts ? (
+        <li>Loading...</li>
+      ) : filteredProducts.length > 0 ? (
+        filteredProducts.map((product) => (
+          <li
+            key={product.id}
+            className={`product-item ${selectedProduct === product.title ? 'selected' : ''}`}
+            onClick={() => {
+              setSelectedProduct(product.title);
+              console.log('Product selected:', product.title); // debug
+            }}
+            style={{
+              border: selectedProduct === product.title ? '2px solid #4CAF50' : '1px solid #ccc',
+              background: selectedProduct === product.title ? '#eaffea' : '#fff',
+              cursor: 'pointer',
+              padding: '8px',
+              marginBottom: '4px',
+              display: 'flex',
+              alignItems: 'center',
+            }}
+          >
+            {product.images?.[0]?.src && (
+              <img
+                src={product.images[0].src}
+                alt={product.title}
+                className="product-image"
+                style={{ width: '40px', height: '40px', marginRight: '10px' }}
+              />
+            )}
+            <span>{product.title}</span>
+          </li>
+        ))
+      ) : (
+        <li>No products found</li>
+      )}
+    </ul>
+
+    {fieldErrors.selectedProduct && (
+      <p className="error">{fieldErrors.selectedProduct}</p>
+    )}
+    {fieldErrors.submit && <p className="error">{fieldErrors.submit}</p>}
+    <button className="submit-btn" onClick={handleSubmit} disabled={loading}>
+      Submit
+    </button>
+  </div>
+)}
 
               {step === 6 && (
                 <div className="form-group text-center">
