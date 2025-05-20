@@ -10,7 +10,7 @@ exports.handler = async (event) => {
     }
 
     const shop = process.env.SHOPIFY_STORE_NAME;
-    const token = process.env.SHOPIFY_API_TOKEN;
+    const token = process.env.SHOPIFY_ACCESS_TOKEN;
 
     if (!shop || !token) {
       return {
