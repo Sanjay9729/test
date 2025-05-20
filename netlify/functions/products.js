@@ -1,13 +1,15 @@
 require("dotenv").config();
 const fetch = require("node-fetch");
 
-const SHOP = process.env.SHOP; // e.g. 'wholesale.ellastein.com'
-const ACCESS_TOKEN = process.env.SHOPIFY_API_TOKEN; // ✅ Correct token name
-const API_VERSION = process.env.API_VERSION || '2024-01';
+const SHOP = process.env.SHOP;
+const ACCESS_TOKEN = process.env.SHOPIFY_ACCESS_TOKEN;
+const API_VERSION = process.env.API_VERSION;
 
 async function fetchAllProducts() {
+    debugger
     let products = [];
-    let url = `https://${SHOP}/admin/api/${API_VERSION}/products.json?limit=250`;
+    // let url = `https://${SHOP}/admin/api/${API_VERSION}/products.json?limit=250`;
+    let url = "https://wholesale.ellastein.com/admin/api/2024-01/products.json?limit=250";
     let hasNextPage = true;
 
     while (hasNextPage) {
@@ -41,13 +43,6 @@ async function fetchAllProducts() {
 
 exports.handler = async (event, context) => {
     try {
-        if (!SHOP || !ACCESS_TOKEN || !API_VERSION) {
-            return {
-                statusCode: 500,
-                body: JSON.stringify({ error: "Missing environment variables (SHOP, SHOPIFY_API_TOKEN, API_VERSION)" }),
-            };
-        }
-
         const allProducts = await fetchAllProducts();
         const minimalProducts = allProducts.map((p) => ({
             id: p.id,
@@ -60,10 +55,10 @@ exports.handler = async (event, context) => {
             body: JSON.stringify(minimalProducts),
         };
     } catch (err) {
-        console.error("Error fetching products:", err.message);
+        console.error("Error fetching products:", err);
         return {
             statusCode: 500,
-            body: JSON.stringify({ error: "Failed to fetch products", details: err.message }),
+            body: JSON.stringify({ error: "Failed to fetch products" }),
         };
     }
 };
