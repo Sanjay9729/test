@@ -6,7 +6,6 @@ const ACCESS_TOKEN = process.env.SHOPIFY_ACCESS_TOKEN; // Shopify Admin API acce
 const API_VERSION = process.env.API_VERSION || '2024-01'; // default version fallback
 
 async function fetchAllProducts() {
-    debugger
     let products = [];
     let url = `https://${SHOP}/admin/api/${API_VERSION}/products.json?limit=250`;
     let hasNextPage = true;
