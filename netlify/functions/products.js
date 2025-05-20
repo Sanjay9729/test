@@ -2,8 +2,8 @@ require("dotenv").config();
 const fetch = require("node-fetch");
 
 const SHOP = process.env.SHOP; // e.g. 'wholesale.ellastein.com'
-const ACCESS_TOKEN = process.env.SHOPIFY_ACCESS_TOKEN; // Shopify Admin API access token
-const API_VERSION = process.env.API_VERSION || '2024-01'; // default version fallback
+const ACCESS_TOKEN = process.env.SHOPIFY_API_TOKEN; 
+const API_VERSION = process.env.API_VERSION || '2024-01'; 
 
 async function fetchAllProducts() {
     debugger
@@ -45,7 +45,7 @@ exports.handler = async (event, context) => {
         if (!SHOP || !ACCESS_TOKEN || !API_VERSION) {
             return {
                 statusCode: 500,
-                body: JSON.stringify({ error: "Missing environment variables (SHOP, SHOPIFY_ACCESS_TOKEN, API_VERSION)" }),
+                body: JSON.stringify({ error: "Missing environment variables (SHOP, SHOPIFY_API_TOKEN, API_VERSION)" }),
             };
         }
 
