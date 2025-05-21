@@ -828,7 +828,7 @@ const Authe = () => {
         const data = await res.json();
         setProducts(data);
         setFilteredProducts(data);
-      } catch (err) {
+      } catch {
         setFieldErrors({ products: 'Failed to load products.' });
       } finally {
         setLoadingProducts(false);
@@ -863,61 +863,49 @@ const Authe = () => {
 
   const validateEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 
- const sendOtp = async () => {
-  setLoading(true);
-  setFieldErrors({});
-  setAuthMessage('');
+  const sendOtp = async () => {
+    setLoading(true);
+    setFieldErrors({});
+    setAuthMessage('');
 
-  if (!email || !validateEmail(email)) {
-    setFieldErrors({ email: 'Enter a valid email address.' });
-    setLoading(false);
-    return;
-  }
+    if (!email || !validateEmail(email)) {
+      setFieldErrors({ email: 'Enter a valid email address.' });
+      setLoading(false);
+      return;
+    }
 
-  try {
-    const response = await account.createEmailToken(ID.unique(), email);
-    localStorage.setItem('userId', response.userId);
-    setAuthMessage('📧 OTP sent to your email.');
-  } catch (err) {
-    setFieldErrors({ email: err.message || 'Failed to send OTP.' });
-  } finally {
-    setLoading(false);
-  }
-};
+    try {
+      const response = await account.createEmailToken(ID.unique(), email);
+      localStorage.setItem('userId', response.userId);
+      setAuthMessage('📧 OTP sent to your email.');
+    } catch (err) {
+      setFieldErrors({ email: err.message || 'Failed to send OTP.' });
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  const verifyOtp = async () => {
+    setLoading(true);
+    const userId = localStorage.getItem('userId');
+    const secret = otp.trim();
 
-const verifyOtp = async () => {
-  setLoading(true);
-  const userId = localStorage.getItem('userId');
-  const secret = otp.trim();
+    if (!userId || !secret) {
+      setFieldErrors({ otp: 'Enter a valid OTP.' });
+      setLoading(false);
+      return;
+    }
 
-  if (!userId || !secret) {
-    setFieldErrors({ otp: 'Enter a valid OTP.' });
-    setLoading(false);
-    return;
-  }
-
-  try {
-    await account.createSession(userId, secret);
-    setIsAuthenticated(true);
-    setAuthMessage('✅ Verified and logged in!');
-    nextStep();
-  } catch (err) {
-    setFieldErrors({ otp: 'Invalid OTP. Please try again.' });
-  } finally {
-    setLoading(false);
-  }
-};
-
-
-  const sendDataToShopify = async (data) => {
-    const res = await fetch('/.netlify/functions/DataWarranty', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data),
-    });
-    const result = await res.json();
-    if (!res.ok) throw new Error(result.error || 'Shopify error');
+    try {
+      await account.createSession(userId, secret);
+      setIsAuthenticated(true);
+      setAuthMessage('✅ Verified and logged in!');
+      nextStep();
+    } catch (err) {
+      setFieldErrors({ otp: 'Invalid OTP. Please try again.' });
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleSubmit = async () => {
@@ -942,8 +930,7 @@ const verifyOtp = async () => {
       };
 
       await database.createDocument(APPWRITE_DATABASE_ID, APPWRITE_COLLECTION_ID, ID.unique(), document);
-      await sendDataToShopify(document);
-      setStep(6);
+      setStep(6); // Success page
     } catch (err) {
       setFieldErrors({ submit: 'Submission failed. Please try again.' });
     } finally {
@@ -1118,6 +1105,7 @@ const verifyOtp = async () => {
 };
 
 export default Authe;
+
 
 
 
