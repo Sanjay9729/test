@@ -739,7 +739,7 @@
 
 // 21/05/25
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
   Page,
   Card,
@@ -749,7 +749,6 @@ import {
   Box,
   Text,
   Button,
-  LegacyStack,
 } from '@shopify/polaris';
 
 const ViewWarranty = () => {
@@ -758,6 +757,10 @@ const ViewWarranty = () => {
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
   const [errorMsg, setErrorMsg] = useState('');
+  const [importLoading, setImportLoading] = useState(false);
+  const [importError, setImportError] = useState('');
+
+  const fileInputRef = useRef(null);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -771,6 +774,7 @@ const ViewWarranty = () => {
         if (Array.isArray(data)) {
           setSubmissions(data);
           setFiltered(data);
+          setErrorMsg('');
         } else {
           setErrorMsg('Invalid data format from server.');
         }
@@ -811,7 +815,7 @@ const ViewWarranty = () => {
     item.address || '-',
   ]);
 
-  // Export filtered data as CSV file
+  // Export CSV
   const exportCSV = () => {
     if (filtered.length === 0) return;
 
@@ -840,19 +844,116 @@ const ViewWarranty = () => {
     document.body.removeChild(link);
   };
 
+  // Simple CSV parser (no commas inside fields)
+  const parseCSV = (text) => {
+    const lines = text.trim().split('\n');
+    const headers = lines[0].split(',').map(h => h.trim().replace(/^"|"$/g, ''));
+    const data = lines.slice(1).map(line => {
+      const values = line.split(',').map(v => v.trim().replace(/^"|"$/g, ''));
+      const entry = {};
+      headers.forEach((h, i) => {
+        entry[h] = values[i] || '';
+      });
+      return entry;
+    });
+    return data;
+  };
+
+  // Handle CSV import
+  const handleFileChange = async (e) => {
+    const file = e.target.files[0];
+    setImportError('');
+    if (!file) return;
+
+    if (!file.name.endsWith('.csv')) {
+      setImportError('Please select a CSV file.');
+      return;
+    }
+
+    setImportLoading(true);
+
+    try {
+      const text = await file.text();
+      const csvData = parseCSV(text);
+
+      // POST CSV data to your Appwrite import function
+      const res = await fetch('/.netlify/functions/importToAppwrite', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ data: csvData }),
+      });
+
+      const result = await res.json();
+
+      if (!res.ok || result.error) {
+        throw new Error(result.error || 'Import failed');
+      }
+
+      // Refresh data after successful import
+      setSearch('');
+      setImportError('');
+      setLoading(true);
+
+      const response = await fetch(
+        '/.netlify/functions/getAppwriteSubmissions?_=' + Date.now()
+      );
+      const data = await response.json();
+
+      if (Array.isArray(data)) {
+        setSubmissions(data);
+        setFiltered(data);
+      } else {
+        setErrorMsg('Invalid data format from server.');
+      }
+      setLoading(false);
+
+      // Clear file input
+      e.target.value = '';
+    } catch (err) {
+      setImportError(err.message || 'Error importing data.');
+      setImportLoading(false);
+    }
+
+    setImportLoading(false);
+  };
+
   return (
     <Page fullWidth>
       <Layout>
         <Layout.Section>
-          {/* Export button above the search box */}
-          <Box paddingBlockEnd="4" display="flex" justifyContent="flex-end">
-            <Button onClick={exportCSV} primary>
+          {/* Import and Export buttons */}
+          <Box paddingBlockEnd="4" display="flex" justifyContent="flex-end" gap="8px">
+            <Button
+              onClick={() => fileInputRef.current.click()}
+              disabled={importLoading}
+              plain
+            >
+              {importLoading ? 'Importing...' : 'Import CSV'}
+            </Button>
+
+            <Button onClick={exportCSV} plain>
               Export
             </Button>
+
+            {/* Hidden file input */}
+            <input
+              type="file"
+              accept=".csv"
+              style={{ display: 'none' }}
+              ref={fileInputRef}
+              onChange={handleFileChange}
+            />
           </Box>
 
+          {importError && (
+            <Box paddingBlock="2">
+              <Text variant="bodyMd" as="p" color="critical" alignment="right">
+                {importError}
+              </Text>
+            </Box>
+          )}
+
           <Card sectioned>
-            {/* Search box only */}
             <TextField
               placeholder="Enter name, email, or product"
               value={search}
@@ -893,6 +994,7 @@ const ViewWarranty = () => {
 };
 
 export default ViewWarranty;
+
 
 
 
