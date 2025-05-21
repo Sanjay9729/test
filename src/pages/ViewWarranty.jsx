@@ -746,23 +746,28 @@ const ViewWarranty = () => {
   const [loading, setLoading] = useState(true);
   const [errorMsg, setErrorMsg] = useState('');
 
-  useEffect(() => {
-    fetch('/.netlify/functions/getAppwriteSubmissions?_=' + Date.now())
-      .then((res) => res.json())
-      .then((data) => {
-        if (Array.isArray(data)) {
-          setSubmissions(data);
-        } else {
-          setErrorMsg('Invalid data format from server.');
-        }
-        setLoading(false);
-      })
-      .catch((err) => {
-        console.error('Error:', err);
-        setErrorMsg('Something went wrong.');
-        setLoading(false);
-      });
-  }, []);
+ useEffect(() => {
+  const fetchData = async () => {
+    setLoading(true);
+    try {
+      const response = await fetch('/.netlify/functions/getAppwriteSubmissions?_=' + Date.now());
+      const data = await response.json();
+
+      if (Array.isArray(data)) {
+        setSubmissions(data);
+      } else {
+        setErrorMsg('Invalid data format from server.');
+      }
+    } catch (err) {
+      console.error('Fetch Error:', err);
+      setErrorMsg('Error fetching data.');
+    }
+    setLoading(false);
+  };
+
+  fetchData(); // ✅ fetch every page load
+}, []);
+
 
   return (
     <div style={{ padding: '2rem' }}>
