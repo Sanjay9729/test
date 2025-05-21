@@ -773,15 +773,7 @@ const ViewWarranty = () => {
         const response = await fetch(
           '/.netlify/functions/getAppwriteSubmissions?_=' + Date.now()
         );
-        const text = await response.text(); // Debug raw response
-        console.log('Raw getAppwriteSubmissions response:', text);
-
-        let data;
-        try {
-          data = JSON.parse(text);
-        } catch (err) {
-          throw new Error('Invalid JSON response from server.');
-        }
+        const data = await response.json();
 
         if (Array.isArray(data)) {
           setSubmissions(data);
@@ -791,8 +783,7 @@ const ViewWarranty = () => {
           setErrorMsg('Invalid data format from server.');
         }
       } catch (err) {
-        console.error('Fetch error:', err);
-        setErrorMsg(err.message || 'Error fetching data.');
+        setErrorMsg('Error fetching data.');
       }
       setLoading(false);
     };
@@ -810,11 +801,10 @@ const ViewWarranty = () => {
         return;
       }
 
-      const result = submissions.filter(
-        (item) =>
-          item.full_name?.toLowerCase().includes(query) ||
-          item.email?.toLowerCase().includes(query) ||
-          item.selected_product?.toLowerCase().includes(query)
+      const result = submissions.filter((item) =>
+        item.full_name?.toLowerCase().includes(query) ||
+        item.email?.toLowerCase().includes(query) ||
+        item.selected_product?.toLowerCase().includes(query)
       );
 
       setFiltered(result);
@@ -897,15 +887,6 @@ const ViewWarranty = () => {
     setLoading(false);
   };
 
-  const rows = filtered.map((item) => [
-    <Button plain onClick={() => handleRowClick(item)}>
-      {item.email || '-'}
-    </Button>,
-    item.selected_product || '-',
-    item.phone || '-',
-    item.address || '-',
-  ]);
-
   // Export CSV
   const exportCSV = () => {
     if (filtered.length === 0) return;
@@ -913,7 +894,7 @@ const ViewWarranty = () => {
     const header = ['Email', 'Product', 'Phone', 'Address'];
     const csvRows = [header.join(',')];
 
-    filtered.forEach((item) => {
+    filtered.forEach(item => {
       const row = [
         `"${item.email || ''}"`,
         `"${item.selected_product || ''}"`,
@@ -938,9 +919,9 @@ const ViewWarranty = () => {
   // Simple CSV parser (no commas inside fields)
   const parseCSV = (text) => {
     const lines = text.trim().split('\n');
-    const headers = lines[0].split(',').map((h) => h.trim().replace(/^"|"$/g, ''));
-    const data = lines.slice(1).map((line) => {
-      const values = line.split(',').map((v) => v.trim().replace(/^"|"$/g, ''));
+    const headers = lines[0].split(',').map(h => h.trim().replace(/^"|"$/g, ''));
+    const data = lines.slice(1).map(line => {
+      const values = line.split(',').map(v => v.trim().replace(/^"|"$/g, ''));
       const entry = {};
       headers.forEach((h, i) => {
         entry[h] = values[i] || '';
@@ -967,25 +948,20 @@ const ViewWarranty = () => {
       const text = await file.text();
       const csvData = parseCSV(text);
 
+      // POST CSV data to your Appwrite import function
       const res = await fetch('/.netlify/functions/importToAppwrite', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ data: csvData }),
       });
 
-      console.log('Raw importToAppwrite response:', text);
-
-      let result;
-      try {
-        result = JSON.parse(text);
-      } catch (err) {
-        throw new Error('Invalid JSON response from import server.');
-      }
+      const result = await res.json();
 
       if (!res.ok || result.error) {
         throw new Error(result.error || 'Import failed');
       }
 
+      // Refresh data after successful import
       setSearch('');
       setImportError('');
       setLoading(true);
@@ -993,15 +969,7 @@ const ViewWarranty = () => {
       const response = await fetch(
         '/.netlify/functions/getAppwriteSubmissions?_=' + Date.now()
       );
-      const fetchText = await response.text();
-      console.log('Raw getAppwriteSubmissions response after import:', fetchText);
-
-      let data;
-      try {
-        data = JSON.parse(fetchText);
-      } catch (err) {
-        throw new Error('Invalid JSON response from server.');
-      }
+      const data = await response.json();
 
       if (Array.isArray(data)) {
         setSubmissions(data);
@@ -1011,9 +979,9 @@ const ViewWarranty = () => {
       }
       setLoading(false);
 
+      // Clear file input
       e.target.value = '';
     } catch (err) {
-      console.error('Import error:', err);
       setImportError(err.message || 'Error importing data.');
       setImportLoading(false);
     }
@@ -1025,6 +993,7 @@ const ViewWarranty = () => {
     <Page fullWidth>
       <Layout>
         <Layout.Section>
+          {/* Import and Export buttons */}
           <Box paddingBlockEnd="4" display="flex" justifyContent="flex-end" gap="8px">
             <Button
               onClick={() => fileInputRef.current.click()}
@@ -1038,6 +1007,7 @@ const ViewWarranty = () => {
               Export
             </Button>
 
+            {/* Hidden file input */}
             <input
               type="file"
               accept=".csv"
@@ -1082,14 +1052,18 @@ const ViewWarranty = () => {
               <DataTable
                 columnContentTypes={['text', 'text', 'text', 'text']}
                 headings={['Email', 'Product', 'Phone', 'Address']}
-                rows={rows}
-                footerContent={`Total: ${rows.length} submission${rows.length !== 1 ? 's' : ''}`}
+                rows={filtered.map(item => [
+                  item.email || '-',
+                  item.selected_product || '-',
+                  item.phone || '-',
+                  item.address || '-',
+                ])}
+                footerContent={`Total: ${filtered.length} submission${filtered.length !== 1 ? 's' : ''}`}
                 verticalAlign="middle"
                 stickyHeader
               />
             )}
           </Card>
-
           {selectedSubmission && (
             <Modal
               open={modalOpen}
