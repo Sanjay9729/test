@@ -739,16 +739,276 @@
 
 // 21/05/25
 
+// import React, { useState, useEffect, useCallback, useRef } from 'react';
+// import {
+//   Page,
+//   Card,
+//   DataTable,
+//   TextField,
+//   Layout,
+//   Box,
+//   Text,
+//   Button,
+// } from '@shopify/polaris';
+
+// const ViewWarranty = () => {
+//   const [submissions, setSubmissions] = useState([]);
+//   const [filtered, setFiltered] = useState([]);
+//   const [search, setSearch] = useState('');
+//   const [loading, setLoading] = useState(true);
+//   const [errorMsg, setErrorMsg] = useState('');
+//   const [importLoading, setImportLoading] = useState(false);
+//   const [importError, setImportError] = useState('');
+
+//   const fileInputRef = useRef(null);
+
+//   useEffect(() => {
+//     const fetchData = async () => {
+//       setLoading(true);
+//       try {
+//         const response = await fetch(
+//           '/.netlify/functions/getAppwriteSubmissions?_=' + Date.now()
+//         );
+//         const data = await response.json();
+
+//         if (Array.isArray(data)) {
+//           setSubmissions(data);
+//           setFiltered(data);
+//           setErrorMsg('');
+//         } else {
+//           setErrorMsg('Invalid data format from server.');
+//         }
+//       } catch (err) {
+//         setErrorMsg('Error fetching data.');
+//       }
+//       setLoading(false);
+//     };
+
+//     fetchData();
+//   }, []);
+
+//   const handleSearch = useCallback(
+//     (value) => {
+//       setSearch(value);
+//       const query = value.toLowerCase().trim();
+
+//       if (!query) {
+//         setFiltered(submissions);
+//         return;
+//       }
+
+//       const result = submissions.filter((item) =>
+//         item.full_name?.toLowerCase().includes(query) ||
+//         item.email?.toLowerCase().includes(query) ||
+//         item.selected_product?.toLowerCase().includes(query)
+//       );
+
+//       setFiltered(result);
+//     },
+//     [submissions]
+//   );
+
+//   const rows = filtered.map((item) => [
+//     item.email || '-',
+//     item.selected_product || '-',
+//     item.phone || '-',
+//     item.address || '-',
+//   ]);
+
+//   // Export CSV
+//   const exportCSV = () => {
+//     if (filtered.length === 0) return;
+
+//     const header = ['Email', 'Product', 'Phone', 'Address'];
+//     const csvRows = [header.join(',')];
+
+//     filtered.forEach(item => {
+//       const row = [
+//         `"${item.email || ''}"`,
+//         `"${item.selected_product || ''}"`,
+//         `"${item.phone || ''}"`,
+//         `"${item.address || ''}"`,
+//       ];
+//       csvRows.push(row.join(','));
+//     });
+
+//     const csvContent = csvRows.join('\n');
+//     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+//     const url = URL.createObjectURL(blob);
+
+//     const link = document.createElement('a');
+//     link.href = url;
+//     link.setAttribute('download', `warranty_submissions_${Date.now()}.csv`);
+//     document.body.appendChild(link);
+//     link.click();
+//     document.body.removeChild(link);
+//   };
+
+//   // Simple CSV parser (no commas inside fields)
+//   const parseCSV = (text) => {
+//     const lines = text.trim().split('\n');
+//     const headers = lines[0].split(',').map(h => h.trim().replace(/^"|"$/g, ''));
+//     const data = lines.slice(1).map(line => {
+//       const values = line.split(',').map(v => v.trim().replace(/^"|"$/g, ''));
+//       const entry = {};
+//       headers.forEach((h, i) => {
+//         entry[h] = values[i] || '';
+//       });
+//       return entry;
+//     });
+//     return data;
+//   };
+
+//   // Handle CSV import
+//   const handleFileChange = async (e) => {
+//     const file = e.target.files[0];
+//     setImportError('');
+//     if (!file) return;
+
+//     if (!file.name.endsWith('.csv')) {
+//       setImportError('Please select a CSV file.');
+//       return;
+//     }
+
+//     setImportLoading(true);
+
+//     try {
+//       const text = await file.text();
+//       const csvData = parseCSV(text);
+
+//       // POST CSV data to your Appwrite import function
+//       const res = await fetch('/.netlify/functions/importToAppwrite', {
+//         method: 'POST',
+//         headers: { 'Content-Type': 'application/json' },
+//         body: JSON.stringify({ data: csvData }),
+//       });
+
+//       const result = await res.json();
+
+//       if (!res.ok || result.error) {
+//         throw new Error(result.error || 'Import failed');
+//       }
+
+//       // Refresh data after successful import
+//       setSearch('');
+//       setImportError('');
+//       setLoading(true);
+
+//       const response = await fetch(
+//         '/.netlify/functions/getAppwriteSubmissions?_=' + Date.now()
+//       );
+//       const data = await response.json();
+
+//       if (Array.isArray(data)) {
+//         setSubmissions(data);
+//         setFiltered(data);
+//       } else {
+//         setErrorMsg('Invalid data format from server.');
+//       }
+//       setLoading(false);
+
+//       // Clear file input
+//       e.target.value = '';
+//     } catch (err) {
+//       setImportError(err.message || 'Error importing data.');
+//       setImportLoading(false);
+//     }
+
+//     setImportLoading(false);
+//   };
+
+//   return (
+//     <Page fullWidth>
+//       <Layout>
+//         <Layout.Section>
+//           {/* Import and Export buttons */}
+//           <Box paddingBlockEnd="4" display="flex" justifyContent="flex-end" gap="8px">
+//             <Button
+//               onClick={() => fileInputRef.current.click()}
+//               disabled={importLoading}
+//               plain
+//             >
+//               {importLoading ? 'Importing...' : 'Import CSV'}
+//             </Button>
+
+//             <Button onClick={exportCSV} plain>
+//               Export
+//             </Button>
+
+//             {/* Hidden file input */}
+//             <input
+//               type="file"
+//               accept=".csv"
+//               style={{ display: 'none' }}
+//               ref={fileInputRef}
+//               onChange={handleFileChange}
+//             />
+//           </Box>
+
+//           {importError && (
+//             <Box paddingBlock="2">
+//               <Text variant="bodyMd" as="p" color="critical" alignment="right">
+//                 {importError}
+//               </Text>
+//             </Box>
+//           )}
+
+//           <Card sectioned>
+//             <TextField
+//               placeholder="Enter name, email, or product"
+//               value={search}
+//               onChange={handleSearch}
+//               clearButton
+//               onClearButtonClick={() => handleSearch('')}
+//               autoComplete="off"
+//               style={{ width: '100%' }}
+//             />
+
+//             {loading ? (
+//               <Box paddingBlock="6" display="flex" justifyContent="center">
+//                 <Text variant="bodyMd" as="p" alignment="center">
+//                   Loading...
+//                 </Text>
+//               </Box>
+//             ) : errorMsg ? (
+//               <Box paddingBlock="6" display="flex" justifyContent="center">
+//                 <Text variant="bodyMd" as="p" color="critical" alignment="center">
+//                   {errorMsg}
+//                 </Text>
+//               </Box>
+//             ) : (
+//               <DataTable
+//                 columnContentTypes={['text', 'text', 'text', 'text']}
+//                 headings={['Email', 'Product', 'Phone', 'Address']}
+//                 rows={rows}
+//                 footerContent={`Total: ${rows.length} submission${rows.length !== 1 ? 's' : ''}`}
+//                 verticalAlign="middle"
+//                 stickyHeader
+//               />
+//             )}
+//           </Card>
+//         </Layout.Section>
+//       </Layout>
+//     </Page>
+//   );
+// };
+
+// export default ViewWarranty;
+
+
+
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
   Page,
   Card,
-  DataTable,
   TextField,
   Layout,
   Box,
   Text,
   Button,
+  IndexTable,
+  Modal,
+  FormLayout,
 } from '@shopify/polaris';
 
 const ViewWarranty = () => {
@@ -759,9 +1019,12 @@ const ViewWarranty = () => {
   const [errorMsg, setErrorMsg] = useState('');
   const [importLoading, setImportLoading] = useState(false);
   const [importError, setImportError] = useState('');
+  const [modalOpen, setModalOpen] = useState(false);
+  const [selectedSubmission, setSelectedSubmission] = useState(null);
 
   const fileInputRef = useRef(null);
 
+  // Fetch submissions
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
@@ -787,6 +1050,7 @@ const ViewWarranty = () => {
     fetchData();
   }, []);
 
+  // Handle search
   const handleSearch = useCallback(
     (value) => {
       setSearch(value);
@@ -797,10 +1061,11 @@ const ViewWarranty = () => {
         return;
       }
 
-      const result = submissions.filter((item) =>
-        item.full_name?.toLowerCase().includes(query) ||
-        item.email?.toLowerCase().includes(query) ||
-        item.selected_product?.toLowerCase().includes(query)
+      const result = submissions.filter(
+        (item) =>
+          item.full_name?.toLowerCase().includes(query) ||
+          item.email?.toLowerCase().includes(query) ||
+          item.selected_product?.toLowerCase().includes(query)
       );
 
       setFiltered(result);
@@ -808,22 +1073,88 @@ const ViewWarranty = () => {
     [submissions]
   );
 
-  const rows = filtered.map((item) => [
-    item.email || '-',
-    item.selected_product || '-',
-    item.phone || '-',
-    item.address || '-',
-  ]);
+  // Prepare rows for IndexTable
+  const rows = filtered.map((item, index) => ({
+    id: item.$id, // Appwrite document ID
+    index,
+    full_name: item.full_name || '-',
+    email: item.email || '-',
+    selected_product: item.selected_product || '-',
+    phone: item.phone || '-',
+    address: item.address || '-',
+  }));
+
+  // Handle row click to open modal
+  const handleRowClick = useCallback((item) => {
+    setSelectedSubmission(item);
+    setModalOpen(true);
+  }, []);
+
+  // Handle modal field changes
+  const handleModalChange = useCallback((field, value) => {
+    setSelectedSubmission((prev) => ({
+      ...prev,
+      [field]: value,
+    }));
+  }, []);
+
+  // Handle save action
+  const handleSave = async () => {
+    if (!selectedSubmission) return;
+
+    try {
+      const response = await fetch('/.netlify/functions/updateSubmission.js', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: selectedSubmission.$id,
+          full_name: selectedSubmission.full_name,
+          email: selectedSubmission.email,
+          selected_product: selectedSubmission.selected_product,
+          phone: selectedSubmission.phone,
+          address: selectedSubmission.address,
+        }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok || result.error) {
+        throw new Error(result.error || 'Update failed');
+      }
+
+      // Refresh data after successful update
+      setLoading(true);
+      const fetchResponse = await fetch(
+        '/.netlify/functions/getAppwriteSubmissions?_=' + Date.now()
+      );
+      const data = await fetchResponse.json();
+
+      if (Array.isArray(data)) {
+        setSubmissions(data);
+        setFiltered(data);
+        setErrorMsg('');
+      } else {
+        setErrorMsg('Invalid data format from server.');
+      }
+
+      setModalOpen(false);
+      setSelectedSubmission(null);
+    } catch (err) {
+      setErrorMsg(err.message || 'Error updating submission.');
+    }
+    setLoading(false);
+  };
 
   // Export CSV
   const exportCSV = () => {
     if (filtered.length === 0) return;
 
-    const header = ['Email', 'Product', 'Phone', 'Address'];
+    const header = ['Full Name', 'Email', 'Product', 'Phone', 'Address'];
     const csvRows = [header.join(',')];
 
-    filtered.forEach(item => {
+    filtered.forEach((item) => {
       const row = [
+        `"${item.full_name || ''}"`,
         `"${item.email || ''}"`,
         `"${item.selected_product || ''}"`,
         `"${item.phone || ''}"`,
@@ -844,12 +1175,12 @@ const ViewWarranty = () => {
     document.body.removeChild(link);
   };
 
-  // Simple CSV parser (no commas inside fields)
+  // Parse CSV for import
   const parseCSV = (text) => {
     const lines = text.trim().split('\n');
-    const headers = lines[0].split(',').map(h => h.trim().replace(/^"|"$/g, ''));
-    const data = lines.slice(1).map(line => {
-      const values = line.split(',').map(v => v.trim().replace(/^"|"$/g, ''));
+    const headers = lines[0].split(',').map((h) => h.trim().replace(/^"|"$/g, ''));
+    const data = lines.slice(1).map((line) => {
+      const values = line.split(',').map((v) => v.trim().replace(/^"|"$/g, ''));
       const entry = {};
       headers.forEach((h, i) => {
         entry[h] = values[i] || '';
@@ -876,7 +1207,6 @@ const ViewWarranty = () => {
       const text = await file.text();
       const csvData = parseCSV(text);
 
-      // POST CSV data to your Appwrite import function
       const res = await fetch('/.netlify/functions/importToAppwrite', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -889,7 +1219,6 @@ const ViewWarranty = () => {
         throw new Error(result.error || 'Import failed');
       }
 
-      // Refresh data after successful import
       setSearch('');
       setImportError('');
       setLoading(true);
@@ -907,7 +1236,6 @@ const ViewWarranty = () => {
       }
       setLoading(false);
 
-      // Clear file input
       e.target.value = '';
     } catch (err) {
       setImportError(err.message || 'Error importing data.');
@@ -922,20 +1250,19 @@ const ViewWarranty = () => {
       <Layout>
         <Layout.Section>
           {/* Import and Export buttons */}
-          <Box paddingBlockEnd="4" display="flex" justifyContent="flex-end" gap="8px">
+          <Box paddingBlockEnd="400" display="flex" justifyContent="flex-end" gap="200">
             <Button
               onClick={() => fileInputRef.current.click()}
               disabled={importLoading}
-              plain
+              variant="plain"
             >
               {importLoading ? 'Importing...' : 'Import CSV'}
             </Button>
 
-            <Button onClick={exportCSV} plain>
+            <Button onClick={exportCSV} variant="plain">
               Export
             </Button>
 
-            {/* Hidden file input */}
             <input
               type="file"
               accept=".csv"
@@ -946,14 +1273,14 @@ const ViewWarranty = () => {
           </Box>
 
           {importError && (
-            <Box paddingBlock="2">
-              <Text variant="bodyMd" as="p" color="critical" alignment="right">
+            <Box paddingBlock="200">
+              <Text variant="bodyMd" as="p" tone="critical" alignment="end">
                 {importError}
               </Text>
             </Box>
           )}
 
-          <Card sectioned>
+          <Card>
             <TextField
               placeholder="Enter name, email, or product"
               value={search}
@@ -961,32 +1288,103 @@ const ViewWarranty = () => {
               clearButton
               onClearButtonClick={() => handleSearch('')}
               autoComplete="off"
-              style={{ width: '100%' }}
             />
 
             {loading ? (
-              <Box paddingBlock="6" display="flex" justifyContent="center">
+              <Box paddingBlock="600" display="flex" justifyContent="center">
                 <Text variant="bodyMd" as="p" alignment="center">
                   Loading...
                 </Text>
               </Box>
             ) : errorMsg ? (
-              <Box paddingBlock="6" display="flex" justifyContent="center">
-                <Text variant="bodyMd" as="p" color="critical" alignment="center">
+              <Box paddingBlock="600" display="flex" justifyContent="center">
+                <Text variant="bodyMd" as="p" tone="critical" alignment="center">
                   {errorMsg}
                 </Text>
               </Box>
+            ) : filtered.length === 0 ? (
+              <Box paddingBlock="600" display="flex" justifyContent="center">
+                <Text variant="bodyLg" as="p">
+                  No warranty submissions found.
+                </Text>
+              </Box>
             ) : (
-              <DataTable
-                columnContentTypes={['text', 'text', 'text', 'text']}
-                headings={['Email', 'Product', 'Phone', 'Address']}
-                rows={rows}
-                footerContent={`Total: ${rows.length} submission${rows.length !== 1 ? 's' : ''}`}
-                verticalAlign="middle"
-                stickyHeader
-              />
+              <IndexTable
+                itemCount={filtered.length}
+                selectable={false}
+                headings={[
+                  { title: 'Full Name' },
+                  { title: 'Email' },
+                  { title: 'Product' },
+                  { title: 'Phone' },
+                  { title: 'Address' },
+                ]}
+              >
+                {rows.map((item) => (
+                  <IndexTable.Row
+                    id={item.id}
+                    key={item.id}
+                    position={item.index}
+                    onClick={() => handleRowClick(item)}
+                  >
+                    <IndexTable.Cell>{item.full_name}</IndexTable.Cell>
+                    <IndexTable.Cell>{item.email}</IndexTable.Cell>
+                    <IndexTable.Cell>{item.selected_product}</IndexTable.Cell>
+                    <IndexTable.Cell>{item.phone}</IndexTable.Cell>
+                    <IndexTable.Cell>{item.address}</IndexTable.Cell>
+                  </IndexTable.Row>
+                ))}
+              </IndexTable>
             )}
           </Card>
+
+          {selectedSubmission && (
+            <Modal
+              open={modalOpen}
+              onClose={() => setModalOpen(false)}
+              title="Edit Submission"
+              primaryAction={{
+                content: 'Save',
+                onAction: handleSave,
+              }}
+              secondaryActions={[
+                {
+                  content: 'Cancel',
+                  onAction: () => setModalOpen(false),
+                },
+              ]}
+            >
+              <Modal.Section>
+                <FormLayout>
+                  <TextField
+                    label="Full Name"
+                    value={selectedSubmission.full_name || ''}
+                    onChange={(value) => handleModalChange('full_name', value)}
+                  />
+                  <TextField
+                    label="Email"
+                    value={selectedSubmission.email || ''}
+                    onChange={(value) => handleModalChange('email', value)}
+                  />
+                  <TextField
+                    label="Product"
+                    value={selectedSubmission.selected_product || ''}
+                    onChange={(value) => handleModalChange('selected_product', value)}
+                  />
+                  <TextField
+                    label="Phone"
+                    value={selectedSubmission.phone || ''}
+                    onChange={(value) => handleModalChange('phone', value)}
+                  />
+                  <TextField
+                    label="Address"
+                    value={selectedSubmission.address || ''}
+                    onChange={(value) => handleModalChange('address', value)}
+                  />
+                </FormLayout>
+              </Modal.Section>
+            </Modal>
+          )}
         </Layout.Section>
       </Layout>
     </Page>
@@ -994,7 +1392,6 @@ const ViewWarranty = () => {
 };
 
 export default ViewWarranty;
-
 
 
 
