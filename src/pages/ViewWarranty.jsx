@@ -748,6 +748,8 @@ import {
   Layout,
   Box,
   Text,
+  Button,
+  LegacyStack,
 } from '@shopify/polaris';
 
 const ViewWarranty = () => {
@@ -809,20 +811,55 @@ const ViewWarranty = () => {
     item.address || '-',
   ]);
 
+  // Export filtered data as CSV file
+  const exportCSV = () => {
+    if (filtered.length === 0) return;
+
+    const header = ['Email', 'Product', 'Phone', 'Address'];
+    const csvRows = [header.join(',')];
+
+    filtered.forEach(item => {
+      const row = [
+        `"${item.email || ''}"`,
+        `"${item.selected_product || ''}"`,
+        `"${item.phone || ''}"`,
+        `"${item.address || ''}"`,
+      ];
+      csvRows.push(row.join(','));
+    });
+
+    const csvContent = csvRows.join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', `warranty_submissions_${Date.now()}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   return (
     <Page title="Warranty registration" fullWidth>
       <Layout>
         <Layout.Section>
           <Card sectioned>
-            <TextField
-              label="Search by Name or Details"
-              placeholder="Enter name, email, or product"
-              value={search}
-              onChange={handleSearch}
-              clearButton
-              onClearButtonClick={() => handleSearch('')}
-              autoComplete="off"
-            />
+            <LegacyStack distribution="equalSpacing" alignment="center" wrap={false}>
+              <TextField
+                label="Search by Name or Details"
+                placeholder="Enter name, email, or product"
+                value={search}
+                onChange={handleSearch}
+                clearButton
+                onClearButtonClick={() => handleSearch('')}
+                autoComplete="off"
+                style={{ flex: 1 }}
+              />
+              <Button onClick={exportCSV} primary>
+                Export
+              </Button>
+            </LegacyStack>
 
             {loading ? (
               <Box paddingBlock="6" display="flex" justifyContent="center">
@@ -854,6 +891,8 @@ const ViewWarranty = () => {
 };
 
 export default ViewWarranty;
+
+
 
 
 
