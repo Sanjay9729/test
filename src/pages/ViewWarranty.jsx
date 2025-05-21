@@ -164,232 +164,287 @@
 
 
 // dynamic data 
+// import React, { useEffect, useState } from 'react';
+// import {
+//   AppProvider,
+//   Page,
+//   IndexTable,
+//   Text,
+//   Box,
+//   TextField,
+//   Button,
+//   Modal,
+//   FormLayout,
+//   Icon,
+// } from '@shopify/polaris';
+// import enTranslations from '@shopify/polaris/locales/en.json';
+// import Papa from 'papaparse';
+// import { SearchIcon } from '@shopify/polaris-icons';
+
+// const ViewWarranty = () => {
+//   const [submissions, setSubmissions] = useState([]);
+//   const [loading, setLoading] = useState(true);
+//   const [searchTerm, setSearchTerm] = useState('');
+//   const [modalOpen, setModalOpen] = useState(false);
+//   const [selectedSubmission, setSelectedSubmission] = useState(null);
+
+//   useEffect(() => {
+//     fetch('/.netlify/functions/getSubmissions')
+//       .then((res) => res.json())
+//       .then((data) => {
+//         setSubmissions(data);
+//         setLoading(false);
+//       });
+//   }, []);
+
+//   const handleSearchChange = (value) => setSearchTerm(value);
+
+//   const exportToCSV = () => {
+//     const data = submissions.map(({ full_name, email, selected_product, phone, address, created_at }) => ({
+//       full_name,
+//       email,
+//       product: selected_product,
+//       phone,
+//       address,
+//       created_at,
+//     }));
+
+//     const csv = Papa.unparse(data);
+//     const blob = new Blob([csv], { type: 'text/csv' });
+//     const link = document.createElement('a');
+//     link.href = URL.createObjectURL(blob);
+//     link.download = 'warranty_submissions.csv';
+//     link.click();
+//   };
+
+//   const handleCSVImport = (event) => {
+//     const file = event.target.files[0];
+//     if (!file) return;
+
+//     Papa.parse(file, {
+//       header: true,
+//       skipEmptyLines: true,
+//       complete: async (results) => {
+//         try {
+//           const response = await fetch("/.netlify/functions/importCSVToSupabase", {
+//             method: "POST",
+//             headers: { "Content-Type": "application/json" },
+//             body: JSON.stringify({ data: results.data }),
+//           });
+
+//           const result = await response.json();
+
+//           if (result.success) {
+//             alert("✅ Import successful");
+//             const refreshed = await fetch("/.netlify/functions/getSubmissions");
+//             setSubmissions(await refreshed.json());
+//           } else {
+//             alert("❌ Import failed");
+//           }
+//         } catch (err) {
+//           console.error("Import Error:", err);
+//           alert("❌ Unexpected error");
+//         }
+//       },
+//     });
+//   };
+
+//   const handleRowClick = (item) => {
+//     setSelectedSubmission(item);
+//     setModalOpen(true);
+//   };
+
+//   const handleModalChange = (field, value) => {
+//     setSelectedSubmission((prev) => ({ ...prev, [field]: value }));
+//   };
+
+//   const handleSave = async () => {
+//     const { id, ...fieldsToUpdate } = selectedSubmission;
+//     const response = await fetch("/.netlify/functions/updateSubmission", {
+//       method: "POST",
+//       headers: { "Content-Type": "application/json" },
+//       body: JSON.stringify({ id, ...fieldsToUpdate }),
+//     });
+//     const result = await response.json();
+//     if (!result.error) {
+//       alert("✅ Saved!");
+//       setModalOpen(false);
+//       const refreshed = await fetch("/.netlify/functions/getSubmissions");
+//       setSubmissions(await refreshed.json());
+//     } else {
+//       alert("❌ Failed");
+//     }
+//   };
+
+//   // ✅ Smart Search Logic
+//   const filteredSubmissions = submissions.filter((item) => {
+//     const searchWords = searchTerm.trim().toLowerCase().split(/\s+/);
+//     const fieldsToSearch = [
+//       item.full_name || '',
+//       item.email || '',
+//       item.selected_product || '',
+//       item.phone || '',
+//     ];
+//     const fieldText = fieldsToSearch.join(' ').toLowerCase();
+//     return searchWords.every((word) => fieldText.includes(word));
+//   });
+
+//   const rows = filteredSubmissions.map((item, index) => (
+//     <IndexTable.Row
+//       id={item.id?.toString() || index.toString()}
+//       key={item.id || index}
+//       position={index}
+//       onClick={() => handleRowClick(item)}
+//     >
+//       <IndexTable.Cell><Box paddingBlock="3"><Text>{item.full_name || '—'}</Text></Box></IndexTable.Cell>
+//       <IndexTable.Cell><Box paddingBlock="3"><Text>{item.email || '—'}</Text></Box></IndexTable.Cell>
+//       <IndexTable.Cell><Box paddingBlock="3"><Text>{item.selected_product || '—'}</Text></Box></IndexTable.Cell>
+//       <IndexTable.Cell><Box paddingBlock="3"><Text>{item.phone || '—'}</Text></Box></IndexTable.Cell>
+//       <IndexTable.Cell><Box paddingBlock="3"><Text>{item.address || '—'}</Text></Box></IndexTable.Cell>
+//     </IndexTable.Row>
+//   ));
+
+//   return (
+//     <AppProvider i18n={enTranslations}>
+//       <Page fullWidth>
+//         {/* Buttons */}
+//         <div style={{
+//           display: 'flex',
+//           justifyContent: 'flex-end',
+//           gap: '10px',
+//           marginBottom: '10px',
+//         }}>
+//           <Button onClick={exportToCSV}>Export</Button>
+//           <Button onClick={() => document.getElementById('csvFileInput').click()}>
+//             Import CSV
+//           </Button>
+//           <input
+//             id="csvFileInput"
+//             type="file"
+//             accept=".csv"
+//             style={{ display: 'none' }}
+//             onChange={handleCSVImport}
+//           />
+//         </div>
+
+//         {/* Search Input */}
+//         <div style={{ marginBottom: '16px' }}>
+//           <TextField
+//             placeholder="Search by Name"
+//             value={searchTerm}
+//             onChange={handleSearchChange}
+//             clearButton
+//             autoComplete="off"
+//             prefix={<Icon source={SearchIcon} color="subdued" />}
+//           />
+//         </div>
+
+//         {/* Table or empty state */}
+//         {!loading && filteredSubmissions.length === 0 ? (
+//           <Box display="flex" justifyContent="center" padding="8">
+//             <Text>No warranty submissions found.</Text>
+//           </Box>
+//         ) : (
+//           <IndexTable
+//             itemCount={filteredSubmissions.length}
+//             selectable={false}
+//             headings={[
+//               { title: 'Full Name' },
+//               { title: 'Email' },
+//               { title: 'Product' },
+//               { title: 'Phone' },
+//               { title: 'Address' },
+//             ]}
+//           >
+//             {rows}
+//           </IndexTable>
+//         )}
+
+//         {/* Edit Modal */}
+//         {selectedSubmission && (
+//           <Modal
+//             open={modalOpen}
+//             onClose={() => setModalOpen(false)}
+//             title="Edit Submission"
+//             primaryAction={{ content: 'Save', onAction: handleSave }}
+//             secondaryActions={[{ content: 'Cancel', onAction: () => setModalOpen(false) }]}
+//           >
+//             <Modal.Section>
+//               <FormLayout>
+//                 <TextField label="Full Name" value={selectedSubmission.full_name} onChange={(val) => handleModalChange('full_name', val)} />
+//                 <TextField label="Email" value={selectedSubmission.email} onChange={(val) => handleModalChange('email', val)} />
+//                 <TextField label="Product" value={selectedSubmission.selected_product} onChange={(val) => handleModalChange('selected_product', val)} />
+//                 <TextField label="Phone" value={selectedSubmission.phone} onChange={(val) => handleModalChange('phone', val)} />
+//                 <TextField label="Address" value={selectedSubmission.address} onChange={(val) => handleModalChange('address', val)} />
+//               </FormLayout>
+//             </Modal.Section>
+//           </Modal>
+//         )}
+//       </Page>
+//     </AppProvider>
+//   );
+// };
+
+// export default ViewWarranty;
+
+
+
+
 import React, { useEffect, useState } from 'react';
-import {
-  AppProvider,
-  Page,
-  IndexTable,
-  Text,
-  Box,
-  TextField,
-  Button,
-  Modal,
-  FormLayout,
-  Icon,
-} from '@shopify/polaris';
-import enTranslations from '@shopify/polaris/locales/en.json';
-import Papa from 'papaparse';
-import { SearchIcon } from '@shopify/polaris-icons';
 
 const ViewWarranty = () => {
   const [submissions, setSubmissions] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [modalOpen, setModalOpen] = useState(false);
-  const [selectedSubmission, setSelectedSubmission] = useState(null);
 
   useEffect(() => {
-    fetch('/.netlify/functions/getSubmissions')
+    fetch('/.netlify/functions/getAppwriteSubmissions')
       .then((res) => res.json())
       .then((data) => {
         setSubmissions(data);
         setLoading(false);
+      })
+      .catch((err) => {
+        console.error('Error loading data:', err);
+        setLoading(false);
       });
   }, []);
 
-  const handleSearchChange = (value) => setSearchTerm(value);
-
-  const exportToCSV = () => {
-    const data = submissions.map(({ full_name, email, selected_product, phone, address, created_at }) => ({
-      full_name,
-      email,
-      product: selected_product,
-      phone,
-      address,
-      created_at,
-    }));
-
-    const csv = Papa.unparse(data);
-    const blob = new Blob([csv], { type: 'text/csv' });
-    const link = document.createElement('a');
-    link.href = URL.createObjectURL(blob);
-    link.download = 'warranty_submissions.csv';
-    link.click();
-  };
-
-  const handleCSVImport = (event) => {
-    const file = event.target.files[0];
-    if (!file) return;
-
-    Papa.parse(file, {
-      header: true,
-      skipEmptyLines: true,
-      complete: async (results) => {
-        try {
-          const response = await fetch("/.netlify/functions/importCSVToSupabase", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ data: results.data }),
-          });
-
-          const result = await response.json();
-
-          if (result.success) {
-            alert("✅ Import successful");
-            const refreshed = await fetch("/.netlify/functions/getSubmissions");
-            setSubmissions(await refreshed.json());
-          } else {
-            alert("❌ Import failed");
-          }
-        } catch (err) {
-          console.error("Import Error:", err);
-          alert("❌ Unexpected error");
-        }
-      },
-    });
-  };
-
-  const handleRowClick = (item) => {
-    setSelectedSubmission(item);
-    setModalOpen(true);
-  };
-
-  const handleModalChange = (field, value) => {
-    setSelectedSubmission((prev) => ({ ...prev, [field]: value }));
-  };
-
-  const handleSave = async () => {
-    const { id, ...fieldsToUpdate } = selectedSubmission;
-    const response = await fetch("/.netlify/functions/updateSubmission", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id, ...fieldsToUpdate }),
-    });
-    const result = await response.json();
-    if (!result.error) {
-      alert("✅ Saved!");
-      setModalOpen(false);
-      const refreshed = await fetch("/.netlify/functions/getSubmissions");
-      setSubmissions(await refreshed.json());
-    } else {
-      alert("❌ Failed");
-    }
-  };
-
-  // ✅ Smart Search Logic
-  const filteredSubmissions = submissions.filter((item) => {
-    const searchWords = searchTerm.trim().toLowerCase().split(/\s+/);
-    const fieldsToSearch = [
-      item.full_name || '',
-      item.email || '',
-      item.selected_product || '',
-      item.phone || '',
-    ];
-    const fieldText = fieldsToSearch.join(' ').toLowerCase();
-    return searchWords.every((word) => fieldText.includes(word));
-  });
-
-  const rows = filteredSubmissions.map((item, index) => (
-    <IndexTable.Row
-      id={item.id?.toString() || index.toString()}
-      key={item.id || index}
-      position={index}
-      onClick={() => handleRowClick(item)}
-    >
-      <IndexTable.Cell><Box paddingBlock="3"><Text>{item.full_name || '—'}</Text></Box></IndexTable.Cell>
-      <IndexTable.Cell><Box paddingBlock="3"><Text>{item.email || '—'}</Text></Box></IndexTable.Cell>
-      <IndexTable.Cell><Box paddingBlock="3"><Text>{item.selected_product || '—'}</Text></Box></IndexTable.Cell>
-      <IndexTable.Cell><Box paddingBlock="3"><Text>{item.phone || '—'}</Text></Box></IndexTable.Cell>
-      <IndexTable.Cell><Box paddingBlock="3"><Text>{item.address || '—'}</Text></Box></IndexTable.Cell>
-    </IndexTable.Row>
-  ));
-
   return (
-    <AppProvider i18n={enTranslations}>
-      <Page fullWidth>
-        {/* Buttons */}
-        <div style={{
-          display: 'flex',
-          justifyContent: 'flex-end',
-          gap: '10px',
-          marginBottom: '10px',
-        }}>
-          <Button onClick={exportToCSV}>Export</Button>
-          <Button onClick={() => document.getElementById('csvFileInput').click()}>
-            Import CSV
-          </Button>
-          <input
-            id="csvFileInput"
-            type="file"
-            accept=".csv"
-            style={{ display: 'none' }}
-            onChange={handleCSVImport}
-          />
-        </div>
-
-        {/* Search Input */}
-        <div style={{ marginBottom: '16px' }}>
-          <TextField
-            placeholder="Search by Name"
-            value={searchTerm}
-            onChange={handleSearchChange}
-            clearButton
-            autoComplete="off"
-            prefix={<Icon source={SearchIcon} color="subdued" />}
-          />
-        </div>
-
-        {/* Table or empty state */}
-        {!loading && filteredSubmissions.length === 0 ? (
-          <Box display="flex" justifyContent="center" padding="8">
-            <Text>No warranty submissions found.</Text>
-          </Box>
-        ) : (
-          <IndexTable
-            itemCount={filteredSubmissions.length}
-            selectable={false}
-            headings={[
-              { title: 'Full Name' },
-              { title: 'Email' },
-              { title: 'Product' },
-              { title: 'Phone' },
-              { title: 'Address' },
-            ]}
-          >
-            {rows}
-          </IndexTable>
-        )}
-
-        {/* Edit Modal */}
-        {selectedSubmission && (
-          <Modal
-            open={modalOpen}
-            onClose={() => setModalOpen(false)}
-            title="Edit Submission"
-            primaryAction={{ content: 'Save', onAction: handleSave }}
-            secondaryActions={[{ content: 'Cancel', onAction: () => setModalOpen(false) }]}
-          >
-            <Modal.Section>
-              <FormLayout>
-                <TextField label="Full Name" value={selectedSubmission.full_name} onChange={(val) => handleModalChange('full_name', val)} />
-                <TextField label="Email" value={selectedSubmission.email} onChange={(val) => handleModalChange('email', val)} />
-                <TextField label="Product" value={selectedSubmission.selected_product} onChange={(val) => handleModalChange('selected_product', val)} />
-                <TextField label="Phone" value={selectedSubmission.phone} onChange={(val) => handleModalChange('phone', val)} />
-                <TextField label="Address" value={selectedSubmission.address} onChange={(val) => handleModalChange('address', val)} />
-              </FormLayout>
-            </Modal.Section>
-          </Modal>
-        )}
-      </Page>
-    </AppProvider>
+    <div style={{ padding: '2rem' }}>
+      <h2>Warranty Submissions</h2>
+      {loading ? (
+        <p>Loading...</p>
+      ) : submissions.length === 0 ? (
+        <p>No data found.</p>
+      ) : (
+        <table border="1" cellPadding="10" style={{ borderCollapse: 'collapse', width: '100%' }}>
+          <thead>
+            <tr>
+              <th>Full Name</th>
+              <th>Email</th>
+              <th>Phone</th>
+              <th>Address</th>
+              <th>Selected Product</th>
+            </tr>
+          </thead>
+          <tbody>
+            {submissions.map((item) => (
+              <tr key={item.$id}>
+                <td>{item.full_name}</td>
+                <td>{item.email}</td>
+                <td>{item.phone}</td>
+                <td>{item.address}</td>
+                <td>{item.selected_product}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
+    </div>
   );
 };
 
 export default ViewWarranty;
-
-
-
-
 
 
 
