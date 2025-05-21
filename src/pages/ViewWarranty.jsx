@@ -746,9 +746,8 @@ import {
   DataTable,
   TextField,
   Layout,
-  Stack,
-  Text,
   Box,
+  Text,
 } from '@shopify/polaris';
 
 const ViewWarranty = () => {
@@ -774,7 +773,6 @@ const ViewWarranty = () => {
           setErrorMsg('Invalid data format from server.');
         }
       } catch (err) {
-        console.error('Fetch Error:', err);
         setErrorMsg('Error fetching data.');
       }
       setLoading(false);
@@ -823,38 +821,32 @@ const ViewWarranty = () => {
               onChange={handleSearch}
               clearButton
               onClearButtonClick={() => handleSearch('')}
+              autoComplete="off"
             />
-          </Card>
-        </Layout.Section>
 
-        <Layout.Section>
-          {loading ? (
-            <Card sectioned>
+            {loading ? (
               <Box paddingBlock="6" display="flex" justifyContent="center">
                 <Text variant="bodyMd" as="p" alignment="center">
                   Loading...
                 </Text>
               </Box>
-            </Card>
-          ) : errorMsg ? (
-            <Card sectioned>
+            ) : errorMsg ? (
               <Box paddingBlock="6" display="flex" justifyContent="center">
                 <Text variant="bodyMd" as="p" color="critical" alignment="center">
                   {errorMsg}
                 </Text>
               </Box>
-            </Card>
-          ) : (
-            <Card>
+            ) : (
               <DataTable
                 columnContentTypes={['text', 'text', 'text', 'text']}
                 headings={['Email', 'Product', 'Phone', 'Address']}
                 rows={rows}
                 footerContent={`Total: ${rows.length} submission${rows.length !== 1 ? 's' : ''}`}
                 verticalAlign="middle"
+                stickyHeader
               />
-            </Card>
-          )}
+            )}
+          </Card>
         </Layout.Section>
       </Layout>
     </Page>
@@ -862,6 +854,7 @@ const ViewWarranty = () => {
 };
 
 export default ViewWarranty;
+
 
 
 
