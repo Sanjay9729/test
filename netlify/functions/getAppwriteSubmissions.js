@@ -9,10 +9,10 @@ exports.handler = async function () {
   const database = new sdk.Databases(client);
 
   try {
-    const response = await database.listDocuments(
-      '68271db80016565f6882',  // Database ID
-      '68271dcf002c6797363d',  // Collection ID
-      [ '$createdAt DESC' ]    // ✅ Sort newest first
+    const result = await database.listDocuments(
+      '68271db80016565f6882',
+      '68271dcf002c6797363d',
+      ['$createdAt DESC']
     );
 
     return {
@@ -20,14 +20,14 @@ exports.handler = async function () {
       headers: {
         'Content-Type': 'application/json',
         'Access-Control-Allow-Origin': '*',
-        'Cache-Control': 'no-cache, no-store, must-revalidate', // ✅ Prevent browser caching
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
         'Pragma': 'no-cache',
         'Expires': '0',
       },
-      body: JSON.stringify(response.documents),
+      body: JSON.stringify(result.documents),
     };
   } catch (error) {
-    console.error('❌ Appwrite Error:', error.message);
+    console.error('Appwrite Error:', error.message);
     return {
       statusCode: 500,
       body: JSON.stringify({ error: error.message }),
