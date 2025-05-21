@@ -11,19 +11,23 @@ exports.handler = async function () {
   try {
     const response = await database.listDocuments(
       '68271db80016565f6882',  // Database ID
-      '68271dcf002c6797363d'   // Collection ID
+      '68271dcf002c6797363d',  // Collection ID
+      [ '$createdAt DESC' ]    // ✅ Sort newest first
     );
 
     return {
       statusCode: 200,
-      body: JSON.stringify(response.documents),
       headers: {
         'Content-Type': 'application/json',
         'Access-Control-Allow-Origin': '*',
+        'Cache-Control': 'no-cache, no-store, must-revalidate', // ✅ Prevent browser caching
+        'Pragma': 'no-cache',
+        'Expires': '0',
       },
+      body: JSON.stringify(response.documents),
     };
   } catch (error) {
-    console.error('Appwrite Error:', error.message);
+    console.error('❌ Appwrite Error:', error.message);
     return {
       statusCode: 500,
       body: JSON.stringify({ error: error.message }),

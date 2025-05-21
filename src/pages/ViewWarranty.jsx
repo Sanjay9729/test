@@ -390,61 +390,62 @@
 
 
 
-import React, { useEffect, useState } from 'react';
+// import React, { useEffect, useState } from 'react';
 
-const ViewWarranty = () => {
-  const [submissions, setSubmissions] = useState([]);
-  const [loading, setLoading] = useState(true);
+// const ViewWarranty = () => {
+//   const [submissions, setSubmissions] = useState([]);
+//   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    fetch('/.netlify/functions/getAppwriteSubmissions')
-      .then((res) => res.json())
-      .then((data) => {
-        setSubmissions(data);
-        setLoading(false);
-      })
-      .catch((err) => {
-        console.error('Error loading data:', err);
-        setLoading(false);
-      });
-  }, []);
+//  useEffect(() => {
+//   fetch('/.netlify/functions/getAppwriteSubmissions?_=' + new Date().getTime()) // ✅ Prevent caching
+//     .then((res) => res.json())
+//     .then((data) => {
+//       setSubmissions(data);
+//       setLoading(false);
+//     })
+//     .catch((err) => {
+//       console.error('Error loading data:', err);
+//       setLoading(false);
+//     });
+// }, []);
 
-  return (
-    <div style={{ padding: '2rem' }}>
-      <h2>Warranty Submissions</h2>
-      {loading ? (
-        <p>Loading...</p>
-      ) : submissions.length === 0 ? (
-        <p>No data found.</p>
-      ) : (
-        <table border="1" cellPadding="10" style={{ borderCollapse: 'collapse', width: '100%' }}>
-          <thead>
-            <tr>
-              <th>Full Name</th>
-              <th>Email</th>
-              <th>Phone</th>
-              <th>Address</th>
-              <th>Selected Product</th>
-            </tr>
-          </thead>
-          <tbody>
-            {submissions.map((item) => (
-              <tr key={item.$id}>
-                <td>{item.full_name}</td>
-                <td>{item.email}</td>
-                <td>{item.phone}</td>
-                <td>{item.address}</td>
-                <td>{item.selected_product}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      )}
-    </div>
-  );
-};
 
-export default ViewWarranty;
+//   return (
+//     <div style={{ padding: '2rem' }}>
+//       <h2>Warranty Submissions</h2>
+//       {loading ? (
+//         <p>Loading...</p>
+//       ) : submissions.length === 0 ? (
+//         <p>No data found.</p>
+//       ) : (
+//         <table border="1" cellPadding="10" style={{ borderCollapse: 'collapse', width: '100%' }}>
+//           <thead>
+//             <tr>
+//               <th>Full Name</th>
+//               <th>Email</th>
+//               <th>Phone</th>
+//               <th>Address</th>
+//               <th>Selected Product</th>
+//             </tr>
+//           </thead>
+//           <tbody>
+//             {submissions.map((item) => (
+//               <tr key={item.$id}>
+//                 <td>{item.full_name}</td>
+//                 <td>{item.email}</td>
+//                 <td>{item.phone}</td>
+//                 <td>{item.address}</td>
+//                 <td>{item.selected_product}</td>
+//               </tr>
+//             ))}
+//           </tbody>
+//         </table>
+//       )}
+//     </div>
+//   );
+// };
+
+// export default ViewWarranty;
 
 
 
@@ -736,6 +737,74 @@ export default ViewWarranty;
 
 
 
+// 21/05/25
+
+import React, { useEffect, useState } from 'react';
+
+const ViewWarranty = () => {
+  const [submissions, setSubmissions] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  const fetchData = () => {
+    setLoading(true);
+    fetch('/.netlify/functions/getAppwriteSubmissions?_=' + new Date().getTime()) // Prevent cache
+      .then((res) => res.json())
+      .then((data) => {
+        setSubmissions(data);
+        setLoading(false);
+      })
+      .catch((err) => {
+        console.error('Error loading data:', err);
+        setLoading(false);
+      });
+  };
+
+  useEffect(() => {
+    fetchData(); // Fetch on load
+  }, []);
+
+  return (
+    <div style={{ padding: '2rem' }}>
+      <h2>Warranty Submissions</h2>
+
+      {/* ✅ Refresh Button */}
+      <button onClick={fetchData} style={{ marginBottom: '1rem' }}>
+        🔄 Refresh
+      </button>
+
+      {loading ? (
+        <p>Loading...</p>
+      ) : submissions.length === 0 ? (
+        <p>No data found.</p>
+      ) : (
+        <table border="1" cellPadding="10" style={{ borderCollapse: 'collapse', width: '100%' }}>
+          <thead>
+            <tr>
+              <th>Full Name</th>
+              <th>Email</th>
+              <th>Phone</th>
+              <th>Address</th>
+              <th>Selected Product</th>
+            </tr>
+          </thead>
+          <tbody>
+            {submissions.map((item) => (
+              <tr key={item.$id}>
+                <td>{item.full_name}</td>
+                <td>{item.email}</td>
+                <td>{item.phone}</td>
+                <td>{item.address}</td>
+                <td>{item.selected_product}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
+    </div>
+  );
+};
+
+export default ViewWarranty;
 
 
 
