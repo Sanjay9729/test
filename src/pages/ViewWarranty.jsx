@@ -747,25 +747,21 @@ const ViewWarranty = () => {
   const [errorMsg, setErrorMsg] = useState('');
 
   useEffect(() => {
-    const fetchData = () => {
-      fetch('/.netlify/functions/getAppwriteSubmissions?_=' + new Date().getTime())
-        .then((res) => res.json())
-        .then((data) => {
-          if (Array.isArray(data)) {
-            setSubmissions(data);
-          } else {
-            setErrorMsg('Invalid data format from server.');
-          }
-          setLoading(false);
-        })
-        .catch((err) => {
-          console.error('Error loading data:', err);
-          setErrorMsg('Failed to fetch data.');
-          setLoading(false);
-        });
-    };
-
-    fetchData(); // Fetch on page load
+    fetch('/.netlify/functions/getAppwriteSubmissions?_=' + Date.now())
+      .then((res) => res.json())
+      .then((data) => {
+        if (Array.isArray(data)) {
+          setSubmissions(data);
+        } else {
+          setErrorMsg('Invalid data format from server.');
+        }
+        setLoading(false);
+      })
+      .catch((err) => {
+        console.error('Error:', err);
+        setErrorMsg('Something went wrong.');
+        setLoading(false);
+      });
   }, []);
 
   return (
@@ -776,7 +772,7 @@ const ViewWarranty = () => {
       {errorMsg && <p style={{ color: 'red' }}>{errorMsg}</p>}
 
       {!loading && submissions.length > 0 && (
-        <table border="1" cellPadding="10" style={{ borderCollapse: 'collapse', width: '100%' }}>
+        <table border="1" cellPadding="10" style={{ width: '100%', borderCollapse: 'collapse' }}>
           <thead>
             <tr>
               <th>Full Name</th>
@@ -806,6 +802,7 @@ const ViewWarranty = () => {
 };
 
 export default ViewWarranty;
+
 
 
 
