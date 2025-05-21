@@ -749,7 +749,7 @@ import {
   Box,
   Text,
   Button,
-  Stack,
+  LegacyStack,
 } from '@shopify/polaris';
 
 const ViewWarranty = () => {
@@ -811,7 +811,7 @@ const ViewWarranty = () => {
     item.address || '-',
   ]);
 
-  // Function to export data as CSV
+  // Export filtered data as CSV file
   const exportCSV = () => {
     if (filtered.length === 0) return;
 
@@ -845,8 +845,7 @@ const ViewWarranty = () => {
       <Layout>
         <Layout.Section>
           <Card sectioned>
-            {/* Search + Export button in one row */}
-            <Stack distribution="equalSpacing" alignment="center" wrap={false}>
+            <LegacyStack distribution="equalSpacing" alignment="center" wrap={false}>
               <TextField
                 label="Search by Name or Details"
                 placeholder="Enter name, email, or product"
@@ -860,7 +859,7 @@ const ViewWarranty = () => {
               <Button onClick={exportCSV} primary>
                 Export
               </Button>
-            </Stack>
+            </LegacyStack>
 
             {loading ? (
               <Box paddingBlock="6" display="flex" justifyContent="center">
@@ -892,6 +891,7 @@ const ViewWarranty = () => {
 };
 
 export default ViewWarranty;
+
 
 
 
