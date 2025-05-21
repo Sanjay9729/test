@@ -746,6 +746,9 @@ import {
   DataTable,
   TextField,
   Layout,
+  Stack,
+  Text,
+  Box,
 } from '@shopify/polaris';
 
 const ViewWarranty = () => {
@@ -755,7 +758,6 @@ const ViewWarranty = () => {
   const [loading, setLoading] = useState(true);
   const [errorMsg, setErrorMsg] = useState('');
 
-  // ✅ Load data from Netlify function
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
@@ -781,7 +783,6 @@ const ViewWarranty = () => {
     fetchData();
   }, []);
 
-  // ✅ Handle search input
   const handleSearch = useCallback(
     (value) => {
       setSearch(value);
@@ -811,10 +812,9 @@ const ViewWarranty = () => {
   ]);
 
   return (
-    <Page title="Warranty registration">
+    <Page title="Warranty registration" fullWidth>
       <Layout>
         <Layout.Section>
-          {/* ✅ Search Bar UI */}
           <Card sectioned>
             <TextField
               label="Search by Name or Details"
@@ -825,15 +825,24 @@ const ViewWarranty = () => {
               onClearButtonClick={() => handleSearch('')}
             />
           </Card>
+        </Layout.Section>
 
-          {/* ✅ Table Results */}
+        <Layout.Section>
           {loading ? (
             <Card sectioned>
-              <p>Loading...</p>
+              <Box paddingBlock="6" display="flex" justifyContent="center">
+                <Text variant="bodyMd" as="p" alignment="center">
+                  Loading...
+                </Text>
+              </Box>
             </Card>
           ) : errorMsg ? (
             <Card sectioned>
-              <p style={{ color: 'red' }}>{errorMsg}</p>
+              <Box paddingBlock="6" display="flex" justifyContent="center">
+                <Text variant="bodyMd" as="p" color="critical" alignment="center">
+                  {errorMsg}
+                </Text>
+              </Box>
             </Card>
           ) : (
             <Card>
@@ -842,6 +851,7 @@ const ViewWarranty = () => {
                 headings={['Email', 'Product', 'Phone', 'Address']}
                 rows={rows}
                 footerContent={`Total: ${rows.length} submission${rows.length !== 1 ? 's' : ''}`}
+                verticalAlign="middle"
               />
             </Card>
           )}
@@ -852,6 +862,28 @@ const ViewWarranty = () => {
 };
 
 export default ViewWarranty;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
