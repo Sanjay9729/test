@@ -908,35 +908,53 @@ const Authe = () => {
     }
   };
 
-  const handleSubmit = async () => {
-    setLoading(true);
-    setFieldErrors({});
+const handleSubmit = async () => {
+  setLoading(true);
+  setFieldErrors({});
 
-    if (!selectedProduct) {
-      setFieldErrors({ selectedProduct: 'Please select a product.' });
-      setLoading(false);
-      return;
-    }
+  if (!selectedProduct) {
+    setFieldErrors({ selectedProduct: 'Please select a product.' });
+    setLoading(false);
+    return;
+  }
 
-    try {
-      const session = await account.get();
-      const document = {
+  try {
+    const session = await account.get();
+    const document = {
+      full_name: fullName,
+      email,
+      phone,
+      address,
+      selected_product: selectedProduct,
+      user_id: session.$id,
+    };
+
+    // 1. Save to Appwrite
+    await database.createDocument(APPWRITE_DATABASE_ID, APPWRITE_COLLECTION_ID, ID.unique(), document);
+
+    // 2. Send to Shopify backend function
+    await fetch('/.netlify/functions/sendToShopify', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
         full_name: fullName,
         email,
         phone,
         address,
         selected_product: selectedProduct,
-        user_id: session.$id,
-      };
+      })
+    });
 
-      await database.createDocument(APPWRITE_DATABASE_ID, APPWRITE_COLLECTION_ID, ID.unique(), document);
-      setStep(6); // Success page
-    } catch (err) {
-      setFieldErrors({ submit: 'Submission failed. Please try again.' });
-    } finally {
-      setLoading(false);
-    }
-  };
+    // 3. Show success step
+    setStep(6);
+  } catch (err) {
+    console.error('Submission error:', err);
+    setFieldErrors({ submit: 'Submission failed. Please try again.' });
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   const nextStep = () => {
     const errors = {};
