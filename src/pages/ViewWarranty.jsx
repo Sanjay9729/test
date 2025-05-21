@@ -744,39 +744,38 @@ import React, { useEffect, useState } from 'react';
 const ViewWarranty = () => {
   const [submissions, setSubmissions] = useState([]);
   const [loading, setLoading] = useState(true);
-
-  const fetchData = () => {
-    setLoading(true);
-    fetch('/.netlify/functions/getAppwriteSubmissions?_=' + new Date().getTime()) // Prevent cache
-      .then((res) => res.json())
-      .then((data) => {
-        setSubmissions(data);
-        setLoading(false);
-      })
-      .catch((err) => {
-        console.error('Error loading data:', err);
-        setLoading(false);
-      });
-  };
+  const [errorMsg, setErrorMsg] = useState('');
 
   useEffect(() => {
-    fetchData(); // Fetch on load
+    const fetchData = () => {
+      fetch('/.netlify/functions/getAppwriteSubmissions?_=' + new Date().getTime())
+        .then((res) => res.json())
+        .then((data) => {
+          if (Array.isArray(data)) {
+            setSubmissions(data);
+          } else {
+            setErrorMsg('Invalid data format from server.');
+          }
+          setLoading(false);
+        })
+        .catch((err) => {
+          console.error('Error loading data:', err);
+          setErrorMsg('Failed to fetch data.');
+          setLoading(false);
+        });
+    };
+
+    fetchData(); // Fetch on page load
   }, []);
 
   return (
     <div style={{ padding: '2rem' }}>
       <h2>Warranty Submissions</h2>
 
-      {/* ✅ Refresh Button */}
-      <button onClick={fetchData} style={{ marginBottom: '1rem' }}>
-        🔄 Refresh
-      </button>
+      {loading && <p>Loading...</p>}
+      {errorMsg && <p style={{ color: 'red' }}>{errorMsg}</p>}
 
-      {loading ? (
-        <p>Loading...</p>
-      ) : submissions.length === 0 ? (
-        <p>No data found.</p>
-      ) : (
+      {!loading && submissions.length > 0 && (
         <table border="1" cellPadding="10" style={{ borderCollapse: 'collapse', width: '100%' }}>
           <thead>
             <tr>
@@ -800,11 +799,14 @@ const ViewWarranty = () => {
           </tbody>
         </table>
       )}
+
+      {!loading && submissions.length === 0 && !errorMsg && <p>No data found.</p>}
     </div>
   );
 };
 
 export default ViewWarranty;
+
 
 
 
