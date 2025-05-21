@@ -20,6 +20,7 @@ exports.handler = async (event) => {
 
     // Map data to match the structure of your Appwrite database
     const mapped = data.map(item => ({
+      user_id: item.user_id,
       email: item.email || '',
       full_name: item.full_name || '',
       selected_product: item.selected_product || '',
