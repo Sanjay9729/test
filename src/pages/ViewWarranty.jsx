@@ -739,74 +739,121 @@
 
 // 21/05/25
 
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
+import {
+  Page,
+  Card,
+  DataTable,
+  TextField,
+  Layout,
+} from '@shopify/polaris';
 
 const ViewWarranty = () => {
   const [submissions, setSubmissions] = useState([]);
+  const [filtered, setFiltered] = useState([]);
+  const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
   const [errorMsg, setErrorMsg] = useState('');
 
- useEffect(() => {
-  const fetchData = async () => {
-    setLoading(true);
-    try {
-      const response = await fetch('/.netlify/functions/getAppwriteSubmissions?_=' + Date.now());
-      const data = await response.json();
+  // ✅ Load data from Netlify function
+  useEffect(() => {
+    const fetchData = async () => {
+      setLoading(true);
+      try {
+        const response = await fetch(
+          '/.netlify/functions/getAppwriteSubmissions?_=' + Date.now()
+        );
+        const data = await response.json();
 
-      if (Array.isArray(data)) {
-        setSubmissions(data);
-      } else {
-        setErrorMsg('Invalid data format from server.');
+        if (Array.isArray(data)) {
+          setSubmissions(data);
+          setFiltered(data);
+        } else {
+          setErrorMsg('Invalid data format from server.');
+        }
+      } catch (err) {
+        console.error('Fetch Error:', err);
+        setErrorMsg('Error fetching data.');
       }
-    } catch (err) {
-      console.error('Fetch Error:', err);
-      setErrorMsg('Error fetching data.');
-    }
-    setLoading(false);
-  };
+      setLoading(false);
+    };
 
-  fetchData(); // ✅ fetch every page load
-}, []);
+    fetchData();
+  }, []);
 
+  // ✅ Handle search input
+  const handleSearch = useCallback(
+    (value) => {
+      setSearch(value);
+      const query = value.toLowerCase().trim();
+
+      if (!query) {
+        setFiltered(submissions);
+        return;
+      }
+
+      const result = submissions.filter((item) =>
+        item.full_name?.toLowerCase().includes(query) ||
+        item.email?.toLowerCase().includes(query) ||
+        item.selected_product?.toLowerCase().includes(query)
+      );
+
+      setFiltered(result);
+    },
+    [submissions]
+  );
+
+  const rows = filtered.map((item) => [
+    item.email || '-',
+    item.selected_product || '-',
+    item.phone || '-',
+    item.address || '-',
+  ]);
 
   return (
-    <div style={{ padding: '2rem' }}>
-      <h2>Warranty Submissions</h2>
+    <Page title="Warranty registration">
+      <Layout>
+        <Layout.Section>
+          {/* ✅ Search Bar UI */}
+          <Card sectioned>
+            <TextField
+              label="Search by Name or Details"
+              placeholder="Enter name, email, or product"
+              value={search}
+              onChange={handleSearch}
+              clearButton
+              onClearButtonClick={() => handleSearch('')}
+            />
+          </Card>
 
-      {loading && <p>Loading...</p>}
-      {errorMsg && <p style={{ color: 'red' }}>{errorMsg}</p>}
-
-      {!loading && submissions.length > 0 && (
-        <table border="1" cellPadding="10" style={{ width: '100%', borderCollapse: 'collapse' }}>
-          <thead>
-            <tr>
-              <th>Full Name</th>
-              <th>Email</th>
-              <th>Phone</th>
-              <th>Address</th>
-              <th>Selected Product</th>
-            </tr>
-          </thead>
-          <tbody>
-            {submissions.map((item) => (
-              <tr key={item.$id}>
-                <td>{item.full_name}</td>
-                <td>{item.email}</td>
-                <td>{item.phone}</td>
-                <td>{item.address}</td>
-                <td>{item.selected_product}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      )}
-
-      {!loading && submissions.length === 0 && !errorMsg && <p>No data found.</p>}
-    </div>
+          {/* ✅ Table Results */}
+          {loading ? (
+            <Card sectioned>
+              <p>Loading...</p>
+            </Card>
+          ) : errorMsg ? (
+            <Card sectioned>
+              <p style={{ color: 'red' }}>{errorMsg}</p>
+            </Card>
+          ) : (
+            <Card>
+              <DataTable
+                columnContentTypes={['text', 'text', 'text', 'text']}
+                headings={['Email', 'Product', 'Phone', 'Address']}
+                rows={rows}
+                footerContent={`Total: ${rows.length} submission${rows.length !== 1 ? 's' : ''}`}
+              />
+            </Card>
+          )}
+        </Layout.Section>
+      </Layout>
+    </Page>
   );
 };
 
 export default ViewWarranty;
+
+
 
 
 
