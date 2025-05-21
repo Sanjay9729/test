@@ -804,7 +804,6 @@ const Authe = () => {
   const [selectedProduct, setSelectedProduct] = useState('');
   const [productSearch, setProductSearch] = useState('');
   const [products, setProducts] = useState([]);
-  const [data ,setData]=useState()
   const [filteredProducts, setFilteredProducts] = useState([]);
   const [fieldErrors, setFieldErrors] = useState({});
   const [loading, setLoading] = useState(false);
@@ -821,10 +820,9 @@ const Authe = () => {
   const client = new Client().setEndpoint(APPWRITE_ENDPOINT).setProject(APPWRITE_PROJECT_ID);
   const account = new Account(client);
   const database = new Databases(client);
-  console.log("data" ,data)
+
   useEffect(() => {
     const fetchProducts = async () => {
-      
       try {
         const res = await fetch('/.netlify/functions/products');
         const data = await res.json();
@@ -838,7 +836,7 @@ const Authe = () => {
     };
     fetchProducts();
   }, []);
-  
+
   useEffect(() => {
     setFilteredProducts(
       productSearch.trim() === ''
@@ -865,50 +863,52 @@ const Authe = () => {
 
   const validateEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 
-  const sendOtp = async () => {
-    setLoading(true);
-    setFieldErrors({});
-    setAuthMessage('');
+ const sendOtp = async () => {
+  setLoading(true);
+  setFieldErrors({});
+  setAuthMessage('');
 
-    if (!email || !validateEmail(email)) {
-      setFieldErrors({ email: 'Enter a valid email address.' });
-      setLoading(false);
-      return;
-    }
+  if (!email || !validateEmail(email)) {
+    setFieldErrors({ email: 'Enter a valid email address.' });
+    setLoading(false);
+    return;
+  }
 
-    try {
-      const response = await account.createEmailToken(ID.unique(), email);
-      localStorage.setItem('userId', response.userId);
-      setAuthMessage('📧 OTP sent to your email.');
-    } catch (err) {
-      setFieldErrors({ email: err.message || 'Failed to send OTP.' });
-    } finally {
-      setLoading(false);
-    }
-  };
+  try {
+    const response = await account.createEmailToken(ID.unique(), email);
+    localStorage.setItem('userId', response.userId);
+    setAuthMessage('📧 OTP sent to your email.');
+  } catch (err) {
+    setFieldErrors({ email: err.message || 'Failed to send OTP.' });
+  } finally {
+    setLoading(false);
+  }
+};
 
-  const verifyOtp = async () => {
-    setLoading(true);
-    const userId = localStorage.getItem('userId');
-    const secret = otp.trim();
 
-    if (!userId || !secret) {
-      setFieldErrors({ otp: 'Enter a valid OTP.' });
-      setLoading(false);
-      return;
-    }
+const verifyOtp = async () => {
+  setLoading(true);
+  const userId = localStorage.getItem('userId');
+  const secret = otp.trim();
 
-    try {
-      await account.createSession(userId, secret);
-      setIsAuthenticated(true);
-      setAuthMessage('✅ Verified and logged in!');
-      nextStep();
-    } catch (err) {
-      setFieldErrors({ otp: 'Invalid OTP. Please try again.' });
-    } finally {
-      setLoading(false);
-    }
-  };
+  if (!userId || !secret) {
+    setFieldErrors({ otp: 'Enter a valid OTP.' });
+    setLoading(false);
+    return;
+  }
+
+  try {
+    await account.createSession(userId, secret);
+    setIsAuthenticated(true);
+    setAuthMessage('✅ Verified and logged in!');
+    nextStep();
+  } catch (err) {
+    setFieldErrors({ otp: 'Invalid OTP. Please try again.' });
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   const sendDataToShopify = async (data) => {
     const res = await fetch('/.netlify/functions/DataWarranty', {
@@ -916,26 +916,16 @@ const Authe = () => {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data),
     });
-
     const result = await res.json();
-    console.log('📦 Shopify response:', result);
-
     if (!res.ok) throw new Error(result.error || 'Shopify error');
   };
 
   const handleSubmit = async () => {
-    if (loading) return;
     setLoading(true);
     setFieldErrors({});
 
     if (!selectedProduct) {
       setFieldErrors({ selectedProduct: 'Please select a product.' });
-      setLoading(false);
-      return;
-    }
-
-    if (!isAuthenticated) {
-      setFieldErrors({ email: 'Please verify your email before submitting.' });
       setLoading(false);
       return;
     }
@@ -955,8 +945,7 @@ const Authe = () => {
       await sendDataToShopify(document);
       setStep(6);
     } catch (err) {
-      console.error('❌ Submit error:', err);
-      setFieldErrors({ submit: err.message || 'Submission failed. Please try again.' });
+      setFieldErrors({ submit: 'Submission failed. Please try again.' });
     } finally {
       setLoading(false);
     }
@@ -1082,44 +1071,26 @@ const Authe = () => {
                     onChange={(e) => setProductSearch(e.target.value)}
                     placeholder="Search products..."
                   />
-                  {selectedProduct && <p className="selected-product">✅ Selected: {selectedProduct}</p>}
                   <ul className="product-list">
                     {loadingProducts ? (
                       <li>Loading...</li>
-                    ) : filteredProducts.length > 0 ? (
+                    ) : (
                       filteredProducts.map((product) => (
                         <li
                           key={product.id}
                           className={`product-item ${selectedProduct === product.title ? 'selected' : ''}`}
                           onClick={() => setSelectedProduct(product.title)}
-                          style={{
-                            border: selectedProduct === product.title ? '2px solid #4CAF50' : '1px solid #ccc',
-                            background: selectedProduct === product.title ? '#eaffea' : '#fff',
-                            cursor: 'pointer',
-                            padding: '8px',
-                            marginBottom: '4px',
-                            display: 'flex',
-                            alignItems: 'center',
-                          }}
                         >
                           {product.images?.[0]?.src && (
-                            <img
-                              src={product.images[0].src}
-                              alt={product.title}
-                              className="product-image"
-                              style={{ width: '40px', height: '40px', marginRight: '10px' }}
-                            />
+                            <img src={product.images[0].src} alt={product.title} className="product-image" />
                           )}
                           <span>{product.title}</span>
                         </li>
                       ))
-                    ) : (
-                      <li>No products found</li>
                     )}
                   </ul>
                   {fieldErrors.selectedProduct && <p className="error">{fieldErrors.selectedProduct}</p>}
                   {fieldErrors.submit && <p className="error">{fieldErrors.submit}</p>}
-                  <button className="submit-btn" onClick={handleSubmit} disabled={loading}>Submit</button>
                 </div>
               )}
 
@@ -1134,8 +1105,9 @@ const Authe = () => {
               )}
 
               <div className="btn-group">
-                {step > 1 && step < 6 && <button onClick={prevStep} disabled={loading}>Previous</button>}
-                {step < 5 && <button onClick={nextStep} disabled={loading}>Next</button>}
+                {step > 1 && step < 6 && <button onClick={prevStep}>Previous</button>}
+                {step < 5 && <button onClick={nextStep}>Next</button>}
+                {step === 5 && <button onClick={handleSubmit} className="submit-btn">Submit</button>}
               </div>
             </>
           )}
@@ -1146,6 +1118,9 @@ const Authe = () => {
 };
 
 export default Authe;
+
+
+
 
 
 
