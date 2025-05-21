@@ -841,25 +841,27 @@ const ViewWarranty = () => {
   };
 
   return (
-    <Page title="Warranty registration" fullWidth>
+    <Page fullWidth>
       <Layout>
         <Layout.Section>
+          {/* Export button above the search box */}
+          <Box paddingBlockEnd="4" display="flex" justifyContent="flex-end">
+            <Button onClick={exportCSV} primary>
+              Export
+            </Button>
+          </Box>
+
           <Card sectioned>
-            <LegacyStack distribution="equalSpacing" alignment="center" wrap={false}>
-              <TextField
-                label="Search by Name or Details"
-                placeholder="Enter name, email, or product"
-                value={search}
-                onChange={handleSearch}
-                clearButton
-                onClearButtonClick={() => handleSearch('')}
-                autoComplete="off"
-                style={{ flex: 1 }}
-              />
-              <Button onClick={exportCSV} primary>
-                Export
-              </Button>
-            </LegacyStack>
+            {/* Search box only */}
+            <TextField
+              placeholder="Enter name, email, or product"
+              value={search}
+              onChange={handleSearch}
+              clearButton
+              onClearButtonClick={() => handleSearch('')}
+              autoComplete="off"
+              style={{ width: '100%' }}
+            />
 
             {loading ? (
               <Box paddingBlock="6" display="flex" justifyContent="center">
@@ -891,6 +893,7 @@ const ViewWarranty = () => {
 };
 
 export default ViewWarranty;
+
 
 
 
