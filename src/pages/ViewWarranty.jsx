@@ -766,6 +766,10 @@ const ViewWarranty = () => {
 
   const fileInputRef = useRef(null);
 
+  useEffect(() => {
+    fetchData();
+  }, []);
+
   const fetchData = async () => {
     setLoading(true);
     try {
@@ -784,15 +788,10 @@ const ViewWarranty = () => {
     setLoading(false);
   };
 
-  useEffect(() => {
-    fetchData();
-  }, []);
-
   const handleSearch = useCallback(
     (value) => {
       setSearch(value);
       const query = value.toLowerCase().trim();
-
       if (!query) {
         setFiltered(submissions);
         return;
@@ -820,32 +819,24 @@ const ViewWarranty = () => {
   };
 
   const handleSave = async () => {
-    const { $id, ...fields } = selectedItem;
+    const { $id, full_name, email, selected_product, phone, address } = selectedItem;
     try {
       const response = await fetch('/.netlify/functions/updateAppwriteSubmission', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: $id, ...fields }),
+        body: JSON.stringify({ id: $id, full_name, email, selected_product, phone, address }),
       });
       const result = await response.json();
       if (!result.error) {
         setModalOpen(false);
         fetchData();
       } else {
-        alert('Update failed.');
+        alert('Update failed: ' + result.error);
       }
     } catch (error) {
-      alert('An error occurred while saving.');
+      alert('An error occurred while saving: ' + error.message);
     }
   };
-
-  const rows = filtered.map((item, index) => [
-    <Button plain onClick={() => handleRowClick(index)}>{item.full_name || '-'}</Button>,
-    item.email || '-',
-    item.selected_product || '-',
-    item.phone || '-',
-    item.address || '-',
-  ]);
 
   const exportCSV = () => {
     if (filtered.length === 0) return;
@@ -920,7 +911,6 @@ const ViewWarranty = () => {
       setSearch('');
       setImportError('');
       fetchData();
-
       e.target.value = '';
     } catch (err) {
       setImportError(err.message || 'Error importing data.');
@@ -928,6 +918,14 @@ const ViewWarranty = () => {
 
     setImportLoading(false);
   };
+
+  const rows = filtered.map(item => [
+    item.full_name || '-',
+    item.email || '-',
+    item.selected_product || '-',
+    item.phone || '-',
+    item.address || '-',
+  ]);
 
   return (
     <Page fullWidth>
@@ -941,11 +939,7 @@ const ViewWarranty = () => {
             >
               {importLoading ? 'Importing...' : 'Import CSV'}
             </Button>
-
-            <Button onClick={exportCSV} plain>
-              Export
-            </Button>
-
+            <Button onClick={exportCSV} plain>Export</Button>
             <input
               type="file"
               accept=".csv"
@@ -994,11 +988,11 @@ const ViewWarranty = () => {
                 footerContent={`Total: ${rows.length} submission${rows.length !== 1 ? 's' : ''}`}
                 verticalAlign="middle"
                 stickyHeader
+                onRowClick={({ index }) => handleRowClick(index)}
               />
             )}
           </Card>
 
-          {/* Edit Modal */}
           {selectedItem && (
             <Modal
               open={modalOpen}
@@ -1045,5 +1039,7 @@ const ViewWarranty = () => {
 };
 
 export default ViewWarranty;
+
+
 
 

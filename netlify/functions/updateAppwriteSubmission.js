@@ -34,46 +34,52 @@
 const sdk = require('node-appwrite');
 
 exports.handler = async function (event, context) {
-  // ✅ Only accept POST requests
+  console.log('Update request received');
+
   if (event.httpMethod !== 'POST') {
     return {
       statusCode: 405,
-      body: JSON.stringify({ error: 'Method Not Allowed' }),
+      body: JSON.stringify({ error: 'Only POST allowed' }),
+    };
+  }
+
+  if (!event.body) {
+    return {
+      statusCode: 400,
+      body: JSON.stringify({ error: 'Missing request body' }),
     };
   }
 
   let data;
-
   try {
-    data = JSON.parse(event.body); // ✅ parse incoming JSON
-  } catch (error) {
+    data = JSON.parse(event.body);
+  } catch (err) {
+    console.error('JSON Parse Error:', err);
     return {
       statusCode: 400,
-      body: JSON.stringify({ error: 'Invalid JSON body' }),
+      body: JSON.stringify({ error: 'Invalid JSON' }),
     };
   }
 
   const { id, full_name, email, selected_product, phone, address } = data;
 
-  // ✅ Check required ID
   if (!id) {
     return {
       statusCode: 400,
-      body: JSON.stringify({ error: 'Document ID is required.' }),
+      body: JSON.stringify({ error: 'Missing document ID' }),
     };
   }
 
-  // ✅ Appwrite Client Setup
   const client = new sdk.Client()
-    .setEndpoint('https://cloud.appwrite.io/v1') // or your custom endpoint
+    .setEndpoint(process.env.APPWRITE_ENDPOINT)
     .setProject(process.env.APPWRITE_PROJECT_ID)
     .setKey(process.env.APPWRITE_API_KEY);
 
   const databases = new sdk.Databases(client);
 
   try {
-    await databases.updateDocument(
-      process.env.APPWRITE_DB_ID,
+    const updated = await databases.updateDocument(
+      process.env.APPWRITE_DATABASE_ID,        // ✅ corrected here
       process.env.APPWRITE_COLLECTION_ID,
       id,
       {
@@ -85,14 +91,19 @@ exports.handler = async function (event, context) {
       }
     );
 
+    console.log('Updated successfully:', updated);
+
     return {
       statusCode: 200,
       body: JSON.stringify({ success: true }),
     };
-  } catch (err) {
+  } catch (error) {
+    console.error('Appwrite error:', error);
     return {
       statusCode: 500,
-      body: JSON.stringify({ error: err.message }),
+      body: JSON.stringify({ error: error.message || 'Update failed' }),
     };
   }
 };
+
+
