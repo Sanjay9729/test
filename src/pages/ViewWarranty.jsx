@@ -749,6 +749,8 @@ import {
   Box,
   Text,
   Button,
+  Modal,
+  FormLayout,
 } from '@shopify/polaris';
 
 const ViewWarranty = () => {
@@ -759,31 +761,30 @@ const ViewWarranty = () => {
   const [errorMsg, setErrorMsg] = useState('');
   const [importLoading, setImportLoading] = useState(false);
   const [importError, setImportError] = useState('');
+  const [selectedItem, setSelectedItem] = useState(null);
+  const [modalOpen, setModalOpen] = useState(false);
 
   const fileInputRef = useRef(null);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      setLoading(true);
-      try {
-        const response = await fetch(
-          '/.netlify/functions/getAppwriteSubmissions?_=' + Date.now()
-        );
-        const data = await response.json();
-
-        if (Array.isArray(data)) {
-          setSubmissions(data);
-          setFiltered(data);
-          setErrorMsg('');
-        } else {
-          setErrorMsg('Invalid data format from server.');
-        }
-      } catch (err) {
-        setErrorMsg('Error fetching data.');
+  const fetchData = async () => {
+    setLoading(true);
+    try {
+      const response = await fetch('/.netlify/functions/getAppwriteSubmissions?_=' + Date.now());
+      const data = await response.json();
+      if (Array.isArray(data)) {
+        setSubmissions(data);
+        setFiltered(data);
+        setErrorMsg('');
+      } else {
+        setErrorMsg('Invalid data format from server.');
       }
-      setLoading(false);
-    };
+    } catch (err) {
+      setErrorMsg('Error fetching data.');
+    }
+    setLoading(false);
+  };
 
+  useEffect(() => {
     fetchData();
   }, []);
 
@@ -808,14 +809,43 @@ const ViewWarranty = () => {
     [submissions]
   );
 
-  const rows = filtered.map((item) => [
-    item.email || '-',
+  const handleRowClick = (index) => {
+    const item = filtered[index];
+    setSelectedItem(item);
+    setModalOpen(true);
+  };
+
+  const handleModalChange = (field, value) => {
+    setSelectedItem(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handleSave = async () => {
+    const { $id, ...fields } = selectedItem;
+    try {
+      const response = await fetch('/.netlify/functions/updateAppwriteSubmission', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: $id, ...fields }),
+      });
+      const result = await response.json();
+      if (!result.error) {
+        setModalOpen(false);
+        fetchData();
+      } else {
+        alert('Update failed.');
+      }
+    } catch (error) {
+      alert('An error occurred while saving.');
+    }
+  };
+
+  const rows = filtered.map((item, index) => [
+    <Button plain onClick={() => handleRowClick(index)}>{item.email || '-'}</Button>,
     item.selected_product || '-',
     item.phone || '-',
     item.address || '-',
   ]);
 
-  // Export CSV
   const exportCSV = () => {
     if (filtered.length === 0) return;
 
@@ -844,11 +874,10 @@ const ViewWarranty = () => {
     document.body.removeChild(link);
   };
 
-  // Simple CSV parser (no commas inside fields)
   const parseCSV = (text) => {
     const lines = text.trim().split('\n');
     const headers = lines[0].split(',').map(h => h.trim().replace(/^"|"$/g, ''));
-    const data = lines.slice(1).map(line => {
+    return lines.slice(1).map(line => {
       const values = line.split(',').map(v => v.trim().replace(/^"|"$/g, ''));
       const entry = {};
       headers.forEach((h, i) => {
@@ -856,10 +885,8 @@ const ViewWarranty = () => {
       });
       return entry;
     });
-    return data;
   };
 
-  // Handle CSV import
   const handleFileChange = async (e) => {
     const file = e.target.files[0];
     setImportError('');
@@ -876,7 +903,6 @@ const ViewWarranty = () => {
       const text = await file.text();
       const csvData = parseCSV(text);
 
-      // POST CSV data to your Appwrite import function
       const res = await fetch('/.netlify/functions/importToAppwrite', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -889,29 +915,13 @@ const ViewWarranty = () => {
         throw new Error(result.error || 'Import failed');
       }
 
-      // Refresh data after successful import
       setSearch('');
       setImportError('');
-      setLoading(true);
+      fetchData();
 
-      const response = await fetch(
-        '/.netlify/functions/getAppwriteSubmissions?_=' + Date.now()
-      );
-      const data = await response.json();
-
-      if (Array.isArray(data)) {
-        setSubmissions(data);
-        setFiltered(data);
-      } else {
-        setErrorMsg('Invalid data format from server.');
-      }
-      setLoading(false);
-
-      // Clear file input
       e.target.value = '';
     } catch (err) {
       setImportError(err.message || 'Error importing data.');
-      setImportLoading(false);
     }
 
     setImportLoading(false);
@@ -921,7 +931,6 @@ const ViewWarranty = () => {
     <Page fullWidth>
       <Layout>
         <Layout.Section>
-          {/* Import and Export buttons */}
           <Box paddingBlockEnd="4" display="flex" justifyContent="flex-end" gap="8px">
             <Button
               onClick={() => fileInputRef.current.click()}
@@ -935,7 +944,6 @@ const ViewWarranty = () => {
               Export
             </Button>
 
-            {/* Hidden file input */}
             <input
               type="file"
               accept=".csv"
@@ -987,6 +995,47 @@ const ViewWarranty = () => {
               />
             )}
           </Card>
+
+          {/* Edit Modal */}
+          {selectedItem && (
+            <Modal
+              open={modalOpen}
+              onClose={() => setModalOpen(false)}
+              title="Edit Submission"
+              primaryAction={{ content: 'Save', onAction: handleSave }}
+              secondaryActions={[{ content: 'Cancel', onAction: () => setModalOpen(false) }]}
+            >
+              <Modal.Section>
+                <FormLayout>
+                  <TextField
+                    label="Full Name"
+                    value={selectedItem.full_name || ''}
+                    onChange={(val) => handleModalChange('full_name', val)}
+                  />
+                  <TextField
+                    label="Email"
+                    value={selectedItem.email || ''}
+                    onChange={(val) => handleModalChange('email', val)}
+                  />
+                  <TextField
+                    label="Product"
+                    value={selectedItem.selected_product || ''}
+                    onChange={(val) => handleModalChange('selected_product', val)}
+                  />
+                  <TextField
+                    label="Phone"
+                    value={selectedItem.phone || ''}
+                    onChange={(val) => handleModalChange('phone', val)}
+                  />
+                  <TextField
+                    label="Address"
+                    value={selectedItem.address || ''}
+                    onChange={(val) => handleModalChange('address', val)}
+                  />
+                </FormLayout>
+              </Modal.Section>
+            </Modal>
+          )}
         </Layout.Section>
       </Layout>
     </Page>
@@ -994,3 +1043,4 @@ const ViewWarranty = () => {
 };
 
 export default ViewWarranty;
+
