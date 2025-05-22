@@ -751,7 +751,11 @@ import {
   Modal,
   FormLayout,
   IndexTable,
+  LegacyStack
 } from '@shopify/polaris';
+
+
+
 
 const ViewWarranty = () => {
   const [submissions, setSubmissions] = useState([]);
@@ -788,25 +792,20 @@ const ViewWarranty = () => {
     setLoading(false);
   };
 
-  const handleSearch = useCallback(
-    (value) => {
-      setSearch(value);
-      const query = value.toLowerCase().trim();
-      if (!query) {
-        setFiltered(submissions);
-        return;
-      }
-
-      const result = submissions.filter((item) =>
-        item.full_name?.toLowerCase().includes(query) ||
-        item.email?.toLowerCase().includes(query) ||
-        item.selected_product?.toLowerCase().includes(query)
-      );
-
-      setFiltered(result);
-    },
-    [submissions]
-  );
+  const handleSearch = useCallback((value) => {
+    setSearch(value);
+    const query = value.toLowerCase().trim();
+    if (!query) {
+      setFiltered(submissions);
+      return;
+    }
+    const result = submissions.filter((item) =>
+      item.full_name?.toLowerCase().includes(query) ||
+      item.email?.toLowerCase().includes(query) ||
+      item.selected_product?.toLowerCase().includes(query)
+    );
+    setFiltered(result);
+  }, [submissions]);
 
   const handleRowClick = (index) => {
     const item = filtered[index];
@@ -815,7 +814,7 @@ const ViewWarranty = () => {
   };
 
   const handleModalChange = (field, value) => {
-    setSelectedItem(prev => ({ ...prev, [field]: value }));
+    setSelectedItem((prev) => ({ ...prev, [field]: value }));
   };
 
   const handleSave = async () => {
@@ -838,10 +837,83 @@ const ViewWarranty = () => {
     }
   };
 
-  const resourceName = {
-    singular: 'submission',
-    plural: 'submissions',
+  const handleFileChange = async (e) => {
+    const file = e.target.files[0];
+    setImportError('');
+    if (!file) return;
+
+    if (!file.name.endsWith('.csv')) {
+      setImportError('Please select a CSV file.');
+      return;
+    }
+
+    setImportLoading(true);
+    try {
+      const text = await file.text();
+      const lines = text.trim().split('\n');
+      const headers = lines[0].split(',').map(h => h.trim().replace(/^"|"$/g, ''));
+      const csvData = lines.slice(1).map(line => {
+        const values = line.split(',').map(v => v.trim().replace(/^"|"$/g, ''));
+        const entry = {};
+        headers.forEach((h, i) => {
+          entry[h] = values[i] || '';
+        });
+        return entry;
+      });
+
+      const res = await fetch('/.netlify/functions/importToAppwrite', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ data: csvData }),
+      });
+
+      const result = await res.json();
+      if (!res.ok || result.error) {
+        throw new Error(result.error || 'Import failed');
+      }
+
+      fetchData();
+      e.target.value = '';
+    } catch (err) {
+      setImportError(err.message || 'Error importing data.');
+    }
+
+    setImportLoading(false);
   };
+
+  const handleExport = () => {
+    if (filtered.length === 0) {
+      alert("No data to export");
+      return;
+    }
+
+    const header = ['Full Name', 'Email', 'Product', 'Phone', 'Address'];
+    const csvRows = [header.join(',')];
+
+    filtered.forEach(item => {
+      const row = [
+        `"${item.full_name || ''}"`,
+        `"${item.email || ''}"`,
+        `"${item.selected_product || ''}"`,
+        `"${item.phone || ''}"`,
+        `"${item.address || ''}"`,
+      ];
+      csvRows.push(row.join(','));
+    });
+
+    const csvContent = csvRows.join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', `warranty_submissions_${Date.now()}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const resourceName = { singular: 'submission', plural: 'submissions' };
 
   const rowMarkup = filtered.map((item, index) => (
     <IndexTable.Row
@@ -862,33 +934,39 @@ const ViewWarranty = () => {
     <Page fullWidth>
       <Layout>
         <Layout.Section>
-          <Box paddingBlockEnd="4" display="flex" justifyContent="flex-end" gap="8px">
-            <Button
-              onClick={() => fileInputRef.current.click()}
-              disabled={importLoading}
-              plain
-            >
-              {importLoading ? 'Importing...' : 'Import CSV'}
-            </Button>
-            <Button onClick={() => alert('Export feature optional')} plain>Export</Button>
-            <input
-              type="file"
-              accept=".csv"
-              style={{ display: 'none' }}
-              ref={fileInputRef}
-              onChange={() => alert('Import logic can be added')}
-            />
-          </Box>
+          {/* BUTTONS RIGHT-ALIGNED */}
+                <div style={{ marginBottom: '10px' }}>
+            <LegacyStack alignment="center" distribution="trailing" spacing="loose" >
+              <Box paddingBlockEnd="4" style={{ display: 'flex', justifyContent: 'flex-end', gap: '16px' }}>
+                <Button onClick={() => fileInputRef.current.click()} disabled={importLoading}>
+                  {importLoading ? 'Importing...' : 'Import CSV'}
+                </Button>
+                <Button onClick={handleExport}>Export</Button>
+                <input
+                  type="file"
+                  accept=".csv"
+                  style={{ display: 'none' }}
+                  ref={fileInputRef}
+                  onChange={handleFileChange}
+                />
+              </Box>
+            </LegacyStack>
+          </div>
+          {/* SEARCH FIELD */}
+         
 
+          {/* IMPORT ERROR DISPLAY */}
           {importError && (
-            <Box paddingBlock="2">
+            <Box paddingBlockEnd="4">
               <Text variant="bodyMd" as="p" color="critical" alignment="right">
                 {importError}
               </Text>
             </Box>
           )}
 
+          {/* TABLE */}
           <Card sectioned>
+             <Box paddingBlockEnd="4" style={{ marginBottom: '10px' }}>
             <TextField
               placeholder="Search by name, email, or product"
               value={search}
@@ -897,18 +975,14 @@ const ViewWarranty = () => {
               onClearButtonClick={() => handleSearch('')}
               autoComplete="off"
             />
-
+          </Box>
             {loading ? (
-              <Box paddingBlock="6" display="flex" justifyContent="center">
-                <Text variant="bodyMd" as="p" alignment="center">
-                  Loading...
-                </Text>
+              <Box padding="6" display="flex" justifyContent="center">
+                <Text>Loading...</Text>
               </Box>
             ) : errorMsg ? (
-              <Box paddingBlock="6" display="flex" justifyContent="center">
-                <Text variant="bodyMd" as="p" color="critical" alignment="center">
-                  {errorMsg}
-                </Text>
+              <Box padding="6" display="flex" justifyContent="center">
+                <Text color="critical">{errorMsg}</Text>
               </Box>
             ) : (
               <IndexTable
@@ -928,6 +1002,7 @@ const ViewWarranty = () => {
             )}
           </Card>
 
+          {/* MODAL */}
           {selectedItem && (
             <Modal
               open={modalOpen}
@@ -974,6 +1049,11 @@ const ViewWarranty = () => {
 };
 
 export default ViewWarranty;
+
+
+
+
+
 
 
 
