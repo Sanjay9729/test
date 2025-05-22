@@ -1113,11 +1113,12 @@ const Authe = () => {
                       <li>Loading...</li>
                     ) : (
                       filteredProducts.map((product) => (
-                        <li
-                          key={product.id}
-                          className={`product-item ${selectedProduct === product.title ? 'selected' : ''}`}
-                          onClick={() => setSelectedProduct(product.title)}
-                        >
+                       <li
+                        key={product.id}
+                        className={`product-item flex items-center ${selectedProduct === product.title ? 'selected' : ''}`}
+                        onClick={() => setSelectedProduct(product.title)}
+                      >
+
                           {product.images?.[0]?.src && (
                             <img src={product.images[0].src} alt={product.title} className="product-image" />
                           )}
@@ -1163,24 +1164,3 @@ const Authe = () => {
 };
 
 export default Authe;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
