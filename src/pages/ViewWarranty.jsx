@@ -840,7 +840,8 @@ const ViewWarranty = () => {
   };
 
   const rows = filtered.map((item, index) => [
-    <Button plain onClick={() => handleRowClick(index)}>{item.email || '-'}</Button>,
+    <Button plain onClick={() => handleRowClick(index)}>{item.full_name || '-'}</Button>,
+    item.email || '-',
     item.selected_product || '-',
     item.phone || '-',
     item.address || '-',
@@ -849,11 +850,12 @@ const ViewWarranty = () => {
   const exportCSV = () => {
     if (filtered.length === 0) return;
 
-    const header = ['Email', 'Product', 'Phone', 'Address'];
+    const header = ['Full Name', 'Email', 'Product', 'Phone', 'Address'];
     const csvRows = [header.join(',')];
 
     filtered.forEach(item => {
       const row = [
+        `"${item.full_name || ''}"`,
         `"${item.email || ''}"`,
         `"${item.selected_product || ''}"`,
         `"${item.phone || ''}"`,
@@ -963,7 +965,7 @@ const ViewWarranty = () => {
 
           <Card sectioned>
             <TextField
-              placeholder="Enter name, email, or product"
+              placeholder="Search by name, email, or product"
               value={search}
               onChange={handleSearch}
               clearButton
@@ -986,8 +988,8 @@ const ViewWarranty = () => {
               </Box>
             ) : (
               <DataTable
-                columnContentTypes={['text', 'text', 'text', 'text']}
-                headings={['Email', 'Product', 'Phone', 'Address']}
+                columnContentTypes={['text', 'text', 'text', 'text', 'text']}
+                headings={['Full Name', 'Email', 'Product', 'Phone', 'Address']}
                 rows={rows}
                 footerContent={`Total: ${rows.length} submission${rows.length !== 1 ? 's' : ''}`}
                 verticalAlign="middle"
@@ -1043,4 +1045,5 @@ const ViewWarranty = () => {
 };
 
 export default ViewWarranty;
+
 
