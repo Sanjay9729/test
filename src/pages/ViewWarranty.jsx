@@ -749,8 +749,6 @@ import {
   Box,
   Text,
   Button,
-  Modal,
-  InlineError,
 } from '@shopify/polaris';
 
 const ViewWarranty = () => {
@@ -759,188 +757,240 @@ const ViewWarranty = () => {
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
   const [errorMsg, setErrorMsg] = useState('');
+  const [importLoading, setImportLoading] = useState(false);
+  const [importError, setImportError] = useState('');
 
-  const [editModalOpen, setEditModalOpen] = useState(false);
-  const [editData, setEditData] = useState({});
-  const [saveError, setSaveError] = useState('');
-  const [saving, setSaving] = useState(false);
+  const fileInputRef = useRef(null);
 
   useEffect(() => {
-    fetchSubmissions();
-  }, []);
+    const fetchData = async () => {
+      setLoading(true);
+      try {
+        const response = await fetch(
+          '/.netlify/functions/getAppwriteSubmissions?_=' + Date.now()
+        );
+        const data = await response.json();
 
-  const fetchSubmissions = async () => {
-    setLoading(true);
-    try {
-      const response = await fetch('/.netlify/functions/getAppwriteSubmissions?_=' + Date.now());
-      const data = await response.json();
-      if (Array.isArray(data)) {
-        setSubmissions(data);
-        setFiltered(data);
-        setErrorMsg('');
-      } else {
-        setErrorMsg('Invalid data format from server.');
+        if (Array.isArray(data)) {
+          setSubmissions(data);
+          setFiltered(data);
+          setErrorMsg('');
+        } else {
+          setErrorMsg('Invalid data format from server.');
+        }
+      } catch (err) {
+        setErrorMsg('Error fetching data.');
       }
-    } catch (err) {
-      setErrorMsg('Error fetching data.');
-    }
-    setLoading(false);
-  };
+      setLoading(false);
+    };
+
+    fetchData();
+  }, []);
 
   const handleSearch = useCallback(
     (value) => {
       setSearch(value);
       const query = value.toLowerCase().trim();
-      if (!query) return setFiltered(submissions);
+
+      if (!query) {
+        setFiltered(submissions);
+        return;
+      }
+
       const result = submissions.filter((item) =>
         item.full_name?.toLowerCase().includes(query) ||
         item.email?.toLowerCase().includes(query) ||
         item.selected_product?.toLowerCase().includes(query)
       );
+
       setFiltered(result);
     },
     [submissions]
   );
-
-  const openEditModal = (submission) => {
-    setEditData({ ...submission });
-    setEditModalOpen(true);
-    setSaveError('');
-  };
-
-  const closeModal = () => {
-    setEditModalOpen(false);
-    setEditData({});
-    setSaveError('');
-  };
-
-  const handleEditChange = (field, value) => {
-    setEditData(prev => ({ ...prev, [field]: value }));
-  };
-
-  const saveEdit = async () => {
-    if (!editData?.$id) return;
-    setSaving(true);
-    try {
-      const res = await fetch('/.netlify/functions/updateAppwriteSubmission', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(editData),
-      });
-
-      const result = await res.json();
-      if (!res.ok || result.error) throw new Error(result.error || 'Update failed');
-
-      const updated = submissions.map(sub =>
-        sub.$id === editData.$id ? result.data : sub
-      );
-
-      setSubmissions(updated);
-      setFiltered(updated);
-      closeModal();
-    } catch (err) {
-      setSaveError(err.message || 'Failed to save changes.');
-    }
-    setSaving(false);
-  };
 
   const rows = filtered.map((item) => [
     item.email || '-',
     item.selected_product || '-',
     item.phone || '-',
     item.address || '-',
-    <Button size="slim" onClick={() => openEditModal(item)}>
-      Edit
-    </Button>,
   ]);
+
+  // Export CSV
+  const exportCSV = () => {
+    if (filtered.length === 0) return;
+
+    const header = ['Email', 'Product', 'Phone', 'Address'];
+    const csvRows = [header.join(',')];
+
+    filtered.forEach(item => {
+      const row = [
+        `"${item.email || ''}"`,
+        `"${item.selected_product || ''}"`,
+        `"${item.phone || ''}"`,
+        `"${item.address || ''}"`,
+      ];
+      csvRows.push(row.join(','));
+    });
+
+    const csvContent = csvRows.join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', `warranty_submissions_${Date.now()}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  // Simple CSV parser (no commas inside fields)
+  const parseCSV = (text) => {
+    const lines = text.trim().split('\n');
+    const headers = lines[0].split(',').map(h => h.trim().replace(/^"|"$/g, ''));
+    const data = lines.slice(1).map(line => {
+      const values = line.split(',').map(v => v.trim().replace(/^"|"$/g, ''));
+      const entry = {};
+      headers.forEach((h, i) => {
+        entry[h] = values[i] || '';
+      });
+      return entry;
+    });
+    return data;
+  };
+
+  // Handle CSV import
+  const handleFileChange = async (e) => {
+    const file = e.target.files[0];
+    setImportError('');
+    if (!file) return;
+
+    if (!file.name.endsWith('.csv')) {
+      setImportError('Please select a CSV file.');
+      return;
+    }
+
+    setImportLoading(true);
+
+    try {
+      const text = await file.text();
+      const csvData = parseCSV(text);
+
+      // POST CSV data to your Appwrite import function
+      const res = await fetch('/.netlify/functions/importToAppwrite', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ data: csvData }),
+      });
+
+      const result = await res.json();
+
+      if (!res.ok || result.error) {
+        throw new Error(result.error || 'Import failed');
+      }
+
+      // Refresh data after successful import
+      setSearch('');
+      setImportError('');
+      setLoading(true);
+
+      const response = await fetch(
+        '/.netlify/functions/getAppwriteSubmissions?_=' + Date.now()
+      );
+      const data = await response.json();
+
+      if (Array.isArray(data)) {
+        setSubmissions(data);
+        setFiltered(data);
+      } else {
+        setErrorMsg('Invalid data format from server.');
+      }
+      setLoading(false);
+
+      // Clear file input
+      e.target.value = '';
+    } catch (err) {
+      setImportError(err.message || 'Error importing data.');
+      setImportLoading(false);
+    }
+
+    setImportLoading(false);
+  };
 
   return (
     <Page fullWidth>
       <Layout>
         <Layout.Section>
-          <Box paddingBlockEnd="4" display="flex" justifyContent="space-between">
+          {/* Import and Export buttons */}
+          <Box paddingBlockEnd="4" display="flex" justifyContent="flex-end" gap="8px">
+            <Button
+              onClick={() => fileInputRef.current.click()}
+              disabled={importLoading}
+              plain
+            >
+              {importLoading ? 'Importing...' : 'Import CSV'}
+            </Button>
+
+            <Button onClick={exportCSV} plain>
+              Export
+            </Button>
+
+            {/* Hidden file input */}
+            <input
+              type="file"
+              accept=".csv"
+              style={{ display: 'none' }}
+              ref={fileInputRef}
+              onChange={handleFileChange}
+            />
+          </Box>
+
+          {importError && (
+            <Box paddingBlock="2">
+              <Text variant="bodyMd" as="p" color="critical" alignment="right">
+                {importError}
+              </Text>
+            </Box>
+          )}
+
+          <Card sectioned>
             <TextField
-              placeholder="Search by name, email, or product"
+              placeholder="Enter name, email, or product"
               value={search}
               onChange={handleSearch}
               clearButton
               onClearButtonClick={() => handleSearch('')}
               autoComplete="off"
+              style={{ width: '100%' }}
             />
-          </Box>
 
-          {errorMsg ? (
-            <Text color="critical">{errorMsg}</Text>
-          ) : loading ? (
-            <Text>Loading...</Text>
-          ) : (
-            <Card sectioned>
+            {loading ? (
+              <Box paddingBlock="6" display="flex" justifyContent="center">
+                <Text variant="bodyMd" as="p" alignment="center">
+                  Loading...
+                </Text>
+              </Box>
+            ) : errorMsg ? (
+              <Box paddingBlock="6" display="flex" justifyContent="center">
+                <Text variant="bodyMd" as="p" color="critical" alignment="center">
+                  {errorMsg}
+                </Text>
+              </Box>
+            ) : (
               <DataTable
-                columnContentTypes={['text', 'text', 'text', 'text', 'text']}
-                headings={['Email', 'Product', 'Phone', 'Address', 'Actions']}
+                columnContentTypes={['text', 'text', 'text', 'text']}
+                headings={['Email', 'Product', 'Phone', 'Address']}
                 rows={rows}
                 footerContent={`Total: ${rows.length} submission${rows.length !== 1 ? 's' : ''}`}
+                verticalAlign="middle"
+                stickyHeader
               />
-            </Card>
-          )}
+            )}
+          </Card>
         </Layout.Section>
       </Layout>
-
-      <Modal
-        open={editModalOpen}
-        onClose={closeModal}
-        title="Edit Warranty Submission"
-        primaryAction={{
-          content: 'Save',
-          onAction: saveEdit,
-          loading: saving,
-        }}
-        secondaryActions={[
-          {
-            content: 'Cancel',
-            onAction: closeModal,
-          },
-        ]}
-      >
-        <Modal.Section>
-          <Box padding="4" display="grid" gap="4">
-            <TextField
-              label="Full Name"
-              value={editData.full_name || ''}
-              onChange={(val) => handleEditChange('full_name', val)}
-              autoComplete="off"
-            />
-            <TextField
-              label="Email"
-              value={editData.email || ''}
-              onChange={(val) => handleEditChange('email', val)}
-              autoComplete="off"
-            />
-            <TextField
-              label="Product"
-              value={editData.selected_product || ''}
-              onChange={(val) => handleEditChange('selected_product', val)}
-              autoComplete="off"
-            />
-            <TextField
-              label="Phone"
-              value={editData.phone || ''}
-              onChange={(val) => handleEditChange('phone', val)}
-              autoComplete="off"
-            />
-            <TextField
-              label="Address"
-              value={editData.address || ''}
-              onChange={(val) => handleEditChange('address', val)}
-              autoComplete="off"
-            />
-            {saveError && <InlineError message={saveError} fieldID="edit-error" />}
-          </Box>
-        </Modal.Section>
-      </Modal>
     </Page>
   );
 };
 
 export default ViewWarranty;
-
