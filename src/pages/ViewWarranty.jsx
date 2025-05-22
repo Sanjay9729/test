@@ -759,21 +759,13 @@ const ViewWarranty = () => {
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
   const [errorMsg, setErrorMsg] = useState('');
-  const [importLoading, setImportLoading] = useState(false);
-  const [importError, setImportError] = useState('');
   const [selectedItem, setSelectedItem] = useState(null);
   const [modalOpen, setModalOpen] = useState(false);
-
-  const fileInputRef = useRef(null);
-
-  useEffect(() => {
-    fetchData();
-  }, []);
 
   const fetchData = async () => {
     setLoading(true);
     try {
-      const response = await fetch('/.netlify/functions/getAppwriteSubmissions?_=' + Date.now());
+      const response = await fetch('/.netlify/functions/getAppwriteSubmissions');
       const data = await response.json();
       if (Array.isArray(data)) {
         setSubmissions(data);
@@ -788,6 +780,10 @@ const ViewWarranty = () => {
     setLoading(false);
   };
 
+  useEffect(() => {
+    fetchData();
+  }, []);
+
   const handleSearch = useCallback(
     (value) => {
       setSearch(value);
@@ -796,167 +792,63 @@ const ViewWarranty = () => {
         setFiltered(submissions);
         return;
       }
-
       const result = submissions.filter((item) =>
         item.full_name?.toLowerCase().includes(query) ||
         item.email?.toLowerCase().includes(query) ||
         item.selected_product?.toLowerCase().includes(query)
       );
-
       setFiltered(result);
     },
     [submissions]
   );
 
   const handleRowClick = (index) => {
-    const item = filtered[index];
-    setSelectedItem(item);
+    setSelectedItem(filtered[index]);
     setModalOpen(true);
   };
 
   const handleModalChange = (field, value) => {
-    setSelectedItem(prev => ({ ...prev, [field]: value }));
+    setSelectedItem((prev) => ({ ...prev, [field]: value }));
   };
 
   const handleSave = async () => {
-    const { $id, full_name, email, selected_product, phone, address } = selectedItem;
+    const { $id, ...fields } = selectedItem;
     try {
       const response = await fetch('/.netlify/functions/updateAppwriteSubmission', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: $id, full_name, email, selected_product, phone, address }),
+        body: JSON.stringify({ id: $id, ...fields }),
       });
       const result = await response.json();
       if (!result.error) {
+        alert('✅ Saved');
         setModalOpen(false);
         fetchData();
       } else {
-        alert('Update failed: ' + result.error);
+        alert('Update failed.');
       }
     } catch (error) {
-      alert('An error occurred while saving: ' + error.message);
+      alert('An error occurred while saving.');
     }
   };
 
-  const exportCSV = () => {
-    if (filtered.length === 0) return;
-
-    const header = ['Full Name', 'Email', 'Product', 'Phone', 'Address'];
-    const csvRows = [header.join(',')];
-
-    filtered.forEach(item => {
-      const row = [
-        `"${item.full_name || ''}"`,
-        `"${item.email || ''}"`,
-        `"${item.selected_product || ''}"`,
-        `"${item.phone || ''}"`,
-        `"${item.address || ''}"`,
-      ];
-      csvRows.push(row.join(','));
-    });
-
-    const csvContent = csvRows.join('\n');
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-
-    const link = document.createElement('a');
-    link.href = url;
-    link.setAttribute('download', `warranty_submissions_${Date.now()}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  };
-
-  const parseCSV = (text) => {
-    const lines = text.trim().split('\n');
-    const headers = lines[0].split(',').map(h => h.trim().replace(/^"|"$/g, ''));
-    return lines.slice(1).map(line => {
-      const values = line.split(',').map(v => v.trim().replace(/^"|"$/g, ''));
-      const entry = {};
-      headers.forEach((h, i) => {
-        entry[h] = values[i] || '';
-      });
-      return entry;
-    });
-  };
-
-  const handleFileChange = async (e) => {
-    const file = e.target.files[0];
-    setImportError('');
-    if (!file) return;
-
-    if (!file.name.endsWith('.csv')) {
-      setImportError('Please select a CSV file.');
-      return;
-    }
-
-    setImportLoading(true);
-
-    try {
-      const text = await file.text();
-      const csvData = parseCSV(text);
-
-      const res = await fetch('/.netlify/functions/importToAppwrite', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ data: csvData }),
-      });
-
-      const result = await res.json();
-
-      if (!res.ok || result.error) {
-        throw new Error(result.error || 'Import failed');
-      }
-
-      setSearch('');
-      setImportError('');
-      fetchData();
-      e.target.value = '';
-    } catch (err) {
-      setImportError(err.message || 'Error importing data.');
-    }
-
-    setImportLoading(false);
-  };
-
-  const rows = filtered.map(item => [
-    item.full_name || '-',
-    item.email || '-',
-    item.selected_product || '-',
-    item.phone || '-',
-    item.address || '-',
-  ]);
+  const rows = filtered.map((item, index) => {
+    return {
+      data: [
+        item.full_name || '-',
+        item.email || '-',
+        item.selected_product || '-',
+        item.phone || '-',
+        item.address || '-',
+      ],
+      onClick: () => handleRowClick(index),
+    };
+  });
 
   return (
     <Page fullWidth>
       <Layout>
         <Layout.Section>
-          <Box paddingBlockEnd="4" display="flex" justifyContent="flex-end" gap="8px">
-            <Button
-              onClick={() => fileInputRef.current.click()}
-              disabled={importLoading}
-              plain
-            >
-              {importLoading ? 'Importing...' : 'Import CSV'}
-            </Button>
-            <Button onClick={exportCSV} plain>Export</Button>
-            <input
-              type="file"
-              accept=".csv"
-              style={{ display: 'none' }}
-              ref={fileInputRef}
-              onChange={handleFileChange}
-            />
-          </Box>
-
-          {importError && (
-            <Box paddingBlock="2">
-              <Text variant="bodyMd" as="p" color="critical" alignment="right">
-                {importError}
-              </Text>
-            </Box>
-          )}
-
           <Card sectioned>
             <TextField
               placeholder="Search by name, email, or product"
@@ -965,30 +857,21 @@ const ViewWarranty = () => {
               clearButton
               onClearButtonClick={() => handleSearch('')}
               autoComplete="off"
-              style={{ width: '100%' }}
             />
 
             {loading ? (
-              <Box paddingBlock="6" display="flex" justifyContent="center">
-                <Text variant="bodyMd" as="p" alignment="center">
-                  Loading...
-                </Text>
+              <Box padding="4" display="flex" justifyContent="center">
+                <Text>Loading...</Text>
               </Box>
             ) : errorMsg ? (
-              <Box paddingBlock="6" display="flex" justifyContent="center">
-                <Text variant="bodyMd" as="p" color="critical" alignment="center">
-                  {errorMsg}
-                </Text>
-              </Box>
+              <Text color="critical">{errorMsg}</Text>
             ) : (
               <DataTable
                 columnContentTypes={['text', 'text', 'text', 'text', 'text']}
                 headings={['Full Name', 'Email', 'Product', 'Phone', 'Address']}
-                rows={rows}
+                rows={rows.map((r) => r.data)}
                 footerContent={`Total: ${rows.length} submission${rows.length !== 1 ? 's' : ''}`}
-                verticalAlign="middle"
-                stickyHeader
-                onRowClick={({ index }) => handleRowClick(index)}
+                onRowClick={(index) => rows[index].onClick()}
               />
             )}
           </Card>
@@ -1039,6 +922,7 @@ const ViewWarranty = () => {
 };
 
 export default ViewWarranty;
+
 
 
 
