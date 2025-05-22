@@ -749,8 +749,7 @@ import {
   Box,
   Text,
   Button,
-  Modal,
-  FormLayout,
+  InlineError,
 } from '@shopify/polaris';
 
 const ViewWarranty = () => {
@@ -759,117 +758,24 @@ const ViewWarranty = () => {
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
   const [errorMsg, setErrorMsg] = useState('');
-  const [importLoading, setImportLoading] = useState(false);
-  const [importError, setImportError] = useState('');
-  const [modalOpen, setModalOpen] = useState(false);
-  const [selectedSubmission, setSelectedSubmission] = useState(null);
+  const [editIndex, setEditIndex] = useState(null);
+  const [editData, setEditData] = useState({});
+  const [saveError, setSaveError] = useState('');
+  const [saving, setSaving] = useState(false);
 
   const fileInputRef = useRef(null);
 
   useEffect(() => {
-    const fetchData = async () => {
-      setLoading(true);
-      try {
-        const response = await fetch(
-          '/.netlify/functions/getAppwriteSubmissions?_=' + Date.now()
-        );
-        const data = await response.json();
-
-        if (Array.isArray(data)) {
-          setSubmissions(data);
-          setFiltered(data);
-          setErrorMsg('');
-        } else {
-          setErrorMsg('Invalid data format from server.');
-        }
-      } catch (err) {
-        setErrorMsg('Error fetching data.');
-      }
-      setLoading(false);
-    };
-
-    fetchData();
+    fetchSubmissions();
   }, []);
 
-  const handleSearch = useCallback(
-    (value) => {
-      setSearch(value);
-      const query = value.toLowerCase().trim();
-
-      if (!query) {
-        setFiltered(submissions);
-        return;
-      }
-
-      const result = submissions.filter((item) =>
-        item.full_name?.toLowerCase().includes(query) ||
-        item.email?.toLowerCase().includes(query) ||
-        item.selected_product?.toLowerCase().includes(query)
-      );
-
-      setFiltered(result);
-    },
-    [submissions]
-  );
-
-  const handleRowClick = useCallback((item) => {
-    setSelectedSubmission(item);
-    setModalOpen(true);
-  }, []);
-
-  const handleModalChange = useCallback((field, value) => {
-    setSelectedSubmission((prev) => ({
-      ...prev,
-      [field]: value,
-    }));
-  }, []);
-
-  const handleSave = async () => {
-    if (!selectedSubmission) return;
-
+  const fetchSubmissions = async () => {
+    setLoading(true);
     try {
-      const response = await fetch('/.netlify/functions/updateAppwriteSubmission', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          id: selectedSubmission.$id, // Appwrite document ID
-          full_name: selectedSubmission.full_name,
-          email: selectedSubmission.email,
-          selected_product: selectedSubmission.selected_product,
-          phone: selectedSubmission.phone,
-          address: selectedSubmission.address,
-        }),
-      });
-
-      const text = await response.text(); // Debug raw response
-      console.log('Raw updateAppwriteSubmission response:', text);
-
-      let result;
-      try {
-        result = JSON.parse(text);
-      } catch (err) {
-        throw new Error('Invalid JSON response from update server.');
-      }
-
-      if (!response.ok || result.error) {
-        throw new Error(result.error || 'Update failed');
-      }
-
-      // Refresh data after successful update
-      setLoading(true);
-      const fetchResponse = await fetch(
+      const response = await fetch(
         '/.netlify/functions/getAppwriteSubmissions?_=' + Date.now()
       );
-      const fetchText = await fetchResponse.text();
-      console.log('Raw getAppwriteSubmissions response after update:', fetchText);
-
-      let data;
-      try {
-        data = JSON.parse(fetchText);
-      } catch (err) {
-        throw new Error('Invalid JSON response from server.');
-      }
-
+      const data = await response.json();
       if (Array.isArray(data)) {
         setSubmissions(data);
         setFiltered(data);
@@ -877,239 +783,154 @@ const ViewWarranty = () => {
       } else {
         setErrorMsg('Invalid data format from server.');
       }
-
-      setModalOpen(false);
-      setSelectedSubmission(null);
     } catch (err) {
-      console.error('Update error:', err);
-      setErrorMsg(err.message || 'Error updating submission.');
+      setErrorMsg('Error fetching data.');
     }
     setLoading(false);
   };
 
-  // Export CSV
-  const exportCSV = () => {
-    if (filtered.length === 0) return;
+  const handleSearch = useCallback(
+    (value) => {
+      setSearch(value);
+      const query = value.toLowerCase().trim();
+      if (!query) return setFiltered(submissions);
+      const result = submissions.filter((item) =>
+        item.full_name?.toLowerCase().includes(query) ||
+        item.email?.toLowerCase().includes(query) ||
+        item.selected_product?.toLowerCase().includes(query)
+      );
+      setFiltered(result);
+    },
+    [submissions]
+  );
 
-    const header = ['Email', 'Product', 'Phone', 'Address'];
-    const csvRows = [header.join(',')];
-
-    filtered.forEach(item => {
-      const row = [
-        `"${item.email || ''}"`,
-        `"${item.selected_product || ''}"`,
-        `"${item.phone || ''}"`,
-        `"${item.address || ''}"`,
-      ];
-      csvRows.push(row.join(','));
-    });
-
-    const csvContent = csvRows.join('\n');
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-
-    const link = document.createElement('a');
-    link.href = url;
-    link.setAttribute('download', `warranty_submissions_${Date.now()}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+  const startEdit = (index) => {
+    setEditIndex(index);
+    setEditData({ ...filtered[index] });
+    setSaveError('');
   };
 
-  // Simple CSV parser (no commas inside fields)
-  const parseCSV = (text) => {
-    const lines = text.trim().split('\n');
-    const headers = lines[0].split(',').map(h => h.trim().replace(/^"|"$/g, ''));
-    const data = lines.slice(1).map(line => {
-      const values = line.split(',').map(v => v.trim().replace(/^"|"$/g, ''));
-      const entry = {};
-      headers.forEach((h, i) => {
-        entry[h] = values[i] || '';
-      });
-      return entry;
-    });
-    return data;
+  const cancelEdit = () => {
+    setEditIndex(null);
+    setEditData({});
+    setSaveError('');
   };
 
-  // Handle CSV import
-  const handleFileChange = async (e) => {
-    const file = e.target.files[0];
-    setImportError('');
-    if (!file) return;
+  const handleEditChange = (field, value) => {
+    setEditData(prev => ({ ...prev, [field]: value }));
+  };
 
-    if (!file.name.endsWith('.csv')) {
-      setImportError('Please select a CSV file.');
-      return;
-    }
-
-    setImportLoading(true);
-
+  const saveEdit = async () => {
+    if (!editData?.$id) return;
+    setSaving(true);
     try {
-      const text = await file.text();
-      const csvData = parseCSV(text);
-
-      // POST CSV data to your Appwrite import function
-      const res = await fetch('/.netlify/functions/importToAppwrite', {
+      const res = await fetch('/.netlify/functions/updateAppwriteSubmission', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ data: csvData }),
+        body: JSON.stringify(editData),
       });
 
       const result = await res.json();
+      if (!res.ok || result.error) throw new Error(result.error || 'Update failed');
 
-      if (!res.ok || result.error) {
-        throw new Error(result.error || 'Import failed');
-      }
+      const updated = [...submissions];
+      const index = submissions.findIndex((s) => s.$id === editData.$id);
+      if (index !== -1) updated[index] = result.data;
 
-      // Refresh data after successful import
-      setSearch('');
-      setImportError('');
-      setLoading(true);
-
-      const response = await fetch(
-        '/.netlify/functions/getAppwriteSubmissions?_=' + Date.now()
-      );
-      const data = await response.json();
-
-      if (Array.isArray(data)) {
-        setSubmissions(data);
-        setFiltered(data);
-      } else {
-        setErrorMsg('Invalid data format from server.');
-      }
-      setLoading(false);
-
-      // Clear file input
-      e.target.value = '';
+      setSubmissions(updated);
+      setFiltered(updated);
+      cancelEdit();
     } catch (err) {
-      setImportError(err.message || 'Error importing data.');
-      setImportLoading(false);
+      setSaveError(err.message || 'Failed to save changes.');
     }
-
-    setImportLoading(false);
+    setSaving(false);
   };
+
+  const rows = filtered.map((item, index) =>
+    editIndex === index
+      ? [
+          <TextField
+            value={editData.email || ''}
+            onChange={(val) => handleEditChange('email', val)}
+            autoComplete="off"
+          />,
+          <TextField
+            value={editData.selected_product || ''}
+            onChange={(val) => handleEditChange('selected_product', val)}
+            autoComplete="off"
+          />,
+          <TextField
+            value={editData.phone || ''}
+            onChange={(val) => handleEditChange('phone', val)}
+            autoComplete="off"
+          />,
+          <TextField
+            value={editData.address || ''}
+            onChange={(val) => handleEditChange('address', val)}
+            autoComplete="off"
+          />,
+          <Box display="flex" gap="4px">
+            <Button size="slim" onClick={saveEdit} loading={saving}>
+              Save
+            </Button>
+            <Button size="slim" onClick={cancelEdit} tone="critical">
+              Cancel
+            </Button>
+          </Box>,
+        ]
+      : [
+          item.email || '-',
+          item.selected_product || '-',
+          item.phone || '-',
+          item.address || '-',
+          <Button size="slim" onClick={() => startEdit(index)}>
+            Edit
+          </Button>,
+        ]
+  );
 
   return (
     <Page fullWidth>
       <Layout>
         <Layout.Section>
-          {/* Import and Export buttons */}
-          <Box paddingBlockEnd="4" display="flex" justifyContent="flex-end" gap="8px">
-            <Button
-              onClick={() => fileInputRef.current.click()}
-              disabled={importLoading}
-              plain
-            >
-              {importLoading ? 'Importing...' : 'Import CSV'}
-            </Button>
-
-            <Button onClick={exportCSV} plain>
-              Export
-            </Button>
-
-            {/* Hidden file input */}
-            <input
-              type="file"
-              accept=".csv"
-              style={{ display: 'none' }}
-              ref={fileInputRef}
-              onChange={handleFileChange}
-            />
-          </Box>
-
-          {importError && (
-            <Box paddingBlock="2">
-              <Text variant="bodyMd" as="p" color="critical" alignment="right">
-                {importError}
-              </Text>
-            </Box>
-          )}
-
-          <Card sectioned>
+          <Box paddingBlockEnd="4" display="flex" justifyContent="space-between" gap="8px">
             <TextField
-              placeholder="Enter name, email, or product"
+              placeholder="Search by name, email, or product"
               value={search}
               onChange={handleSearch}
               clearButton
               onClearButtonClick={() => handleSearch('')}
               autoComplete="off"
-              style={{ width: '100%' }}
             />
+          </Box>
 
-            {loading ? (
-              <Box paddingBlock="6" display="flex" justifyContent="center">
-                <Text variant="bodyMd" as="p" alignment="center">
-                  Loading...
-                </Text>
-              </Box>
-            ) : errorMsg ? (
-              <Box paddingBlock="6" display="flex" justifyContent="center">
-                <Text variant="bodyMd" as="p" color="critical" alignment="center">
-                  {errorMsg}
-                </Text>
-              </Box>
-            ) : (
+          {saveError && (
+            <Box paddingBlock="2">
+              <InlineError message={saveError} fieldID="save-error" />
+            </Box>
+          )}
+
+          {loading ? (
+            <Box paddingBlock="6" display="flex" justifyContent="center">
+              <Text alignment="center">Loading...</Text>
+            </Box>
+          ) : errorMsg ? (
+            <Box paddingBlock="6" display="flex" justifyContent="center">
+              <Text color="critical" alignment="center">
+                {errorMsg}
+              </Text>
+            </Box>
+          ) : (
+            <Card sectioned>
               <DataTable
-                columnContentTypes={['text', 'text', 'text', 'text']}
-                headings={['Email', 'Product', 'Phone', 'Address']}
-                rows={filtered.map(item => [
-                  item.email || '-',
-                  item.selected_product || '-',
-                  item.phone || '-',
-                  item.address || '-',
-                ])}
-                footerContent={`Total: ${filtered.length} submission${filtered.length !== 1 ? 's' : ''}`}
+                columnContentTypes={['text', 'text', 'text', 'text', 'text']}
+                headings={['Email', 'Product', 'Phone', 'Address', 'Actions']}
+                rows={rows}
                 verticalAlign="middle"
                 stickyHeader
+                footerContent={`Total: ${rows.length} submission${rows.length !== 1 ? 's' : ''}`}
               />
-            )}
-          </Card>
-          {selectedSubmission && (
-            <Modal
-              open={modalOpen}
-              onClose={() => setModalOpen(false)}
-              title="Edit Submission"
-              primaryAction={{
-                content: 'Save',
-                onAction: handleSave,
-              }}
-              secondaryActions={[
-                {
-                  content: 'Cancel',
-                  onAction: () => setModalOpen(false),
-                },
-              ]}
-            >
-              <Modal.Section>
-                <FormLayout>
-                  <TextField
-                    label="Full Name"
-                    value={selectedSubmission.full_name || ''}
-                    onChange={(value) => handleModalChange('full_name', value)}
-                  />
-                  <TextField
-                    label="Email"
-                    value={selectedSubmission.email || ''}
-                    onChange={(value) => handleModalChange('email', value)}
-                  />
-                  <TextField
-                    label="Product"
-                    value={selectedSubmission.selected_product || ''}
-                    onChange={(value) => handleModalChange('selected_product', value)}
-                  />
-                  <TextField
-                    label="Phone"
-                    value={selectedSubmission.phone || ''}
-                    onChange={(value) => handleModalChange('phone', value)}
-                  />
-                  <TextField
-                    label="Address"
-                    value={selectedSubmission.address || ''}
-                    onChange={(value) => handleModalChange('address', value)}
-                  />
-                </FormLayout>
-              </Modal.Section>
-            </Modal>
+            </Card>
           )}
         </Layout.Section>
       </Layout>
