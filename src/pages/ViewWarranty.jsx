@@ -743,7 +743,6 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
   Page,
   Card,
-  DataTable,
   TextField,
   Layout,
   Box,
@@ -751,6 +750,7 @@ import {
   Button,
   Modal,
   FormLayout,
+  IndexTable,
 } from '@shopify/polaris';
 
 const ViewWarranty = () => {
@@ -761,11 +761,19 @@ const ViewWarranty = () => {
   const [errorMsg, setErrorMsg] = useState('');
   const [selectedItem, setSelectedItem] = useState(null);
   const [modalOpen, setModalOpen] = useState(false);
+  const [importLoading, setImportLoading] = useState(false);
+  const [importError, setImportError] = useState('');
+
+  const fileInputRef = useRef(null);
+
+  useEffect(() => {
+    fetchData();
+  }, []);
 
   const fetchData = async () => {
     setLoading(true);
     try {
-      const response = await fetch('/.netlify/functions/getAppwriteSubmissions');
+      const response = await fetch('/.netlify/functions/getAppwriteSubmissions?_=' + Date.now());
       const data = await response.json();
       if (Array.isArray(data)) {
         setSubmissions(data);
@@ -780,10 +788,6 @@ const ViewWarranty = () => {
     setLoading(false);
   };
 
-  useEffect(() => {
-    fetchData();
-  }, []);
-
   const handleSearch = useCallback(
     (value) => {
       setSearch(value);
@@ -792,63 +796,98 @@ const ViewWarranty = () => {
         setFiltered(submissions);
         return;
       }
+
       const result = submissions.filter((item) =>
         item.full_name?.toLowerCase().includes(query) ||
         item.email?.toLowerCase().includes(query) ||
         item.selected_product?.toLowerCase().includes(query)
       );
+
       setFiltered(result);
     },
     [submissions]
   );
 
   const handleRowClick = (index) => {
-    setSelectedItem(filtered[index]);
+    const item = filtered[index];
+    setSelectedItem(item);
     setModalOpen(true);
   };
 
   const handleModalChange = (field, value) => {
-    setSelectedItem((prev) => ({ ...prev, [field]: value }));
+    setSelectedItem(prev => ({ ...prev, [field]: value }));
   };
 
   const handleSave = async () => {
-    const { $id, ...fields } = selectedItem;
+    const { $id, full_name, email, selected_product, phone, address } = selectedItem;
     try {
       const response = await fetch('/.netlify/functions/updateAppwriteSubmission', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: $id, ...fields }),
+        body: JSON.stringify({ id: $id, full_name, email, selected_product, phone, address }),
       });
       const result = await response.json();
       if (!result.error) {
-        alert('✅ Saved');
         setModalOpen(false);
         fetchData();
       } else {
-        alert('Update failed.');
+        alert('Update failed: ' + result.error);
       }
     } catch (error) {
-      alert('An error occurred while saving.');
+      alert('An error occurred while saving: ' + error.message);
     }
   };
 
-  const rows = filtered.map((item, index) => {
-    return {
-      data: [
-        item.full_name || '-',
-        item.email || '-',
-        item.selected_product || '-',
-        item.phone || '-',
-        item.address || '-',
-      ],
-      onClick: () => handleRowClick(index),
-    };
-  });
+  const resourceName = {
+    singular: 'submission',
+    plural: 'submissions',
+  };
+
+  const rowMarkup = filtered.map((item, index) => (
+    <IndexTable.Row
+      id={item.$id || index.toString()}
+      key={item.$id || index}
+      position={index}
+      onClick={() => handleRowClick(index)}
+    >
+      <IndexTable.Cell>{item.full_name || '-'}</IndexTable.Cell>
+      <IndexTable.Cell>{item.email || '-'}</IndexTable.Cell>
+      <IndexTable.Cell>{item.selected_product || '-'}</IndexTable.Cell>
+      <IndexTable.Cell>{item.phone || '-'}</IndexTable.Cell>
+      <IndexTable.Cell>{item.address || '-'}</IndexTable.Cell>
+    </IndexTable.Row>
+  ));
 
   return (
     <Page fullWidth>
       <Layout>
         <Layout.Section>
+          <Box paddingBlockEnd="4" display="flex" justifyContent="flex-end" gap="8px">
+            <Button
+              onClick={() => fileInputRef.current.click()}
+              disabled={importLoading}
+              plain
+            >
+              {importLoading ? 'Importing...' : 'Import CSV'}
+            </Button>
+            <Button onClick={() => alert('Export feature optional')} plain>Export</Button>
+            <input
+              type="file"
+              accept=".csv"
+              style={{ display: 'none' }}
+              ref={fileInputRef}
+              onChange={() => alert('Import logic can be added')}
+            />
+          </Box>
+
+          {importError && (
+            <Box paddingBlock="2">
+              <Text variant="bodyMd" as="p" color="critical" alignment="right">
+                {importError}
+              </Text>
+            </Box>
+          )}
+
           <Card sectioned>
             <TextField
               placeholder="Search by name, email, or product"
@@ -860,19 +899,32 @@ const ViewWarranty = () => {
             />
 
             {loading ? (
-              <Box padding="4" display="flex" justifyContent="center">
-                <Text>Loading...</Text>
+              <Box paddingBlock="6" display="flex" justifyContent="center">
+                <Text variant="bodyMd" as="p" alignment="center">
+                  Loading...
+                </Text>
               </Box>
             ) : errorMsg ? (
-              <Text color="critical">{errorMsg}</Text>
+              <Box paddingBlock="6" display="flex" justifyContent="center">
+                <Text variant="bodyMd" as="p" color="critical" alignment="center">
+                  {errorMsg}
+                </Text>
+              </Box>
             ) : (
-              <DataTable
-                columnContentTypes={['text', 'text', 'text', 'text', 'text']}
-                headings={['Full Name', 'Email', 'Product', 'Phone', 'Address']}
-                rows={rows.map((r) => r.data)}
-                footerContent={`Total: ${rows.length} submission${rows.length !== 1 ? 's' : ''}`}
-                onRowClick={(index) => rows[index].onClick()}
-              />
+              <IndexTable
+                resourceName={resourceName}
+                itemCount={filtered.length}
+                selectable={false}
+                headings={[
+                  { title: 'Full Name' },
+                  { title: 'Email' },
+                  { title: 'Product' },
+                  { title: 'Phone' },
+                  { title: 'Address' },
+                ]}
+              >
+                {rowMarkup}
+              </IndexTable>
             )}
           </Card>
 
