@@ -812,6 +812,9 @@ const Authe = () => {
   const [otp, setOtp] = useState('');
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
+  // NEW: Track if user just verified OTP now
+  const [justVerified, setJustVerified] = useState(false);
+
   const APPWRITE_ENDPOINT = 'https://appwrite.appunik-team.com/v1';
   const APPWRITE_PROJECT_ID = '68271c3c000854f08575';
   const APPWRITE_DATABASE_ID = '68271db80016565f6882';
@@ -852,10 +855,10 @@ const Authe = () => {
       try {
         const session = await account.get();
         setIsAuthenticated(true);
-        setAuthMessage(`✅ Logged in as ${session.email}`);
         setEmail(session.email);
         localStorage.setItem('userId', session.$id);
         localStorage.setItem('email', session.email);
+        setJustVerified(false); // Reset here, user is logged in from saved session
       } catch {}
     };
     checkSession();
@@ -887,6 +890,9 @@ const Authe = () => {
 
   const verifyOtp = async () => {
     setLoading(true);
+    setFieldErrors({});
+    setAuthMessage('');
+
     const userId = localStorage.getItem('userId');
     const secret = otp.trim();
 
@@ -900,6 +906,7 @@ const Authe = () => {
       await account.createSession(userId, secret);
       setIsAuthenticated(true);
       setAuthMessage('✅ Verified and logged in!');
+      setJustVerified(true); // Mark OTP just verified
       nextStep();
     } catch (err) {
       setFieldErrors({ otp: 'Invalid OTP. Please try again.' });
@@ -908,58 +915,60 @@ const Authe = () => {
     }
   };
 
-const handleSubmit = async () => {
-  setLoading(true);
-  setFieldErrors({});
+  const handleOtpChange = (e) => {
+    setOtp(e.target.value);
+    setFieldErrors({ ...fieldErrors, otp: '' });
+    setAuthMessage('');
+  };
 
-  if (!selectedProduct) {
-    setFieldErrors({ selectedProduct: 'Please select a product.' });
-    setLoading(false);
-    return;
-  }
+  const handleSubmit = async () => {
+    setLoading(true);
+    setFieldErrors({});
 
-  try {
-    const session = await account.get();
-    const document = {
-      full_name: fullName,
-      email,
-      phone,
-      address,
-      selected_product: selectedProduct,
-      user_id: session.$id,
-    };
+    if (!selectedProduct) {
+      setFieldErrors({ selectedProduct: 'Please select a product.' });
+      setLoading(false);
+      return;
+    }
 
-    // 1. Save to Appwrite
-    await database.createDocument(APPWRITE_DATABASE_ID, APPWRITE_COLLECTION_ID, ID.unique(), document);
-
-    // 2. Send to Shopify backend function
-    await fetch('/.netlify/functions/sendToShopify', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
+    try {
+      const session = await account.get();
+      const document = {
         full_name: fullName,
         email,
         phone,
         address,
         selected_product: selectedProduct,
-      })
-    });
+        user_id: session.$id,
+      };
 
-    // 3. Show success step
-    setStep(6);
-  } catch (err) {
-    console.error('Submission error:', err);
-    setFieldErrors({ submit: 'Submission failed. Please try again.' });
-  } finally {
-    setLoading(false);
-  }
-};
+      await database.createDocument(APPWRITE_DATABASE_ID, APPWRITE_COLLECTION_ID, ID.unique(), document);
 
+      await fetch('/.netlify/functions/sendToShopify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          full_name: fullName,
+          email,
+          phone,
+          address,
+          selected_product: selectedProduct,
+        }),
+      });
+
+      setStep(6);
+    } catch (err) {
+      console.error('Submission error:', err);
+      setFieldErrors({ submit: 'Submission failed. Please try again.' });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const nextStep = () => {
     const errors = {};
     if (step === 1 && !fullName) errors.fullName = 'Enter your full name.';
-    if (step === 2 && (!email || !isAuthenticated)) errors.email = 'Verify email with OTP.';
+    if (step === 2 && !isAuthenticated) errors.email = 'Verify email with OTP.';
     if (step === 3 && !phone) errors.phone = 'Enter phone number.';
     if (step === 4 && !address) errors.address = 'Enter address.';
     if (step === 5 && !selectedProduct) errors.selectedProduct = 'Select a product.';
@@ -979,6 +988,7 @@ const handleSubmit = async () => {
       setIsAuthenticated(false);
       setAuthMessage('');
       setOtp('');
+      setJustVerified(false); // Reset on logout
       localStorage.clear();
     } catch (err) {
       console.error('Sign out error:', err);
@@ -1021,34 +1031,56 @@ const handleSubmit = async () => {
                     type="email"
                     value={email}
                     onChange={(e) => {
-                      setEmail(e.target.value);
-                      setOtp('');
-                      setIsAuthenticated(false);
-                      setAuthMessage('');
-                      setFieldErrors({});
-                    }}
-                    disabled={isAuthenticated}
+    setEmail(e.target.value);
+    setFieldErrors({ ...fieldErrors, email: '' });
+  }}
+                    placeholder="Enter your email"
                   />
                   {isAuthenticated ? (
                     <>
-                      <p className="success-message">{authMessage}</p>
-                      <button onClick={handleSignOut} className="otp-btn">Sign Out</button>
+                      <button
+                        onClick={handleSignOut}
+                        className="mt-2 px-4 py-2 bg-green-600 text-white rounded-md hover:bg-black transition duration-300 disabled:bg-gray-300 disabled:cursor-not-allowed"
+                      >
+                        Sign Out
+                      </button>
+
+                      {/* Show only one message at a time */}
+                      {justVerified ? (
+                        <div className="mt-2 text-base text-green-700 font-semibold">
+                          ✅ Verified and logged in!
+                        </div>
+                      ) : (
+                        <div className="mt-2 text-blue-600">
+                          <h2 className="text-base ">✅ Already logged in!</h2>
+                        </div>
+                      )}
                     </>
                   ) : (
                     <>
-                      <button onClick={sendOtp} className="otp-btn">Send OTP</button>
+                      <button onClick={sendOtp} className="otp-btn mt-2 mb-2">
+                        Send OTP
+                      </button>
                       <input
                         placeholder="Enter OTP"
                         value={otp}
-                        onChange={(e) => setOtp(e.target.value)}
+                        onChange={handleOtpChange}
                         maxLength={6}
                       />
-                      <button onClick={verifyOtp} className="otp-btn">Verify OTP</button>
+                      <button onClick={verifyOtp} className="otp-btn mt-2">
+                        Verify OTP
+                      </button>
                     </>
                   )}
-                  {fieldErrors.email && <p className="error">{fieldErrors.email}</p>}
+                  {fieldErrors.email && !isAuthenticated && (
+                    <div className="error">{fieldErrors.email}</div>
+                  )}
                   {fieldErrors.otp && <p className="error">{fieldErrors.otp}</p>}
-                  {authMessage && <p className={isAuthenticated ? 'success-message' : 'info-message'}>{authMessage}</p>}
+
+                  {/* Show OTP sent message only if NOT authenticated */}
+                  {!isAuthenticated && authMessage && (
+                    <p className="info-message">{authMessage}</p>
+                  )}
                 </div>
               )}
 
@@ -1112,7 +1144,11 @@ const handleSubmit = async () => {
               <div className="btn-group">
                 {step > 1 && step < 6 && <button onClick={prevStep}>Previous</button>}
                 {step < 5 && <button onClick={nextStep}>Next</button>}
-                {step === 5 && <button onClick={handleSubmit} className="submit-btn">Submit</button>}
+                {step === 5 && (
+                  <button onClick={handleSubmit} className="submit-btn">
+                    Submit
+                  </button>
+                )}
               </div>
             </>
           )}
@@ -1123,6 +1159,8 @@ const handleSubmit = async () => {
 };
 
 export default Authe;
+
+
 
 
 
