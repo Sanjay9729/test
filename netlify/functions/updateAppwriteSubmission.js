@@ -53,6 +53,7 @@ exports.handler = async function (event, context) {
   let data;
   try {
     data = JSON.parse(event.body);
+    console.log('Raw body:', event.body);
   } catch (err) {
     console.error('JSON Parse Error:', err);
     return {
