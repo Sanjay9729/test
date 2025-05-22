@@ -1132,14 +1132,18 @@ const Authe = () => {
               )}
 
               {step === 6 && (
-                <div className="form-group text-center">
-                  <h2>Thank You!</h2>
-                  <p>Your Warranty Registration is complete.</p>
-                  <a href="https://wholesale.ellastein.com/" className="text-blue-600 underline">
-                    Go to Ellastein.com
-                  </a>
-                </div>
-              )}
+  <div className="max-w-md mx-auto p-6 bg-white rounded-lg shadow-lg border border-gray-200 text-left">
+    <h2 className="text-2xl font-semibold text-gray-800 mb-2">Thank You!</h2>
+    <p className="text-gray-600 mb-4">Your Warranty Registration is complete.</p>
+    <a
+      href="https://wholesale.ellastein.com/"
+      className="inline-block px-5 py-2 text-white bg-blue-600 rounded hover:bg-blue-700 transition"
+    >
+      Go to Ellastein.com
+    </a>
+  </div>
+)}
+
 
               <div className="btn-group">
                 {step > 1 && step < 6 && <button onClick={prevStep}>Previous</button>}
