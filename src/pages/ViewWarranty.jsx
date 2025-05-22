@@ -749,6 +749,7 @@ import {
   Box,
   Text,
   Button,
+  Modal,
   InlineError,
 } from '@shopify/polaris';
 
@@ -758,12 +759,11 @@ const ViewWarranty = () => {
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
   const [errorMsg, setErrorMsg] = useState('');
-  const [editIndex, setEditIndex] = useState(null);
+
+  const [editModalOpen, setEditModalOpen] = useState(false);
   const [editData, setEditData] = useState({});
   const [saveError, setSaveError] = useState('');
   const [saving, setSaving] = useState(false);
-
-  const fileInputRef = useRef(null);
 
   useEffect(() => {
     fetchSubmissions();
@@ -772,9 +772,7 @@ const ViewWarranty = () => {
   const fetchSubmissions = async () => {
     setLoading(true);
     try {
-      const response = await fetch(
-        '/.netlify/functions/getAppwriteSubmissions?_=' + Date.now()
-      );
+      const response = await fetch('/.netlify/functions/getAppwriteSubmissions?_=' + Date.now());
       const data = await response.json();
       if (Array.isArray(data)) {
         setSubmissions(data);
@@ -804,14 +802,14 @@ const ViewWarranty = () => {
     [submissions]
   );
 
-  const startEdit = (index) => {
-    setEditIndex(index);
-    setEditData({ ...filtered[index] });
+  const openEditModal = (submission) => {
+    setEditData({ ...submission });
+    setEditModalOpen(true);
     setSaveError('');
   };
 
-  const cancelEdit = () => {
-    setEditIndex(null);
+  const closeModal = () => {
+    setEditModalOpen(false);
     setEditData({});
     setSaveError('');
   };
@@ -833,67 +831,34 @@ const ViewWarranty = () => {
       const result = await res.json();
       if (!res.ok || result.error) throw new Error(result.error || 'Update failed');
 
-      const updated = [...submissions];
-      const index = submissions.findIndex((s) => s.$id === editData.$id);
-      if (index !== -1) updated[index] = result.data;
+      const updated = submissions.map(sub =>
+        sub.$id === editData.$id ? result.data : sub
+      );
 
       setSubmissions(updated);
       setFiltered(updated);
-      cancelEdit();
+      closeModal();
     } catch (err) {
       setSaveError(err.message || 'Failed to save changes.');
     }
     setSaving(false);
   };
 
-  const rows = filtered.map((item, index) =>
-    editIndex === index
-      ? [
-          <TextField
-            value={editData.email || ''}
-            onChange={(val) => handleEditChange('email', val)}
-            autoComplete="off"
-          />,
-          <TextField
-            value={editData.selected_product || ''}
-            onChange={(val) => handleEditChange('selected_product', val)}
-            autoComplete="off"
-          />,
-          <TextField
-            value={editData.phone || ''}
-            onChange={(val) => handleEditChange('phone', val)}
-            autoComplete="off"
-          />,
-          <TextField
-            value={editData.address || ''}
-            onChange={(val) => handleEditChange('address', val)}
-            autoComplete="off"
-          />,
-          <Box display="flex" gap="4px">
-            <Button size="slim" onClick={saveEdit} loading={saving}>
-              Save
-            </Button>
-            <Button size="slim" onClick={cancelEdit} tone="critical">
-              Cancel
-            </Button>
-          </Box>,
-        ]
-      : [
-          item.email || '-',
-          item.selected_product || '-',
-          item.phone || '-',
-          item.address || '-',
-          <Button size="slim" onClick={() => startEdit(index)}>
-            Edit
-          </Button>,
-        ]
-  );
+  const rows = filtered.map((item) => [
+    item.email || '-',
+    item.selected_product || '-',
+    item.phone || '-',
+    item.address || '-',
+    <Button size="slim" onClick={() => openEditModal(item)}>
+      Edit
+    </Button>,
+  ]);
 
   return (
     <Page fullWidth>
       <Layout>
         <Layout.Section>
-          <Box paddingBlockEnd="4" display="flex" justifyContent="space-between" gap="8px">
+          <Box paddingBlockEnd="4" display="flex" justifyContent="space-between">
             <TextField
               placeholder="Search by name, email, or product"
               value={search}
@@ -904,38 +869,78 @@ const ViewWarranty = () => {
             />
           </Box>
 
-          {saveError && (
-            <Box paddingBlock="2">
-              <InlineError message={saveError} fieldID="save-error" />
-            </Box>
-          )}
-
-          {loading ? (
-            <Box paddingBlock="6" display="flex" justifyContent="center">
-              <Text alignment="center">Loading...</Text>
-            </Box>
-          ) : errorMsg ? (
-            <Box paddingBlock="6" display="flex" justifyContent="center">
-              <Text color="critical" alignment="center">
-                {errorMsg}
-              </Text>
-            </Box>
+          {errorMsg ? (
+            <Text color="critical">{errorMsg}</Text>
+          ) : loading ? (
+            <Text>Loading...</Text>
           ) : (
             <Card sectioned>
               <DataTable
                 columnContentTypes={['text', 'text', 'text', 'text', 'text']}
                 headings={['Email', 'Product', 'Phone', 'Address', 'Actions']}
                 rows={rows}
-                verticalAlign="middle"
-                stickyHeader
                 footerContent={`Total: ${rows.length} submission${rows.length !== 1 ? 's' : ''}`}
               />
             </Card>
           )}
         </Layout.Section>
       </Layout>
+
+      <Modal
+        open={editModalOpen}
+        onClose={closeModal}
+        title="Edit Warranty Submission"
+        primaryAction={{
+          content: 'Save',
+          onAction: saveEdit,
+          loading: saving,
+        }}
+        secondaryActions={[
+          {
+            content: 'Cancel',
+            onAction: closeModal,
+          },
+        ]}
+      >
+        <Modal.Section>
+          <Box padding="4" display="grid" gap="4">
+            <TextField
+              label="Full Name"
+              value={editData.full_name || ''}
+              onChange={(val) => handleEditChange('full_name', val)}
+              autoComplete="off"
+            />
+            <TextField
+              label="Email"
+              value={editData.email || ''}
+              onChange={(val) => handleEditChange('email', val)}
+              autoComplete="off"
+            />
+            <TextField
+              label="Product"
+              value={editData.selected_product || ''}
+              onChange={(val) => handleEditChange('selected_product', val)}
+              autoComplete="off"
+            />
+            <TextField
+              label="Phone"
+              value={editData.phone || ''}
+              onChange={(val) => handleEditChange('phone', val)}
+              autoComplete="off"
+            />
+            <TextField
+              label="Address"
+              value={editData.address || ''}
+              onChange={(val) => handleEditChange('address', val)}
+              autoComplete="off"
+            />
+            {saveError && <InlineError message={saveError} fieldID="edit-error" />}
+          </Box>
+        </Modal.Section>
+      </Modal>
     </Page>
   );
 };
 
 export default ViewWarranty;
+
