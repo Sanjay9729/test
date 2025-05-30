@@ -1905,9 +1905,15 @@ const Authe = () => {
             )}
 
            {step === 5 && (
+            
   <div className="form-group space-y-4">
-    <label className="block text-lg font-medium text-gray-700">Select a Product</label>
-    
+    <div className="step-label">
+              <div className="step_number_main">
+                <span className="step-number">5</span>
+                <span><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="black" viewBox="0 0 16 16"><path fillRule="evenodd" clipRule="evenodd" d="M8.47 1.97a.75.75 0 0 1 1.06 0l4.897 4.896a1.25 1.25 0 0 1 0 1.768L9.53 13.53a.75.75 0 0 1-1.06-1.06l3.97-3.97H1.75a.75.75 0 1 1 0-1.5h10.69L8.47 3.03a.75.75 0 0 1 0-1.06Z" /></svg></span>
+              </div>
+             Select a Product:
+            </div>
     {/* Search Input */}
     <input
       value={productSearch}
@@ -1962,12 +1968,21 @@ const Authe = () => {
 )}
 
 {num === 6 && (
-  <div className="thank-you-section">
-    <h2 className="thank-you-heading">Thank You!</h2>
-    <p className="thank-you-message">Your Warranty Registration is complete.</p>
-    <p className="thank-you-link">Visit: <a href="https://wholesale.ellastein.com/" target="_blank" rel="noreferrer">Ellastein.com</a></p>
+  <div className="max-w-xl mx-auto mt-32 text-center">
+    <h1 className="text-2xl font-semibold text-gray-800">
+      Thank you for registering your Ella Stein jewelry under our Warranty Program.
+    </h1>
+    <p className="mt-4 text-base text-gray-600">
+      Learn more about caring for your jewelry using the link below.
+    </p>
+    <p className="mt-6 text-base text-black underline">
+      <a href="https://www.ellastein.com/pages/jewelry-care-tips/" target="_blank" rel="noreferrer">
+        Ellastein.com
+      </a>
+    </p>
   </div>
 )}
+
           </section>
         ))}
 
