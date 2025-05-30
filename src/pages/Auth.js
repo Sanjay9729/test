@@ -1573,6 +1573,8 @@ const Authe = () => {
   const [authMessage, setAuthMessage] = useState("");
   const [otp, setOtp] = useState("");
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [otpSent, setOtpSent] = useState(false);
+
   const [justVerified, setJustVerified] = useState(false); const [addressLine1, setAddressLine1] = useState("");
 
   const [addressLine2, setAddressLine2] = useState("");
@@ -1685,9 +1687,8 @@ const Authe = () => {
     setLoading(true);
     setFieldErrors({});
     setAuthMessage("");
-    setAuthMessage("");
+     setOtpSent(false);
     if (!email || !validateEmail(email)) {
-      setFieldErrors({ email: "Enter a valid email address." });
       setFieldErrors({ email: "Enter a valid email address." });
       setLoading(false);
       return;
@@ -1696,10 +1697,8 @@ const Authe = () => {
       const response = await account.createEmailToken(ID.unique(), email);
       localStorage.setItem("userId", response.userId);
       setAuthMessage("📧 OTP sent to your email.");
-      localStorage.setItem("userId", response.userId);
-      setAuthMessage("📧 OTP sent to your email.");
+       setOtpSent(true);
     } catch (err) {
-      setFieldErrors({ email: err.message || "Failed to send OTP." });
       setFieldErrors({ email: err.message || "Failed to send OTP." });
     } finally {
       setLoading(false);
@@ -1825,43 +1824,103 @@ const Authe = () => {
           </section>
         )}
 
-        {step === 2 && (
-          <section className="step-section active slide-up">
-            <div className="step-label">
-              <div className="step_number_main">
-                <span className="step-number">2</span>
-                <span><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="black" viewBox="0 0 16 16"><path fillRule="evenodd" clipRule="evenodd" d="M8.47 1.97a.75.75 0 0 1 1.06 0l4.897 4.896a1.25 1.25 0 0 1 0 1.768L9.53 13.53a.75.75 0 0 1-1.06-1.06l3.97-3.97H1.75a.75.75 0 1 1 0-1.5h10.69L8.47 3.03a.75.75 0 0 1 0-1.06Z" /></svg></span>
-              </div>
-              Email Address:
-            </div>
-            <p className="step-description">Please enter an email address whose inbox you access regularly.</p>
-            <input
-              type="email"
-              placeholder="name@example.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="styled-input"
-            />
-            {fieldErrors.email && <p className="error">{fieldErrors.email}</p>}
-            {!isAuthenticated ? (
-              <>
-                <div className="ok-container">
-                  <button onClick={sendOtp} className="ok-button" disabled={loading}>{loading ? "Sending..." : "OK"}</button>
-                  <span className="enter-text">press <span className="enter-key">Enter ↵</span></span>
-                </div>
-                <input type="text" placeholder="Enter OTP" value={otp} onChange={handleOtpChange} maxLength={6} className="styled-input" />
-                {fieldErrors.otp && <p className="error">{fieldErrors.otp}</p>}
-                {authMessage && <p className={authMessage.includes("✅") ? "success-message" : "info-message"}>{authMessage}</p>}
-                <button onClick={verifyOtp} className="otp-btn" disabled={loading}>{loading ? "Verifying..." : "Verify OTP"}</button>
-              </>
-            ) : (
-              <>
-                <button onClick={handleSignOut} className="signout-btn">Sign Out</button>
-                <p className="success-message">✅ Verified and logged in!</p>
-              </>
-            )}
-          </section>
-        )}
+{step === 2 && (
+  <section className="step-section active slide-up">
+    <div className="step-label">
+      <div className="step_number_main">
+        <span className="step-number">2</span>
+        <span>
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="black" viewBox="0 0 16 16">
+            <path fillRule="evenodd" clipRule="evenodd" d="M8.47 1.97a.75.75 0 0 1 1.06 0l4.897 4.896a1.25 1.25 0 0 1 0 1.768L9.53 13.53a.75.75 0 0 1-1.06-1.06l3.97-3.97H1.75a.75.75 0 1 1 0-1.5h10.69L8.47 3.03a.75.75 0 0 1 0-1.06Z" />
+          </svg>
+        </span>
+      </div>
+      Email Address:
+    </div>
+
+    <p className="step-description">Please enter an email address whose inbox you access regularly.</p>
+
+    <input
+      type="email"
+      placeholder="name@example.com"
+      value={email}
+      onChange={(e) => setEmail(e.target.value)}
+      className="styled-input"
+    />
+
+    {fieldErrors.email && <p className="error">{fieldErrors.email}</p>}
+
+    {!isAuthenticated ? (
+      <>
+        {/* SEND OTP */}
+        <div className="ok-container mb-3">
+          <button onClick={sendOtp} className="ok-button" disabled={loading}>
+            {loading ? "Sending..." : "Send OTP"}
+          </button>
+          <span className="enter-text">press <span className="enter-key">Enter ↵</span></span>
+        </div>
+
+        {/* OTP FIELD */}
+        <input
+          type="text"
+          placeholder="Enter OTP"
+          value={otp}
+          onChange={handleOtpChange}
+          maxLength={6}
+          className="styled-input"
+        />
+
+        {fieldErrors.otp && <p className="error">{fieldErrors.otp}</p>}
+        {authMessage && <p className={authMessage.includes("✅") ? "success-message" : "info-message"}>{authMessage}</p>}
+
+        {/* SIDE BY SIDE BUTTONS */}
+        <div className="flex gap-4 mt-3">
+          <button
+            onClick={verifyOtp}
+            disabled={loading}
+            className="bg-black text-white text-sm px-4 py-2 rounded hover:bg-gray-800"
+          >
+            {loading ? "Verifying..." : "Verify OTP"}
+          </button>
+
+          {otpSent && (
+            <button
+              onClick={sendOtp}
+              disabled={loading}
+              className="bg-gray-200 text-black text-sm px-4 py-2 rounded hover:bg-gray-300"
+            >
+              {loading ? "Resending..." : "Resend OTP"}
+            </button>
+          )}
+        </div>
+      </>
+    ) : (
+      <>
+        <button
+          onClick={async () => {
+            try {
+              await account.deleteSession("current");
+              setIsAuthenticated(false);
+              setAuthMessage("");
+              setOtp("");
+              setJustVerified(false);
+              localStorage.clear();
+              setStep(2);
+            } catch (err) {
+              console.error("Sign out error:", err);
+            }
+          }}
+          className="signout-btn bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded"
+        >
+          Sign Out
+        </button>
+        <p className="success-message">✅ Verified and logged in!</p>
+      </>
+    )}
+  </section>
+)}
+
+
 
         {step === 3 && (
           <PhoneNumberStep phone={phone} setPhone={setPhone} nextStep={nextStep} fieldErrors={fieldErrors} />
@@ -1918,7 +1977,7 @@ const Authe = () => {
       value={productSearch}
       onChange={(e) => setProductSearch(e.target.value)}
       placeholder="🔍 Search for products..."
-      className="w-full px-4 py-2 border rounded-lg shadow-sm focus:ring focus:ring-blue-300 focus:outline-none"
+      className="max-w-full w-full px-4 py-2 border rounded-lg shadow-sm focus:ring focus:ring-blue-300 focus:outline-none"
     />
 
     {/* Product List */}
@@ -1971,17 +2030,17 @@ const Authe = () => {
 
 
 {step === 6 && (
-  <div className="max-w-xl mx-auto mt-32 text-center">
+  <div className="max-w-xl mx-auto mt-32 text-center submission_container">
     {/* Removed the step number and arrow */}
-    <h1 className="text-2xl font-semibold text-gray-800">
+    <h1 className="text-5xl font-semibold text-gray-800 submisiion_headding">
       Thank you for registering your Ella Stein jewelry under our Warranty Program.
     </h1>
     <p className="mt-4 text-base text-gray-600">
       Learn more about caring for your jewelry using the link below.
     </p>
-    <p className="mt-6 text-base text-black underline">
-      <a href="https://wholesale.ellastein.com/" target="_blank" rel="noreferrer">
-        Ellastein.com
+    <p className="mt-6 text-base text-black underline submisiion_button">
+      <a className="inline-block px-6 py-3 bg-[#f2e1d1] text-lg font-bold text-gray-800 rounded-md shadow-md hover:bg-[#e0cfbf] transition" href="https://www.ellastein.com/pages/jewelry-care-tips" target="_blank" rel="noreferrer">
+        JEWELRY CARE TIPS
       </a>
     </p>
   </div>
