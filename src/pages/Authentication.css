@@ -1165,3 +1165,12 @@ ul.product-list {
   color: red;
   font-size: 14px;
 }
+
+.submisiion_headding {
+    font-size: 36px !important;
+    line-height: 1.2;
+}
+.submission_container{
+  width: 100%;
+  max-width: 720px !important;
+}
