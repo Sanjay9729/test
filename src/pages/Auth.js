@@ -1174,9 +1174,398 @@ import { Client, Account, Databases, ID } from "appwrite";
 import "./Authentication.css";
 import PhoneNumberStep from './PhoneNumberStep';
 import countryData from '../data/countryData';
+// import React, { useState, useEffect } from 'react';
+// import { Client, Account, Databases, ID } from 'appwrite';
+// import './Authentication.css';
+
+// const Authe = () => {
+//   const [step, setStep] = useState(1);
+//   const [fullName, setFullName] = useState('');
+//   const [email, setEmail] = useState('');
+//   const [phone, setPhone] = useState('');
+//   const [address, setAddress] = useState('');
+//   const [selectedProduct, setSelectedProduct] = useState('');
+//   const [productSearch, setProductSearch] = useState('');
+//   const [products, setProducts] = useState([]);
+//   const [filteredProducts, setFilteredProducts] = useState([]);
+//   const [fieldErrors, setFieldErrors] = useState({});
+//   const [loading, setLoading] = useState(false);
+//   const [loadingProducts, setLoadingProducts] = useState(true);
+//   const [authMessage, setAuthMessage] = useState('');
+//   const [otp, setOtp] = useState('');
+//   const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+//   // NEW: Track if user just verified OTP now
+//   const [justVerified, setJustVerified] = useState(false);
+
+//   const APPWRITE_ENDPOINT = 'https://appwrite.appunik-team.com/v1';
+//   const APPWRITE_PROJECT_ID = '68271c3c000854f08575';
+//   const APPWRITE_DATABASE_ID = '68271db80016565f6882';
+//   const APPWRITE_COLLECTION_ID = '68271dcf002c6797363d';
+
+//   const client = new Client().setEndpoint(APPWRITE_ENDPOINT).setProject(APPWRITE_PROJECT_ID);
+//   const account = new Account(client);
+//   const database = new Databases(client);
+
+//   useEffect(() => {
+//     const fetchProducts = async () => {
+//       try {
+//         const res = await fetch('/.netlify/functions/products');
+//         const data = await res.json();
+//         setProducts(data);
+//         setFilteredProducts(data);
+//       } catch {
+//         setFieldErrors({ products: 'Failed to load products.' });
+//       } finally {
+//         setLoadingProducts(false);
+//       }
+//     };
+//     fetchProducts();
+//   }, []);
+
+//   useEffect(() => {
+//     setFilteredProducts(
+//       productSearch.trim() === ''
+//         ? products
+//         : products.filter((p) =>
+//             p.title.toLowerCase().includes(productSearch.toLowerCase().trim())
+//           )
+//     );
+//   }, [productSearch, products]);
+
+//   useEffect(() => {
+//     const checkSession = async () => {
+//       try {
+//         const session = await account.get();
+//         setIsAuthenticated(true);
+//         setEmail(session.email);
+//         localStorage.setItem('userId', session.$id);
+//         localStorage.setItem('email', session.email);
+//         setJustVerified(false); // Reset here, user is logged in from saved session
+//       } catch {}
+//     };
+//     checkSession();
+//   }, []);
+
+//   const validateEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+
+//   const sendOtp = async () => {
+//     setLoading(true);
+//     setFieldErrors({});
+//     setAuthMessage('');
+
+//     if (!email || !validateEmail(email)) {
+//       setFieldErrors({ email: 'Enter a valid email address.' });
+//       setLoading(false);
+//       return;
+//     }
+
+//     try {
+//       const response = await account.createEmailToken(ID.unique(), email);
+//       localStorage.setItem('userId', response.userId);
+//       setAuthMessage('📧 OTP sent to your email.');
+//     } catch (err) {
+//       setFieldErrors({ email: err.message || 'Failed to send OTP.' });
+//     } finally {
+//       setLoading(false);
+//     }
+//   };
+
+//   const verifyOtp = async () => {
+//     setLoading(true);
+//     setFieldErrors({});
+//     setAuthMessage('');
+
+//     const userId = localStorage.getItem('userId');
+//     const secret = otp.trim();
+
+//     if (!userId || !secret) {
+//       setFieldErrors({ otp: 'Enter a valid OTP.' });
+//       setLoading(false);
+//       return;
+//     }
+
+//     try {
+//       await account.createSession(userId, secret);
+//       setIsAuthenticated(true);
+//       setAuthMessage('✅ Verified and logged in!');
+//       setJustVerified(true); // Mark OTP just verified
+//       nextStep();
+//     } catch (err) {
+//       setFieldErrors({ otp: 'Invalid OTP. Please try again.' });
+//     } finally {
+//       setLoading(false);
+//     }
+//   };
+
+//   const handleOtpChange = (e) => {
+//     setOtp(e.target.value);
+//     setFieldErrors({ ...fieldErrors, otp: '' });
+//     setAuthMessage('');
+//   };
+
+//   const handleSubmit = async () => {
+//     setLoading(true);
+//     setFieldErrors({});
+
+//     if (!selectedProduct) {
+//       setFieldErrors({ selectedProduct: 'Please select a product.' });
+//       setLoading(false);
+//       return;
+//     }
+
+//     try {
+//       const session = await account.get();
+//       const document = {
+//         full_name: fullName,
+//         email,
+//         phone,
+//         address,
+//         selected_product: selectedProduct,
+//         user_id: session.$id,
+//       };
+
+//       await database.createDocument(APPWRITE_DATABASE_ID, APPWRITE_COLLECTION_ID, ID.unique(), document);
+
+//       await fetch('/.netlify/functions/sendToShopify', {
+//         method: 'POST',
+//         headers: { 'Content-Type': 'application/json' },
+//         body: JSON.stringify({
+//           full_name: fullName,
+//           email,
+//           phone,
+//           address,
+//           selected_product: selectedProduct,
+//         }),
+//       });
+
+//       setStep(6);
+//     } catch (err) {
+//       console.error('Submission error:', err);
+//       setFieldErrors({ submit: 'Submission failed. Please try again.' });
+//     } finally {
+//       setLoading(false);
+//     }
+//   };
+
+//   const nextStep = () => {
+//     const errors = {};
+//     if (step === 1 && !fullName) errors.fullName = 'Enter your full name.';
+//     if (step === 2 && !isAuthenticated) errors.email = 'Verify email with OTP.';
+//     if (step === 3 && !phone) errors.phone = 'Enter phone number.';
+//     if (step === 4 && !address) errors.address = 'Enter address.';
+//     if (step === 5 && !selectedProduct) errors.selectedProduct = 'Select a product.';
+
+//     if (Object.keys(errors).length > 0) {
+//       setFieldErrors(errors);
+//     } else {
+//       setStep(step + 1);
+//     }
+//   };
+
+//   const prevStep = () => setStep(step - 1);
+
+//   const handleSignOut = async () => {
+//     try {
+//       await account.deleteSession('current');
+//       setIsAuthenticated(false);
+//       setAuthMessage('');
+//       setOtp('');
+//       setJustVerified(false); // Reset on logout
+//       localStorage.clear();
+//     } catch (err) {
+//       console.error('Sign out error:', err);
+//     }
+//   };
+
+//   return (
+//     <div className="auth-background">
+//       <div className="container">
+//         <div className="card">
+//           <h2 className="title">Warranty Registration</h2>
+
+//           <div className="steps">
+//             {[1, 2, 3, 4, 5, 6].map((s) => (
+//               <div
+//                 key={s}
+//                 className={`step-circle ${s === step ? 'active' : s < step ? 'completed' : ''}`}
+//               >
+//                 {s < step ? '✓' : s}
+//               </div>
+//             ))}
+//           </div>
+
+//           {loading ? (
+//             <p>Loading...</p>
+//           ) : (
+//             <>
+//               {step === 1 && (
+//                 <div className="form-group">
+//                   <label>Full Name</label>
+//                   <input value={fullName} onChange={(e) => setFullName(e.target.value)} />
+//                   {fieldErrors.fullName && <p className="error">{fieldErrors.fullName}</p>}
+//                 </div>
+//               )}
+
+//               {step === 2 && (
+//                 <div className="form-group">
+//                   <label>Email</label>
+//                   <input
+//                     type="email"
+//                     value={email}
+//                     onChange={(e) => {
+//     setEmail(e.target.value);
+//     setFieldErrors({ ...fieldErrors, email: '' });
+//   }}
+//                     placeholder="Enter your email"
+//                   />
+//                   {isAuthenticated ? (
+//                     <>
+//                       <button
+//                         onClick={handleSignOut}
+//                         className="mt-2 px-4 py-2 bg-green-600 text-white rounded-md hover:bg-black transition duration-300 disabled:bg-gray-300 disabled:cursor-not-allowed"
+//                       >
+//                         Sign Out
+//                       </button>
+
+//                       {/* Show only one message at a time */}
+//                       {justVerified ? (
+//                         <div className="mt-2 text-base text-green-700 font-semibold">
+//                           ✅ Verified and logged in!
+//                         </div>
+//                       ) : (
+//                         <div className="mt-2 text-blue-600">
+//                           <h2 className="text-base ">✅ Already logged in!</h2>
+//                         </div>
+//                       )}
+//                     </>
+//                   ) : (
+//                     <>
+//                       <button onClick={sendOtp} className="otp-btn mt-2 mb-2">
+//                         Send OTP
+//                       </button>
+//                       <input
+//                         placeholder="Enter OTP"
+//                         value={otp}
+//                         onChange={handleOtpChange}
+//                         maxLength={6}
+//                       />
+//                       <button onClick={verifyOtp} className="otp-btn mt-2">
+//                         Verify OTP
+//                       </button>
+//                     </>
+//                   )}
+//                   {fieldErrors.email && !isAuthenticated && (
+//                     <div className="error">{fieldErrors.email}</div>
+//                   )}
+//                   {fieldErrors.otp && <p className="error">{fieldErrors.otp}</p>}
+
+//                   {/* Show OTP sent message only if NOT authenticated */}
+//                   {!isAuthenticated && authMessage && (
+//                     <p className="info-message">{authMessage}</p>
+//                   )}
+//                 </div>
+//               )}
+
+//               {step === 3 && (
+//                 <div className="form-group">
+//                   <label>Phone Number</label>
+//                   <input value={phone} onChange={(e) => setPhone(e.target.value)} />
+//                   {fieldErrors.phone && <p className="error">{fieldErrors.phone}</p>}
+//                 </div>
+//               )}
+
+//               {step === 4 && (
+//                 <div className="form-group">
+//                   <label>Address</label>
+//                   <textarea value={address} onChange={(e) => setAddress(e.target.value)} />
+//                   {fieldErrors.address && <p className="error">{fieldErrors.address}</p>}
+//                 </div>
+//               )}
+
+//               {step === 5 && (
+//                 <div className="form-group">
+//                   <label>Select Product</label>
+//                   <input
+//                     value={productSearch}
+//                     onChange={(e) => setProductSearch(e.target.value)}
+//                     placeholder="Search products..."
+//                   />
+//                   <ul className="product-list">
+//                     {loadingProducts ? (
+//                       <li>Loading...</li>
+//                     ) : (
+//                       filteredProducts.map((product) => (
+//                        <li
+//                         key={product.id}
+//                         className={`product-item flex items-center ${selectedProduct === product.title ? 'selected' : ''}`}
+//                         onClick={() => setSelectedProduct(product.title)}
+//                       >
+
+//                           {product.images?.[0]?.src && (
+//                             <img src={product.images[0].src} alt={product.title} className="product-image" />
+//                           )}
+//                           <span>{product.title}</span>
+//                         </li>
+//                       ))
+//                     )}
+//                   </ul>
+//                   {fieldErrors.selectedProduct && <p className="error">{fieldErrors.selectedProduct}</p>}
+//                   {fieldErrors.submit && <p className="error">{fieldErrors.submit}</p>}
+//                 </div>
+//               )}
+
+//               {step === 6 && (
+//               <div className="max-w-md mx-auto p-6 text-left">
+//                 <h2 className="text-2xl font-semibold text-gray-800 mb-2">Thank You!</h2>
+//                 <p className="text-gray-600 mb-4">Your Warranty Registration is complete.</p>
+//                 <a
+//                   href="https://wholesale.ellastein.com/"
+//                   className="inline-block px-5 py-2 text-black rounded"
+//                 >
+//                   Ellastein.com
+//                 </a>
+//               </div>
+//               )}
+//               <div className="btn-group">
+//                 {step > 1 && step < 6 && <button onClick={prevStep}>Previous</button>}
+//                 {step < 5 && <button onClick={nextStep}>Next</button>}
+//                 {step === 5 && (
+//                   <button onClick={handleSubmit} className="submit-btn">
+//                     Submit
+//                   </button>
+//                 )}
+//               </div>
+//             </>
+//           )}
+//         </div>
+//       </div>
+//     </div>
+//   );
+// };
+
+// export default Authe;
+
+
+
+// 28-05-25
+
+
+
+import React, { useState, useEffect } from "react";
+import { Client, Account, Databases, ID } from "appwrite";
+import "./Authentication.css";
+import PhoneNumberStep from './PhoneNumberStep';
+import countryData from '../data/countryData';
 
 const Authe = () => {
   const [step, setStep] = useState(1);
+  const [fullName, setFullName] = useState("");
+  const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
+  const [address, setAddress] = useState("");
+  const [selectedProduct, setSelectedProduct] = useState("");
+  const [productSearch, setProductSearch] = useState("");
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
@@ -1188,6 +1577,8 @@ const Authe = () => {
   const [fieldErrors, setFieldErrors] = useState({});
   const [loading, setLoading] = useState(false);
   const [loadingProducts, setLoadingProducts] = useState(true);
+  const [authMessage, setAuthMessage] = useState("");
+  const [otp, setOtp] = useState("");
   const [authMessage, setAuthMessage] = useState("");
   const [otp, setOtp] = useState("");
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -1205,14 +1596,20 @@ const [country, setCountry] = useState("");
   const APPWRITE_PROJECT_ID = "68271c3c000854f08575";
   const APPWRITE_DATABASE_ID = "68271db80016565f6882";
   const APPWRITE_COLLECTION_ID = "68271dcf002c6797363d";
+  const APPWRITE_ENDPOINT = "https://appwrite.appunik-team.com/v1";
+  const APPWRITE_PROJECT_ID = "68271c3c000854f08575";
+  const APPWRITE_DATABASE_ID = "68271db80016565f6882";
+  const APPWRITE_COLLECTION_ID = "68271dcf002c6797363d";
 
   const client = new Client().setEndpoint(APPWRITE_ENDPOINT).setProject(APPWRITE_PROJECT_ID);
   const account = new Account(client);
   const database = new Databases(client);
 
+  // Updated product fetch logic (only change)
   useEffect(() => {
     const fetchProducts = async () => {
       try {
+        const res = await fetch("/.netlify/functions/products");
         const res = await fetch("/.netlify/functions/products");
         const data = await res.json();
         if (Array.isArray(data)) {
@@ -1227,6 +1624,9 @@ const [country, setCountry] = useState("");
         setProducts([]);
         setFilteredProducts([]);
         setFieldErrors({ products: "Failed to load products." });
+        setProducts([]);
+        setFilteredProducts([]);
+        setFieldErrors({ products: "Failed to load products." });
       } finally {
         setLoadingProducts(false);
       }
@@ -1236,11 +1636,13 @@ const [country, setCountry] = useState("");
 
   useEffect(() => {
     if (!Array.isArray(products)) return;
+    if (!Array.isArray(products)) return;
     setFilteredProducts(
+      productSearch.trim() === ""
       productSearch.trim() === ""
         ? products
         : products.filter((p) =>
-            p.title.toLowerCase().includes(productSearch.toLowerCase().trim())
+            (p.title || "").toLowerCase().includes(productSearch.toLowerCase().trim())
           )
     );
   }, [productSearch, products]);
@@ -1251,6 +1653,9 @@ const [country, setCountry] = useState("");
         const session = await account.get();
         setIsAuthenticated(true);
         setEmail(session.email);
+        localStorage.setItem("userId", session.$id);
+        localStorage.setItem("email", session.email);
+        setJustVerified(false);
         localStorage.setItem("userId", session.$id);
         localStorage.setItem("email", session.email);
         setJustVerified(false);
@@ -1295,7 +1700,9 @@ const [country, setCountry] = useState("");
     setLoading(true);
     setFieldErrors({});
     setAuthMessage("");
+    setAuthMessage("");
     if (!email || !validateEmail(email)) {
+      setFieldErrors({ email: "Enter a valid email address." });
       setFieldErrors({ email: "Enter a valid email address." });
       setLoading(false);
       return;
@@ -1304,7 +1711,10 @@ const [country, setCountry] = useState("");
       const response = await account.createEmailToken(ID.unique(), email);
       localStorage.setItem("userId", response.userId);
       setAuthMessage("📧 OTP sent to your email.");
+      localStorage.setItem("userId", response.userId);
+      setAuthMessage("📧 OTP sent to your email.");
     } catch (err) {
+      setFieldErrors({ email: err.message || "Failed to send OTP." });
       setFieldErrors({ email: err.message || "Failed to send OTP." });
     } finally {
       setLoading(false);
@@ -1316,8 +1726,11 @@ const [country, setCountry] = useState("");
     setFieldErrors({});
     setAuthMessage("");
     const userId = localStorage.getItem("userId");
+    setAuthMessage("");
+    const userId = localStorage.getItem("userId");
     const secret = otp.trim();
     if (!userId || !secret) {
+      setFieldErrors({ otp: "Enter a valid OTP." });
       setFieldErrors({ otp: "Enter a valid OTP." });
       setLoading(false);
       return;
@@ -1327,8 +1740,11 @@ const [country, setCountry] = useState("");
       setIsAuthenticated(true);
       setAuthMessage("✅ Verified and logged in!");
       setJustVerified(true);
+      setAuthMessage("✅ Verified and logged in!");
+      setJustVerified(true);
       nextStep();
     } catch (err) {
+      setFieldErrors({ otp: "Invalid OTP. Please try again." });
       setFieldErrors({ otp: "Invalid OTP. Please try again." });
     } finally {
       setLoading(false);
@@ -1339,12 +1755,15 @@ const [country, setCountry] = useState("");
     setOtp(e.target.value);
     setFieldErrors({ ...fieldErrors, otp: "" });
     setAuthMessage("");
+    setFieldErrors({ ...fieldErrors, otp: "" });
+    setAuthMessage("");
   };
 
   const handleSubmit = async () => {
     setLoading(true);
     setFieldErrors({});
     if (!selectedProduct) {
+      setFieldErrors({ selectedProduct: "Please select a product." });
       setFieldErrors({ selectedProduct: "Please select a product." });
       setLoading(false);
       return;
@@ -1371,6 +1790,7 @@ const [country, setCountry] = useState("");
       setStep(6);
     } catch (err) {
       setFieldErrors({ submit: "Submission failed. Please try again." });
+      setFieldErrors({ submit: "Submission failed. Please try again." });
     } finally {
       setLoading(false);
     }
@@ -1379,12 +1799,17 @@ const [country, setCountry] = useState("");
   const handleSignOut = async () => {
     try {
       await account.deleteSession("current");
+      await account.deleteSession("current");
       setIsAuthenticated(false);
+      setAuthMessage("");
+      setOtp("");
+      setJustVerified(false);
       setAuthMessage("");
       setOtp("");
       setJustVerified(false);
       localStorage.clear();
     } catch (err) {
+      console.error("Sign out error:", err);
       console.error("Sign out error:", err);
     }
   };
@@ -1529,6 +1954,10 @@ const [country, setCountry] = useState("");
           </section>
         ))}
 
+        <div className="btn-group">
+          {step > 1 && step < 6 && (<button onClick={prevStep} className="nav-btn">Previous</button>)}
+          {step < 5 && (<button onClick={nextStep} className="nav-btn">Next</button>)}
+          {step === 5 && (<button onClick={handleSubmit} className="submit-btn" disabled={loading}>{loading ? "Submitting..." : "Submit"}</button>)}
         <div className="btn-group">
           {step > 1 && step < 6 && (<button onClick={prevStep} className="nav-btn">Previous</button>)}
           {step < 5 && (<button onClick={nextStep} className="nav-btn">Next</button>)}
