@@ -645,7 +645,7 @@
 //                     }}
 //                     disabled={isAuthenticated}
 //                   />
-                  
+
 //                   {!isAuthenticated ? (
 //                     <>
 //                       <button onClick={sendOtp} className="otp-btn" disabled={loading}>
@@ -1169,11 +1169,11 @@
 
 
 
-import React, { useState, useEffect } from "react";
-import { Client, Account, Databases, ID } from "appwrite";
-import "./Authentication.css";
-import PhoneNumberStep from './PhoneNumberStep';
-import countryData from '../data/countryData';
+// import React, { useState, useEffect } from "react";
+// import { Client, Account, Databases, ID } from "appwrite";
+// import "./Authentication.css";
+// import PhoneNumberStep from './PhoneNumberStep';
+// import countryData from '../data/countryData';
 // import React, { useState, useEffect } from 'react';
 // import { Client, Account, Databases, ID } from 'appwrite';
 // import './Authentication.css';
@@ -1566,12 +1566,6 @@ const Authe = () => {
   const [address, setAddress] = useState("");
   const [selectedProduct, setSelectedProduct] = useState("");
   const [productSearch, setProductSearch] = useState("");
-  const [fullName, setFullName] = useState("");
-  const [email, setEmail] = useState("");
-  const [phone, setPhone] = useState("");
-  const [address, setAddress] = useState("");
-  const [selectedProduct, setSelectedProduct] = useState("");
-  const [productSearch, setProductSearch] = useState("");
   const [products, setProducts] = useState([]);
   const [filteredProducts, setFilteredProducts] = useState([]);
   const [fieldErrors, setFieldErrors] = useState({});
@@ -1579,23 +1573,17 @@ const Authe = () => {
   const [loadingProducts, setLoadingProducts] = useState(true);
   const [authMessage, setAuthMessage] = useState("");
   const [otp, setOtp] = useState("");
-  const [authMessage, setAuthMessage] = useState("");
-  const [otp, setOtp] = useState("");
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [justVerified, setJustVerified] = useState(false);const [addressLine1, setAddressLine1] = useState("");
- 
-const [addressLine2, setAddressLine2] = useState("");
-const [city, setCity] = useState("");
-const [state, setState] = useState("");
-const [zip, setZip] = useState("");
-const [country, setCountry] = useState("");
+  const [justVerified, setJustVerified] = useState(false); const [addressLine1, setAddressLine1] = useState("");
 
-  
+  const [addressLine2, setAddressLine2] = useState("");
+  const [city, setCity] = useState("");
+  const [state, setState] = useState("");
+  const [zip, setZip] = useState("");
+  const [country, setCountry] = useState("");
 
-  const APPWRITE_ENDPOINT = "https://appwrite.appunik-team.com/v1";
-  const APPWRITE_PROJECT_ID = "68271c3c000854f08575";
-  const APPWRITE_DATABASE_ID = "68271db80016565f6882";
-  const APPWRITE_COLLECTION_ID = "68271dcf002c6797363d";
+
+
   const APPWRITE_ENDPOINT = "https://appwrite.appunik-team.com/v1";
   const APPWRITE_PROJECT_ID = "68271c3c000854f08575";
   const APPWRITE_DATABASE_ID = "68271db80016565f6882";
@@ -1609,7 +1597,6 @@ const [country, setCountry] = useState("");
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        const res = await fetch("/.netlify/functions/products");
         const res = await fetch("/.netlify/functions/products");
         const data = await res.json();
         if (Array.isArray(data)) {
@@ -1639,11 +1626,10 @@ const [country, setCountry] = useState("");
     if (!Array.isArray(products)) return;
     setFilteredProducts(
       productSearch.trim() === ""
-      productSearch.trim() === ""
         ? products
         : products.filter((p) =>
-            (p.title || "").toLowerCase().includes(productSearch.toLowerCase().trim())
-          )
+          (p.title || "").toLowerCase().includes(productSearch.toLowerCase().trim())
+        )
     );
   }, [productSearch, products]);
 
@@ -1659,7 +1645,7 @@ const [country, setCountry] = useState("");
         localStorage.setItem("userId", session.$id);
         localStorage.setItem("email", session.email);
         setJustVerified(false);
-      } catch {}
+      } catch { }
     };
     checkSession();
   }, []);
@@ -1676,7 +1662,7 @@ const [country, setCountry] = useState("");
       if (!zip.trim()) errors.zip = "Enter zip.";
       if (!country.trim()) errors.country = "Enter country.";
     };
-    
+
     if (currentStep === 5 && !selectedProduct) errors.selectedProduct = "Select a product.";
     setFieldErrors(errors);
     return Object.keys(errors).length === 0;
@@ -1727,7 +1713,6 @@ const [country, setCountry] = useState("");
     setAuthMessage("");
     const userId = localStorage.getItem("userId");
     setAuthMessage("");
-    const userId = localStorage.getItem("userId");
     const secret = otp.trim();
     if (!userId || !secret) {
       setFieldErrors({ otp: "Enter a valid OTP." });
@@ -1886,70 +1871,70 @@ const [country, setCountry] = useState("");
 
         {[4, 5, 6].map((num) => (
           <section key={num} className={`step-section ${step === num ? "active slide-up" : "hidden"}`}>
-          {num === 4 && (
-  <div className="address-step">
-  <div className="step-label">
-  <div className="step_number_main">
-  
-                <span className="step-number">4</span>
-                <span><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="black" viewBox="0 0 16 16"><path fillRule="evenodd" clipRule="evenodd" d="M8.47 1.97a.75.75 0 0 1 1.06 0l4.897 4.896a1.25 1.25 0 0 1 0 1.768L9.53 13.53a.75.75 0 0 1-1.06-1.06l3.97-3.97H1.75a.75.75 0 1 1 0-1.5h10.69L8.47 3.03a.75.75 0 0 1 0-1.06Z" /></svg></span>
-              </div>
-              Address:
-              </div>
-    <p>This is the address Ella Stein will use to initiate a pick-up and product replacement.</p>
-    <label>Address</label>
-    <input type="text" placeholder="65 Hansen Way" value={addressLine1} onChange={(e) => setAddressLine1(e.target.value)} />
-    
-    <label>Address line 2</label>
-    <input type="text" placeholder="Apartment 4" value={addressLine2} onChange={(e) => setAddressLine2(e.target.value)} />
-    
-    <label>City/Town</label>
-    <input type="text" placeholder="Palo Alto" value={city} onChange={(e) => setCity(e.target.value)} />
-    
-    <label>State/Region/Province</label>
-    <input type="text" placeholder="California" value={state} onChange={(e) => setState(e.target.value)} />
-    
-    <label>Zip/Post code</label>
-    <input type="text" placeholder="94304" value={zip} onChange={(e) => setZip(e.target.value)} />
-    
-    <label>Country</label>
-    <input type="text" placeholder="United States" value={country} onChange={(e) => setCountry(e.target.value)} />
-    
-    {fieldErrors.address && <p className="error">{fieldErrors.address}</p>}
-  </div>
-)}
+            {num === 4 && (
+              <div className="address-step">
+                <div className="step-label">
+                  <div className="step_number_main">
 
-           {step === 5 && (
-             <div className="form-group">
-               <label>Select Product</label>
+                    <span className="step-number">4</span>
+                    <span><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="black" viewBox="0 0 16 16"><path fillRule="evenodd" clipRule="evenodd" d="M8.47 1.97a.75.75 0 0 1 1.06 0l4.897 4.896a1.25 1.25 0 0 1 0 1.768L9.53 13.53a.75.75 0 0 1-1.06-1.06l3.97-3.97H1.75a.75.75 0 1 1 0-1.5h10.69L8.47 3.03a.75.75 0 0 1 0-1.06Z" /></svg></span>
+                  </div>
+                  Address:
+                </div>
+                <p>This is the address Ella Stein will use to initiate a pick-up and product replacement.</p>
+                <label>Address</label>
+                <input type="text" placeholder="65 Hansen Way" value={addressLine1} onChange={(e) => setAddressLine1(e.target.value)} />
+
+                <label>Address line 2</label>
+                <input type="text" placeholder="Apartment 4" value={addressLine2} onChange={(e) => setAddressLine2(e.target.value)} />
+
+                <label>City/Town</label>
+                <input type="text" placeholder="Palo Alto" value={city} onChange={(e) => setCity(e.target.value)} />
+
+                <label>State/Region/Province</label>
+                <input type="text" placeholder="California" value={state} onChange={(e) => setState(e.target.value)} />
+
+                <label>Zip/Post code</label>
+                <input type="text" placeholder="94304" value={zip} onChange={(e) => setZip(e.target.value)} />
+
+                <label>Country</label>
+                <input type="text" placeholder="United States" value={country} onChange={(e) => setCountry(e.target.value)} />
+
+                {fieldErrors.address && <p className="error">{fieldErrors.address}</p>}
+              </div>
+            )}
+
+            {step === 5 && (
+              <div className="form-group">
+                <label>Select Product</label>
                 <input
                   value={productSearch}
                   onChange={(e) => setProductSearch(e.target.value)}
                   placeholder="Search products..."
                 />
-<ul className="product-list">
-                 {loadingProducts ? (
-                     <li>Loading...</li>
-                   ) : (
-                     filteredProducts.map((product) => (
+                <ul className="product-list">
+                  {loadingProducts ? (
+                    <li>Loading...</li>
+                  ) : (
+                    filteredProducts.map((product) => (
                       <li
-                       key={product.id}
-                       className={`product-item flex items-center ${selectedProduct === product.title ? 'selected' : ''}`}
-                       onClick={() => setSelectedProduct(product.title)}
-                     >
+                        key={product.id}
+                        className={`product-item flex items-center ${selectedProduct === product.title ? 'selected' : ''}`}
+                        onClick={() => setSelectedProduct(product.title)}
+                      >
 
-                         {product.images?.[0]?.src && (
-                           <img src={product.images[0].src} alt={product.title} className="product-image" />
-                         )}
-                         <span>{product.title}</span>
-                       </li>
-                     ))
-                   )}
-                 </ul>
-                 {fieldErrors.selectedProduct && <p className="error">{fieldErrors.selectedProduct}</p>}
-                 {fieldErrors.submit && <p className="error">{fieldErrors.submit}</p>}
-               </div>
-              )}
+                        {product.images?.[0]?.src && (
+                          <img src={product.images[0].src} alt={product.title} className="product-image" />
+                        )}
+                        <span>{product.title}</span>
+                      </li>
+                    ))
+                  )}
+                </ul>
+                {fieldErrors.selectedProduct && <p className="error">{fieldErrors.selectedProduct}</p>}
+                {fieldErrors.submit && <p className="error">{fieldErrors.submit}</p>}
+              </div>
+            )}
             {num === 6 && (<><h2>Thank You!</h2><p>Your Warranty Registration is complete.</p><a href="https://wholesale.ellastein.com/" target="_blank" rel="noreferrer" className="complete-link">Ellastein.com</a></>)}
           </section>
         ))}
@@ -1958,10 +1943,7 @@ const [country, setCountry] = useState("");
           {step > 1 && step < 6 && (<button onClick={prevStep} className="nav-btn">Previous</button>)}
           {step < 5 && (<button onClick={nextStep} className="nav-btn">Next</button>)}
           {step === 5 && (<button onClick={handleSubmit} className="submit-btn" disabled={loading}>{loading ? "Submitting..." : "Submit"}</button>)}
-        <div className="btn-group">
-          {step > 1 && step < 6 && (<button onClick={prevStep} className="nav-btn">Previous</button>)}
-          {step < 5 && (<button onClick={nextStep} className="nav-btn">Next</button>)}
-          {step === 5 && (<button onClick={handleSubmit} className="submit-btn" disabled={loading}>{loading ? "Submitting..." : "Submit"}</button>)}
+         
         </div>
       </div>
     </div>
