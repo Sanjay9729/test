@@ -1904,38 +1904,70 @@ const Authe = () => {
               </div>
             )}
 
-            {step === 5 && (
-              <div className="form-group">
-                <label>Select Product</label>
-                <input
-                  value={productSearch}
-                  onChange={(e) => setProductSearch(e.target.value)}
-                  placeholder="Search products..."
-                />
-                <ul className="product-list">
-                  {loadingProducts ? (
-                    <li>Loading...</li>
-                  ) : (
-                    filteredProducts.map((product) => (
-                      <li
-                        key={product.id}
-                        className={`product-item flex items-center ${selectedProduct === product.title ? 'selected' : ''}`}
-                        onClick={() => setSelectedProduct(product.title)}
-                      >
+           {step === 5 && (
+  <div className="form-group space-y-4">
+    <label className="block text-lg font-medium text-gray-700">Select a Product</label>
+    
+    {/* Search Input */}
+    <input
+      value={productSearch}
+      onChange={(e) => setProductSearch(e.target.value)}
+      placeholder="🔍 Search for products..."
+      className="w-full px-4 py-2 border rounded-lg shadow-sm focus:ring focus:ring-blue-300 focus:outline-none"
+    />
 
-                        {product.images?.[0]?.src && (
-                          <img src={product.images[0].src} alt={product.title} className="product-image" />
-                        )}
-                        <span>{product.title}</span>
-                      </li>
-                    ))
-                  )}
-                </ul>
-                {fieldErrors.selectedProduct && <p className="error">{fieldErrors.selectedProduct}</p>}
-                {fieldErrors.submit && <p className="error">{fieldErrors.submit}</p>}
+    {/* Product List */}
+    <div className="product-list max-h-60 overflow-y-auto rounded-lg border p-2 bg-white shadow-sm">
+      {loadingProducts ? (
+        <p className="text-center text-gray-500">Loading...</p>
+      ) : filteredProducts.length === 0 ? (
+        <p className="text-center text-gray-500">No products found.</p>
+      ) : (
+        filteredProducts.map((product) => (
+          <div
+            key={product.id}
+            className={`flex items-center p-2 rounded-md hover:bg-blue-50 cursor-pointer transition ${
+              selectedProduct === product.title ? 'bg-blue-100 border border-blue-400' : ''
+            }`}
+            onClick={() => setSelectedProduct(product.title)}
+          >
+            {product.images?.[0]?.src ? (
+              <img
+                src={product.images[0].src}
+                alt={product.title}
+                className="w-12 h-12 object-cover rounded-md mr-3"
+              />
+            ) : (
+              <div className="w-12 h-12 bg-gray-200 rounded-md mr-3 flex items-center justify-center text-gray-400">
+                📦
               </div>
             )}
-            {num === 6 && (<><h2>Thank You!</h2><p>Your Warranty Registration is complete.</p><a href="https://wholesale.ellastein.com/" target="_blank" rel="noreferrer" className="complete-link">Ellastein.com</a></>)}
+            <span className="flex-1 text-sm">{product.title}</span>
+            {selectedProduct === product.title && (
+              <span className="text-blue-600 font-semibold">✔</span>
+            )}
+          </div>
+        ))
+      )}
+    </div>
+
+    {/* Error Messages */}
+    {fieldErrors.selectedProduct && (
+      <p className="text-red-500 text-sm">{fieldErrors.selectedProduct}</p>
+    )}
+    {fieldErrors.submit && (
+      <p className="text-red-500 text-sm">{fieldErrors.submit}</p>
+    )}
+  </div>
+)}
+
+{num === 6 && (
+  <div className="thank-you-section">
+    <h2 className="thank-you-heading">Thank You!</h2>
+    <p className="thank-you-message">Your Warranty Registration is complete.</p>
+    <p className="thank-you-link">Visit: <a href="https://wholesale.ellastein.com/" target="_blank" rel="noreferrer">Ellastein.com</a></p>
+  </div>
+)}
           </section>
         ))}
 
