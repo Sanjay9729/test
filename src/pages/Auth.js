@@ -1563,7 +1563,6 @@ const Authe = () => {
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
-  const [address, setAddress] = useState("");
   const [selectedProduct, setSelectedProduct] = useState("");
   const [productSearch, setProductSearch] = useState("");
   const [products, setProducts] = useState([]);
@@ -1749,7 +1748,6 @@ const Authe = () => {
     setFieldErrors({});
     if (!selectedProduct) {
       setFieldErrors({ selectedProduct: "Please select a product." });
-      setFieldErrors({ selectedProduct: "Please select a product." });
       setLoading(false);
       return;
     }
@@ -1906,8 +1904,17 @@ const Authe = () => {
 
            {step === 5 && (
   <div className="form-group space-y-4">
-    <label className="block text-lg font-medium text-gray-700">Select a Product</label>
-    
+    {/* Step Indicator */}
+    <div className="flex items-center gap-2 text-lg font-medium text-gray-800">
+      <div className="flex items-center gap-1">
+        <span className="bg-blue-600 text-white rounded-full w-6 h-6 flex items-center justify-center">5</span>
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16">
+          <path fillRule="evenodd" d="M8.47 1.97a.75.75 0 0 1 1.06 0l4.897 4.896a1.25 1.25 0 0 1 0 1.768L9.53 13.53a.75.75 0 0 1-1.06-1.06l3.97-3.97H1.75a.75.75 0 1 1 0-1.5h10.69L8.47 3.03a.75.75 0 0 1 0-1.06Z" />
+        </svg>
+      </div>
+      <span>Select a Product:</span>
+    </div>
+
     {/* Search Input */}
     <input
       value={productSearch}
@@ -1958,16 +1965,44 @@ const Authe = () => {
     {fieldErrors.submit && (
       <p className="text-red-500 text-sm">{fieldErrors.submit}</p>
     )}
+
+    {/* Navigation Buttons */}
+    <div className="flex justify-between mt-4">
+      <button
+        type="button"
+        className="px-4 py-2 bg-black text-white rounded hover:bg-gray-800"
+        onClick={() => setStep(step - 1)}
+      >
+        Previous
+      </button>
+      <button
+        type="button"
+        className="px-4 py-2 bg-black text-white rounded hover:bg-gray-800"
+        onClick={handleSubmit}
+      >
+        Submit
+      </button>
+    </div>
   </div>
 )}
 
-{num === 6 && (
-  <div className="thank-you-section">
-    <h2 className="thank-you-heading">Thank You!</h2>
-    <p className="thank-you-message">Your Warranty Registration is complete.</p>
-    <p className="thank-you-link">Visit: <a href="https://wholesale.ellastein.com/" target="_blank" rel="noreferrer">Ellastein.com</a></p>
+
+{step === 6 && (
+  <div className="max-w-xl mx-auto mt-32 text-center">
+    <h1 className="text-2xl font-semibold text-gray-800">
+      Thank you for registering your Ella Stein jewelry under our Warranty Program.
+    </h1>
+    <p className="mt-4 text-base text-gray-600">
+      Learn more about caring for your jewelry using the link below.
+    </p>
+    <p className="mt-6 text-base text-black underline">
+      <a href="https://wholesale.ellastein.com/" target="_blank" rel="noreferrer">
+        Ellastein.com
+      </a>
+    </p>
   </div>
 )}
+
           </section>
         ))}
 
