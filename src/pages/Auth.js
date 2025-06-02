@@ -1653,23 +1653,27 @@ const Authe = () => {
     checkSession();
   }, []);
 
-  const validateStep = (currentStep) => {
-    const errors = {};
-    if (currentStep === 1 && !fullName.trim()) errors.fullName = "Enter your full name.";
-    if (currentStep === 2 && !isAuthenticated) errors.email = "Verify email with OTP.";
-    if (currentStep === 3 && !phone.trim()) errors.phone = "Enter phone number.";
-    if (currentStep === 4) {
-      if (!addressLine1.trim()) errors.addressLine1 = "Enter address line 1.";
-      if (!city.trim()) errors.city = "Enter city.";
-      if (!state.trim()) errors.state = "Enter state.";
-      if (!zip.trim()) errors.zip = "Enter zip.";
-      if (!country.trim()) errors.country = "Enter country.";
-    };
+const validateStep = (currentStep) => {
+  const errors = {};
 
-    if (currentStep === 5 && !selectedProduct) errors.selectedProduct = "Select a product.";
-    setFieldErrors(errors);
-    return Object.keys(errors).length === 0;
-  };
+  if (currentStep === 1 && !fullName.trim()) errors.fullName = "Enter your full name.";
+  if (currentStep === 2 && !email.trim()) errors.email = "Enter your email.";
+  if (currentStep === 3 && !otp.trim()) errors.otp = "Enter the OTP.";
+  if (currentStep === 4 && !phone.trim()) errors.phone = "Enter your phone number."; // ✅ validate phone here
+  if (currentStep === 5) {
+    if (!addressLine1.trim()) errors.addressLine1 = "Enter address line 1.";
+    if (!city.trim()) errors.city = "Enter city.";
+    if (!state.trim()) errors.state = "Enter state.";
+    if (!zip.trim()) errors.zip = "Enter zip.";
+    if (!country.trim()) errors.country = "Enter country.";
+  }
+  if (currentStep === 6 && !selectedProduct) errors.selectedProduct = "Select a product.";
+
+  setFieldErrors(errors);
+  return Object.keys(errors).length === 0;
+};
+
+
 
   const nextStep = () => {
     if (validateStep(step)) {
@@ -1685,27 +1689,32 @@ const Authe = () => {
 
   const validateEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 
-  const sendOtp = async () => {
-    setLoading(true);
-    setFieldErrors({});
-    setAuthMessage("");
-     setOtpSent(false);
-    if (!email || !validateEmail(email)) {
-      setFieldErrors({ email: "Enter a valid email address." });
-      setLoading(false);
-      return;
-    }
-    try {
-      const response = await account.createEmailToken(ID.unique(), email);
-      localStorage.setItem("userId", response.userId);
-      setAuthMessage("📧 OTP sent to your email.");
-       setOtpSent(true);
-    } catch (err) {
-      setFieldErrors({ email: err.message || "Failed to send OTP." });
-    } finally {
-      setLoading(false);
-    }
-  };
+ const sendOtp = async () => {
+  setLoading(true);
+  setFieldErrors({});
+  setAuthMessage("");
+
+  if (!email || !validateEmail(email)) {
+    setFieldErrors({ email: "Enter a valid email address." });
+    setLoading(false);
+    return;
+  }
+
+  try {
+    const response = await account.createEmailToken(ID.unique(), email);
+    localStorage.setItem("userId", response.userId);
+    setAuthMessage("📧 OTP sent to your email.");
+    setOtpSent(true);
+
+    // 🔥 Move to Step 3 (OTP Entry)
+    setStep(3);
+  } catch (err) {
+    setFieldErrors({ email: err.message || "Failed to send OTP." });
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   const verifyOtp = async () => {
     setLoading(true);
@@ -1922,20 +1931,67 @@ const Authe = () => {
   </section>
 )}
 
+{step === 3 && (
+  <section className="step-section active slide-up">
+    <div className="step-label">
+      <div className="step_number_main">
+        <span className="step-number">3</span>
+        <span>
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="black" viewBox="0 0 16 16">
+            <path fillRule="evenodd" clipRule="evenodd" d="M8.47 1.97a.75.75 0 0 1 1.06 0l4.897 4.896a1.25 1.25 0 0 1 0 1.768L9.53 13.53a.75.75 0 0 1-1.06-1.06l3.97-3.97H1.75a.75.75 0 1 1 0-1.5h10.69L8.47 3.03a.75.75 0 0 1 0-1.06Z" />
+          </svg>
+        </span>
+      </div>
+      Enter OTP:
+    </div>
+
+    <p className="step-description">Enter the OTP sent to {email}.</p>
+
+    <input
+      type="text"
+      placeholder="Enter OTP"
+      value={otp}
+      onChange={handleOtpChange}
+      maxLength={6}
+      className="styled-input"
+    />
+
+    {fieldErrors.otp && <p className="error">{fieldErrors.otp}</p>}
+    {authMessage && <p className={authMessage.includes("✅") ? "success-message" : "info-message"}>{authMessage}</p>}
+
+    <div className="flex gap-4 mt-3">
+      <button
+        onClick={verifyOtp}
+        disabled={loading}
+        className="bg-black text-white text-sm px-4 py-2 rounded hover:bg-gray-800"
+      >
+        {loading ? "Verifying..." : "Verify OTP"}
+      </button>
+
+      <button
+        onClick={sendOtp}
+        disabled={loading}
+        className="bg-gray-200 text-black text-sm px-4 py-2 rounded hover:bg-gray-300"
+      >
+        {loading ? "Resending..." : "Resend OTP"}
+      </button>
+    </div>
+  </section>
+)}
 
 
-        {step === 3 && (
+        {step === 4 && (
           <PhoneNumberStep phone={phone} setPhone={setPhone} nextStep={nextStep} fieldErrors={fieldErrors} />
         )}
 
-        {[4, 5, 6].map((num) => (
+        {[5, 6, 7].map((num) => (
           <section key={num} className={`step-section ${step === num ? "active slide-up" : "hidden"}`}>
-            {num === 4 && (
+            {num === 5 && (
               <div className="address-step">
                 <div className="step-label">
                   <div className="step_number_main">
 
-                    <span className="step-number">4</span>
+                    <span className="step-number">5</span>
                     <span><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="black" viewBox="0 0 16 16"><path fillRule="evenodd" clipRule="evenodd" d="M8.47 1.97a.75.75 0 0 1 1.06 0l4.897 4.896a1.25 1.25 0 0 1 0 1.768L9.53 13.53a.75.75 0 0 1-1.06-1.06l3.97-3.97H1.75a.75.75 0 1 1 0-1.5h10.69L8.47 3.03a.75.75 0 0 1 0-1.06Z" /></svg></span>
                   </div>
                   Address:
@@ -1962,24 +2018,55 @@ const Authe = () => {
                 {fieldErrors.address && <p className="error">{fieldErrors.address}</p>}
               </div>
             )}
+{num === 6 && (
+  <>
+    <div className="step-label">
+      <div className="step_number_main">
+        <span className="step-number">6</span>
+        <span>
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="black" viewBox="0 0 16 16">
+            <path fillRule="evenodd" clipRule="evenodd" d="M8.47 1.97a.75.75 0 0 1 1.06 0l4.897 4.896a1.25 1.25 0 0 1 0 1.768L9.53 13.53a.75.75 0 0 1-1.06-1.06l3.97-3.97H1.75a.75.75 0 1 1 0-1.5h10.69L8.47 3.03a.75.75 0 0 1 0-1.06Z" />
+          </svg>
+        </span>
+      </div>
+      Select Product:
+    </div>
 
-            {num === 5 && (
-              <>
-                <label>Select Product</label>
-                <input value={productSearch} onChange={(e) => setProductSearch(e.target.value)} placeholder="Search products..." />
-                <ul className="product-list">
-                  {loadingProducts ? <li>Loading...</li> : fieldErrors.products ? <li>{fieldErrors.products}</li> :
-                    filteredProducts.map((product) => (
-                      <li key={product.id} className={`product-item ${selectedProduct === product.title ? "selected" : ""}`} onClick={() => setSelectedProduct(product.title)}>
-                        {product.images?.[0]?.src && <img src={product.images[0].src} alt={product.title} className="product-image" />}<span>{product.title}</span>
-                      </li>))}
-                </ul>
-                <p className="error">{fieldErrors.selectedProduct}</p><p className="error">{fieldErrors.submit}</p>
-              </>
+    <input
+      value={productSearch}
+      onChange={(e) => setProductSearch(e.target.value)}
+      placeholder="Search products..."
+    />
+
+    <ul className="product-list">
+      {loadingProducts ? (
+        <li>Loading...</li>
+      ) : fieldErrors.products ? (
+        <li>{fieldErrors.products}</li>
+      ) : (
+        filteredProducts.map((product) => (
+          <li
+            key={product.id}
+            className={`product-item ${selectedProduct === product.title ? "selected" : ""}`}
+            onClick={() => setSelectedProduct(product.title)}
+          >
+            {product.images?.[0]?.src && (
+              <img src={product.images[0].src} alt={product.title} className="product-image" />
             )}
+            <span>{product.title}</span>
+          </li>
+        ))
+      )}
+    </ul>
+
+    <p className="error">{fieldErrors.selectedProduct}</p>
+    <p className="error">{fieldErrors.submit}</p>
+  </>
+)}
 
 
-{step === 6 && (
+
+{step === 7 && (
   <div className="max-w-xl mx-auto mt-32 text-center submission_container">
     {/* Removed the step number and arrow */}
     <h1 className="text-5xl font-semibold text-gray-800 submisiion_headding">
@@ -2006,12 +2093,12 @@ const Authe = () => {
       Previous
     </button>
   )}
-  {step < 5 && (
+  {step < 6 && (
     <button onClick={nextStep} className="px-4 py-2 bg-black text-white rounded hover:bg-gray-800">
       Next
     </button>
   )}
-  {step === 5 && (
+  {step === 6 && (
     <button onClick={handleSubmit} className="px-4 py-2 bg-black text-white rounded hover:bg-gray-800" disabled={loading}>
       {loading ? "Submitting..." : "Submit"}
     </button>
