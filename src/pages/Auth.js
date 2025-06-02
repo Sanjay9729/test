@@ -1625,14 +1625,14 @@ const Authe = () => {
  useEffect(() => {
   if (!Array.isArray(products)) return;
   const searchLower = productSearch.toLowerCase().trim();
-  setFilteredProducts(
-    productSearch === ""
-      ? products
-      : products.filter((p) => 
-          (p.title && p.title.toLowerCase().includes(searchLower)) ||
-          (p.sku && p.sku.toLowerCase().includes(searchLower))
-        )
-  );
+ setFilteredProducts(
+  productSearch === ""
+    ? products
+    : products.filter((p) =>
+        (p.title?.toLowerCase().includes(searchLower)) ||
+        (p.sku?.toLowerCase().includes(searchLower))
+      )
+);
 }, [productSearch, products]);
 
 
@@ -1677,7 +1677,7 @@ const validateStep = (currentStep) => {
 
   const nextStep = () => {
     if (validateStep(step)) {
-      setStep((prev) => Math.min(prev + 1, 6));
+      setStep((prev) => Math.min(prev + 1, 7));
       setFieldErrors({});
     }
   };
@@ -1780,7 +1780,7 @@ const validateStep = (currentStep) => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(document),
       });
-      setStep(6);
+      setStep(7);
     } catch (err) {
       setFieldErrors({ submit: "Submission failed. Please try again." });
       setFieldErrors({ submit: "Submission failed. Please try again." });
