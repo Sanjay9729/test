@@ -1551,12 +1551,9 @@
 // 28-05-25
 
 
-
 import React, { useState, useEffect } from "react";
 import { Client, Account, Databases, ID } from "appwrite";
 import "./Authentication.css";
-import PhoneNumberStep from './PhoneNumberStep';
-import countryData from '../data/countryData';
 
 const Authe = () => {
   const [step, setStep] = useState(1);
@@ -1574,16 +1571,14 @@ const Authe = () => {
   const [otp, setOtp] = useState("");
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [otpSent, setOtpSent] = useState(false);
-
-  const [justVerified, setJustVerified] = useState(false); const [addressLine1, setAddressLine1] = useState("");
-
+  const [justVerified, setJustVerified] = useState(false);
+  const [addressLine1, setAddressLine1] = useState("");
   const [addressLine2, setAddressLine2] = useState("");
   const [city, setCity] = useState("");
   const [state, setState] = useState("");
   const [zip, setZip] = useState("");
   const [country, setCountry] = useState("");
-
-
+  const [uploadedImage, setUploadedImage] = useState(null);  // NEW for image upload
 
   const APPWRITE_ENDPOINT = "https://appwrite.appunik-team.com/v1";
   const APPWRITE_PROJECT_ID = "68271c3c000854f08575";
@@ -1594,24 +1589,14 @@ const Authe = () => {
   const account = new Account(client);
   const database = new Databases(client);
 
-  // Updated product fetch logic (only change)
   useEffect(() => {
     const fetchProducts = async () => {
       try {
         const res = await fetch("/.netlify/functions/products");
         const data = await res.json();
-        if (Array.isArray(data)) {
-          setProducts(data);
-          setFilteredProducts(data);
-        } else {
-          setProducts([]);
-          setFilteredProducts([]);
-          setFieldErrors({ products: "Invalid products data." });
-        }
+        setProducts(Array.isArray(data) ? data : []);
+        setFilteredProducts(Array.isArray(data) ? data : []);
       } catch {
-        setProducts([]);
-        setFilteredProducts([]);
-        setFieldErrors({ products: "Failed to load products." });
         setProducts([]);
         setFilteredProducts([]);
         setFieldErrors({ products: "Failed to load products." });
@@ -1624,13 +1609,14 @@ const Authe = () => {
 
   useEffect(() => {
     if (!Array.isArray(products)) return;
-    if (!Array.isArray(products)) return;
     setFilteredProducts(
       productSearch.trim() === ""
         ? products
-        : products.filter((p) =>
-          (p.title || "").toLowerCase().includes(productSearch.toLowerCase().trim())
-        )
+        : products.filter((p) => {
+            const titleMatch = (p.title || "").toLowerCase().includes(productSearch.toLowerCase().trim());
+            const skuMatch = (p.sku || "").toLowerCase().includes(productSearch.toLowerCase().trim());
+            return titleMatch || skuMatch;
+          })
     );
   }, [productSearch, products]);
 
@@ -1641,12 +1627,7 @@ const Authe = () => {
         setIsAuthenticated(true);
         setEmail(session.email);
         localStorage.setItem("userId", session.$id);
-        localStorage.setItem("email", session.email);
-        setJustVerified(false);
-        localStorage.setItem("userId", session.$id);
-        localStorage.setItem("email", session.email);
-        setJustVerified(false);
-      } catch { }
+      } catch {}
     };
     checkSession();
   }, []);
@@ -1662,32 +1643,22 @@ const Authe = () => {
       if (!state.trim()) errors.state = "Enter state.";
       if (!zip.trim()) errors.zip = "Enter zip.";
       if (!country.trim()) errors.country = "Enter country.";
-    };
-
+    }
     if (currentStep === 5 && !selectedProduct) errors.selectedProduct = "Select a product.";
     setFieldErrors(errors);
     return Object.keys(errors).length === 0;
   };
 
   const nextStep = () => {
-    if (validateStep(step)) {
-      setStep((prev) => Math.min(prev + 1, 6));
-      setFieldErrors({});
-    }
+    if (validateStep(step)) setStep((prev) => Math.min(prev + 1, 6));
   };
 
-  const prevStep = () => {
-    setStep((prev) => Math.max(prev - 1, 1));
-    setFieldErrors({});
-  };
+  const prevStep = () => setStep((prev) => Math.max(prev - 1, 1));
 
   const validateEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 
   const sendOtp = async () => {
     setLoading(true);
-    setFieldErrors({});
-    setAuthMessage("");
-     setOtpSent(false);
     if (!email || !validateEmail(email)) {
       setFieldErrors({ email: "Enter a valid email address." });
       setLoading(false);
@@ -1697,7 +1668,7 @@ const Authe = () => {
       const response = await account.createEmailToken(ID.unique(), email);
       localStorage.setItem("userId", response.userId);
       setAuthMessage("📧 OTP sent to your email.");
-       setOtpSent(true);
+      setOtpSent(true);
     } catch (err) {
       setFieldErrors({ email: err.message || "Failed to send OTP." });
     } finally {
@@ -1707,13 +1678,9 @@ const Authe = () => {
 
   const verifyOtp = async () => {
     setLoading(true);
-    setFieldErrors({});
-    setAuthMessage("");
     const userId = localStorage.getItem("userId");
-    setAuthMessage("");
     const secret = otp.trim();
     if (!userId || !secret) {
-      setFieldErrors({ otp: "Enter a valid OTP." });
       setFieldErrors({ otp: "Enter a valid OTP." });
       setLoading(false);
       return;
@@ -1722,29 +1689,16 @@ const Authe = () => {
       await account.createSession(userId, secret);
       setIsAuthenticated(true);
       setAuthMessage("✅ Verified and logged in!");
-      setJustVerified(true);
-      setAuthMessage("✅ Verified and logged in!");
-      setJustVerified(true);
       nextStep();
     } catch (err) {
-      setFieldErrors({ otp: "Invalid OTP. Please try again." });
       setFieldErrors({ otp: "Invalid OTP. Please try again." });
     } finally {
       setLoading(false);
     }
   };
 
-  const handleOtpChange = (e) => {
-    setOtp(e.target.value);
-    setFieldErrors({ ...fieldErrors, otp: "" });
-    setAuthMessage("");
-    setFieldErrors({ ...fieldErrors, otp: "" });
-    setAuthMessage("");
-  };
-
   const handleSubmit = async () => {
     setLoading(true);
-    setFieldErrors({});
     if (!selectedProduct) {
       setFieldErrors({ selectedProduct: "Please select a product." });
       setLoading(false);
@@ -1753,7 +1707,6 @@ const Authe = () => {
     try {
       const session = await account.get();
       const address = `${addressLine1}, ${addressLine2}, ${city}, ${state}, ${zip}, ${country}`;
-
       const document = {
         full_name: fullName,
         email,
@@ -1761,38 +1714,19 @@ const Authe = () => {
         address,
         selected_product: selectedProduct,
         user_id: session.$id,
+        uploaded_image: uploadedImage,
       };
       await database.createDocument(APPWRITE_DATABASE_ID, APPWRITE_COLLECTION_ID, ID.unique(), document);
-
       await fetch("/.netlify/functions/sendToShopify", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(document),
       });
       setStep(6);
-    } catch (err) {
-      setFieldErrors({ submit: "Submission failed. Please try again." });
+    } catch {
       setFieldErrors({ submit: "Submission failed. Please try again." });
     } finally {
       setLoading(false);
-    }
-  };
-
-  const handleSignOut = async () => {
-    try {
-      await account.deleteSession("current");
-      await account.deleteSession("current");
-      setIsAuthenticated(false);
-      setAuthMessage("");
-      setOtp("");
-      setJustVerified(false);
-      setAuthMessage("");
-      setOtp("");
-      setJustVerified(false);
-      localStorage.clear();
-    } catch (err) {
-      console.error("Sign out error:", err);
-      console.error("Sign out error:", err);
     }
   };
 
@@ -1801,279 +1735,96 @@ const Authe = () => {
       <div className="logo-text">ELLA STEIN</div>
       <div className="right-side">
         {step === 1 && (
-          <section className="step-section active slide-up">
-            <div className="step-label">
-              <div className="step_number_main">
-                <span className="step-number">1</span>
-                <span><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="black" viewBox="0 0 16 16"><path fillRule="evenodd" clipRule="evenodd" d="M8.47 1.97a.75.75 0 0 1 1.06 0l4.897 4.896a1.25 1.25 0 0 1 0 1.768L9.53 13.53a.75.75 0 0 1-1.06-1.06l3.97-3.97H1.75a.75.75 0 1 1 0-1.5h10.69L8.47 3.03a.75.75 0 0 1 0-1.06Z" /></svg></span>
-              </div>
-              Your Full Name:
-            </div>
-            <input
-              type="text"
-              placeholder="Type your answer here..."
-              value={fullName}
-              onChange={(e) => setFullName(e.target.value)}
-              className="styled-input"
-            />
-            {fieldErrors.fullName && <p className="error">{fieldErrors.fullName}</p>}
-            <div className="ok-container">
-              <button onClick={nextStep} className="ok-button">OK</button>
-              <span className="enter-text">press <span className="enter-key">Enter ↵</span></span>
-            </div>
+          <section>
+            <h2>1 ➡️ Your Full Name:</h2>
+            <input value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="Full name" />
+            {fieldErrors.fullName && <p>{fieldErrors.fullName}</p>}
+            <button onClick={nextStep}>Next</button>
           </section>
         )}
 
-{step === 2 && (
-  <section className="step-section active slide-up">
-    <div className="step-label">
-      <div className="step_number_main">
-        <span className="step-number">2</span>
-        <span>
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="black" viewBox="0 0 16 16">
-            <path fillRule="evenodd" clipRule="evenodd" d="M8.47 1.97a.75.75 0 0 1 1.06 0l4.897 4.896a1.25 1.25 0 0 1 0 1.768L9.53 13.53a.75.75 0 0 1-1.06-1.06l3.97-3.97H1.75a.75.75 0 1 1 0-1.5h10.69L8.47 3.03a.75.75 0 0 1 0-1.06Z" />
-          </svg>
-        </span>
-      </div>
-      Email Address:
-    </div>
-
-    <p className="step-description">Please enter an email address whose inbox you access regularly.</p>
-
-    <input
-      type="email"
-      placeholder="name@example.com"
-      value={email}
-      onChange={(e) => setEmail(e.target.value)}
-      className="styled-input"
-    />
-
-    {fieldErrors.email && <p className="error">{fieldErrors.email}</p>}
-
-    {!isAuthenticated ? (
-      <>
-        {/* SEND OTP */}
-        <div className="ok-container mb-3">
-          <button onClick={sendOtp} className="ok-button" disabled={loading}>
-            {loading ? "Sending..." : "Send OTP"}
-          </button>
-          <span className="enter-text">press <span className="enter-key">Enter ↵</span></span>
-        </div>
-
-        {/* OTP FIELD */}
-        <input
-          type="text"
-          placeholder="Enter OTP"
-          value={otp}
-          onChange={handleOtpChange}
-          maxLength={6}
-          className="styled-input"
-        />
-
-        {fieldErrors.otp && <p className="error">{fieldErrors.otp}</p>}
-        {authMessage && <p className={authMessage.includes("✅") ? "success-message" : "info-message"}>{authMessage}</p>}
-
-        {/* SIDE BY SIDE BUTTONS */}
-        <div className="flex gap-4 mt-3">
-          <button
-            onClick={verifyOtp}
-            disabled={loading}
-            className="bg-black text-white text-sm px-4 py-2 rounded hover:bg-gray-800"
-          >
-            {loading ? "Verifying..." : "Verify OTP"}
-          </button>
-
-          {otpSent && (
-            <button
-              onClick={sendOtp}
-              disabled={loading}
-              className="bg-gray-200 text-black text-sm px-4 py-2 rounded hover:bg-gray-300"
-            >
-              {loading ? "Resending..." : "Resend OTP"}
-            </button>
-          )}
-        </div>
-      </>
-    ) : (
-      <>
-        <button
-          onClick={async () => {
-            try {
-              await account.deleteSession("current");
-              setIsAuthenticated(false);
-              setAuthMessage("");
-              setOtp("");
-              setJustVerified(false);
-              localStorage.clear();
-              setStep(2);
-            } catch (err) {
-              console.error("Sign out error:", err);
-            }
-          }}
-          className="signout-btn bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded"
-        >
-          Sign Out
-        </button>
-        <p className="success-message">✅ Verified and logged in!</p>
-      </>
-    )}
-  </section>
-)}
-
-
+        {step === 2 && (
+          <section>
+            <h2>2 ➡️ Email Address</h2>
+            <input value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email" />
+            {fieldErrors.email && <p>{fieldErrors.email}</p>}
+            {!isAuthenticated ? (
+              <>
+                <button onClick={sendOtp} disabled={loading}>{loading ? "Sending..." : "Send OTP"}</button>
+                <input value={otp} onChange={(e) => setOtp(e.target.value)} placeholder="Enter OTP" />
+                {fieldErrors.otp && <p>{fieldErrors.otp}</p>}
+                <button onClick={verifyOtp} disabled={loading}>{loading ? "Verifying..." : "Verify OTP"}</button>
+              </>
+            ) : <p>✅ Verified</p>}
+            <button onClick={prevStep}>Previous</button>
+          </section>
+        )}
 
         {step === 3 && (
-          <PhoneNumberStep phone={phone} setPhone={setPhone} nextStep={nextStep} fieldErrors={fieldErrors} />
+          <section>
+            <h2>3 ➡️ Phone Number</h2>
+            <input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="Phone" />
+            {fieldErrors.phone && <p>{fieldErrors.phone}</p>}
+            <button onClick={nextStep}>Next</button>
+            <button onClick={prevStep}>Previous</button>
+          </section>
         )}
 
-        {[4, 5, 6].map((num) => (
-          <section key={num} className={`step-section ${step === num ? "active slide-up" : "hidden"}`}>
-            {num === 4 && (
-              <div className="address-step">
-                <div className="step-label">
-                  <div className="step_number_main">
-
-                    <span className="step-number">4</span>
-                    <span><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="black" viewBox="0 0 16 16"><path fillRule="evenodd" clipRule="evenodd" d="M8.47 1.97a.75.75 0 0 1 1.06 0l4.897 4.896a1.25 1.25 0 0 1 0 1.768L9.53 13.53a.75.75 0 0 1-1.06-1.06l3.97-3.97H1.75a.75.75 0 1 1 0-1.5h10.69L8.47 3.03a.75.75 0 0 1 0-1.06Z" /></svg></span>
-                  </div>
-                  Address:
-                </div>
-                <p>This is the address Ella Stein will use to initiate a pick-up and product replacement.</p>
-                <label>Address</label>
-                <input type="text" placeholder="65 Hansen Way" value={addressLine1} onChange={(e) => setAddressLine1(e.target.value)} />
-
-                <label>Address line 2</label>
-                <input type="text" placeholder="Apartment 4" value={addressLine2} onChange={(e) => setAddressLine2(e.target.value)} />
-
-                <label>City/Town</label>
-                <input type="text" placeholder="Palo Alto" value={city} onChange={(e) => setCity(e.target.value)} />
-
-                <label>State/Region/Province</label>
-                <input type="text" placeholder="California" value={state} onChange={(e) => setState(e.target.value)} />
-
-                <label>Zip/Post code</label>
-                <input type="text" placeholder="94304" value={zip} onChange={(e) => setZip(e.target.value)} />
-
-                <label>Country</label>
-                <input type="text" placeholder="United States" value={country} onChange={(e) => setCountry(e.target.value)} />
-
-                {fieldErrors.address && <p className="error">{fieldErrors.address}</p>}
-              </div>
-            )}
-
-           {step === 5 && (
-  <div className="form-group space-y-4">
-    {/* Step Indicator */}
-   <div className="step-label">
-              <div className="step_number_main">
-                <span className="step-number">5</span>
-                <span><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="black" viewBox="0 0 16 16"><path fillRule="evenodd" clipRule="evenodd" d="M8.47 1.97a.75.75 0 0 1 1.06 0l4.897 4.896a1.25 1.25 0 0 1 0 1.768L9.53 13.53a.75.75 0 0 1-1.06-1.06l3.97-3.97H1.75a.75.75 0 1 1 0-1.5h10.69L8.47 3.03a.75.75 0 0 1 0-1.06Z" /></svg></span>
-              </div>
-          Select a Product:
-            </div>
-
-    {/* Search Input */}
-    <input
-      value={productSearch}
-      onChange={(e) => setProductSearch(e.target.value)}
-      placeholder="🔍 Search for products..."
-      className="max-w-full w-full px-4 py-2 border rounded-lg shadow-sm focus:ring focus:ring-blue-300 focus:outline-none"
-    />
-
-    {/* Product List */}
-    <div className="product-list max-h-60 overflow-y-auto rounded-lg border p-2 bg-white shadow-sm">
-      {loadingProducts ? (
-        <p className="text-center text-gray-500">Loading...</p>
-      ) : filteredProducts.length === 0 ? (
-        <p className="text-center text-gray-500">No products found.</p>
-      ) : (
-        filteredProducts.map((product) => (
-          <div
-            key={product.id}
-            className={`flex items-center p-2 rounded-md hover:bg-blue-50 cursor-pointer transition ${
-              selectedProduct === product.title ? 'bg-blue-100 border border-blue-400' : ''
-            }`}
-            onClick={() => setSelectedProduct(product.title)}
-          >
-            {product.images?.[0]?.src ? (
-              <img
-                src={product.images[0].src}
-                alt={product.title}
-                className="w-12 h-12 object-cover rounded-md mr-3"
-              />
-            ) : (
-              <div className="w-12 h-12 bg-gray-200 rounded-md mr-3 flex items-center justify-center text-gray-400">
-                📦
-              </div>
-            )}
-            <span className="flex-1 text-sm">{product.title}</span>
-            {selectedProduct === product.title && (
-              <span className="text-blue-600 font-semibold">✔</span>
-            )}
-          </div>
-        ))
-      )}
-    </div>
-
-    {/* Error Messages */}
-    {fieldErrors.selectedProduct && (
-      <p className="text-red-500 text-sm">{fieldErrors.selectedProduct}</p>
-    )}
-    {fieldErrors.submit && (
-      <p className="text-red-500 text-sm">{fieldErrors.submit}</p>
-    )}
-
-    {/* Navigation Buttons */}
-   
-  </div>
-)}
-
-
-{step === 6 && (
-  <div className="max-w-xl mx-auto mt-32 text-center submission_container">
-    {/* Removed the step number and arrow */}
-    <h1 className="text-5xl font-semibold text-gray-800 submisiion_headding">
-      Thank you for registering your Ella Stein jewelry under our Warranty Program.
-    </h1>
-    <p className="mt-4 text-base text-gray-600">
-      Learn more about caring for your jewelry using the link below.
-    </p>
-    <p className="mt-6 text-base text-black underline submisiion_button">
-      <a className="inline-block px-6 py-3 bg-[#f2e1d1] text-lg font-bold text-gray-800 rounded-md shadow-md hover:bg-[#e0cfbf] transition" href="https://www.ellastein.com/pages/jewelry-care-tips" target="_blank" rel="noreferrer">
-        JEWELRY CARE TIPS
-      </a>
-    </p>
-  </div>
-)}
-
-
+        {step === 4 && (
+          <section>
+            <h2>4 ➡️ Address</h2>
+            <input value={addressLine1} onChange={(e) => setAddressLine1(e.target.value)} placeholder="Address line 1" />
+            <input value={addressLine2} onChange={(e) => setAddressLine2(e.target.value)} placeholder="Address line 2" />
+            <input value={city} onChange={(e) => setCity(e.target.value)} placeholder="City" />
+            <input value={state} onChange={(e) => setState(e.target.value)} placeholder="State" />
+            <input value={zip} onChange={(e) => setZip(e.target.value)} placeholder="Zip" />
+            <input value={country} onChange={(e) => setCountry(e.target.value)} placeholder="Country" />
+            <button onClick={nextStep}>Next</button>
+            <button onClick={prevStep}>Previous</button>
           </section>
-        ))}
+        )}
 
-       <div className="btn-group flex justify-between mt-4 gap-4">
-  {step > 1 && step < 6 && (
-    <button onClick={prevStep} className="px-4 py-2 bg-black text-white rounded hover:bg-gray-800">
-      Previous
-    </button>
-  )}
-  {step < 5 && (
-    <button onClick={nextStep} className="px-4 py-2 bg-black text-white rounded hover:bg-gray-800">
-      Next
-    </button>
-  )}
-  {step === 5 && (
-    <button onClick={handleSubmit} className="px-4 py-2 bg-black text-white rounded hover:bg-gray-800" disabled={loading}>
-      {loading ? "Submitting..." : "Submit"}
-    </button>
-  )}
-</div>
+        {step === 5 && (
+          <section>
+            <h2>5 ➡️ Select a Product</h2>
+            {/* Image Upload */}
+            <input type="file" accept="image/*" onChange={(e) => {
+              const file = e.target.files[0];
+              if (file) {
+                const reader = new FileReader();
+                reader.onload = (event) => setUploadedImage(event.target.result);
+                reader.readAsDataURL(file);
+              }
+            }} />
+            {uploadedImage && <img src={uploadedImage} alt="Preview" width={100} />}
+            {/* Product Search */}
+            <input value={productSearch} onChange={(e) => setProductSearch(e.target.value)} placeholder="Search by title or SKU" />
+            <div>
+              {loadingProducts ? "Loading..." : filteredProducts.map(p => (
+                <div key={p.id} onClick={() => setSelectedProduct(p.title)} style={{border: selectedProduct === p.title ? '2px solid blue' : '1px solid gray', padding: '5px'}}>
+                  {p.title} ({p.sku})
+                </div>
+              ))}
+              {fieldErrors.selectedProduct && <p>{fieldErrors.selectedProduct}</p>}
+            </div>
+            <button onClick={handleSubmit}>{loading ? "Submitting..." : "Submit"}</button>
+            <button onClick={prevStep}>Previous</button>
+          </section>
+        )}
 
+        {step === 6 && (
+          <section>
+            <h2>Thank you for registering!</h2>
+            <p>Visit <a href="https://www.ellastein.com/pages/jewelry-care-tips" target="_blank" rel="noreferrer">Jewelry Care Tips</a></p>
+          </section>
+        )}
       </div>
     </div>
   );
 };
 
 export default Authe;
+
 
 
 
