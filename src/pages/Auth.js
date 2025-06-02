@@ -1625,15 +1625,23 @@ const Authe = () => {
  useEffect(() => {
   if (!Array.isArray(products)) return;
   const searchLower = productSearch.toLowerCase().trim();
+
   setFilteredProducts(
     productSearch === ""
       ? products
-      : products.filter((p) => 
-          (p.title && p.title.toLowerCase().includes(searchLower)) ||
-          (p.sku && p.sku.toLowerCase().includes(searchLower))
-        )
+      : products.filter((p) => {
+          const titleMatch = p.title?.toLowerCase().includes(searchLower);
+          const skuMatch = p.sku?.toLowerCase().includes(searchLower) ||
+                           p.variants?.[0]?.sku?.toLowerCase().includes(searchLower);
+          return titleMatch || skuMatch;
+        })
   );
 }, [productSearch, products]);
+
+
+
+
+
 
 
   useEffect(() => {
@@ -1782,7 +1790,6 @@ const validateStep = (currentStep) => {
       });
       setStep(7);
     } catch (err) {
-      setFieldErrors({ submit: "Submission failed. Please try again." });
       setFieldErrors({ submit: "Submission failed. Please try again." });
     } finally {
       setLoading(false);
