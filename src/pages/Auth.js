@@ -1627,18 +1627,34 @@ const Authe = () => {
   const searchLower = productSearch.toLowerCase().trim();
 
   setFilteredProducts(
-  productSearch === ""
-    ? products
-    : products.filter((p) => {
-        const titleMatch = p.title?.toLowerCase().includes(searchLower);
-        const skuMatch = p.variants?.some(
-          (variant) => variant.sku?.toLowerCase().includes(searchLower)
-        );
-        return titleMatch || skuMatch;
-      })
-);
+    productSearch === ""
+      ? products
+      : products.filter((p) => {
+          const titleMatch = p.title?.toLowerCase().includes(searchLower);
 
+          // ✅ LOG EACH PRODUCT BEING CHECKED
+          console.log("Checking product:", p.title, p.variants);
+
+          const skuMatch = Array.isArray(p.variants) &&
+            p.variants.some(
+              (variant) => {
+                const matched = variant.sku?.toLowerCase().includes(searchLower);
+                // ✅ LOG EACH VARIANT CHECK
+                console.log("Variant SKU:", variant.sku, "Matched:", matched);
+                return matched;
+              }
+            );
+
+          const isMatch = titleMatch || skuMatch;
+          if (isMatch) {
+            // ✅ LOG MATCHES
+            console.log("✔ Matched:", p.title);
+          }
+          return isMatch;
+        })
+  );
 }, [productSearch, products]);
+
 
 
 
