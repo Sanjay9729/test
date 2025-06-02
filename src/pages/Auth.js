@@ -1627,15 +1627,17 @@ const Authe = () => {
   const searchLower = productSearch.toLowerCase().trim();
 
   setFilteredProducts(
-    productSearch === ""
-      ? products
-      : products.filter((p) => {
-          const titleMatch = p.title?.toLowerCase().includes(searchLower);
-          const skuMatch = p.sku?.toLowerCase().includes(searchLower) ||
-                           p.variants?.[0]?.sku?.toLowerCase().includes(searchLower);
-          return titleMatch || skuMatch;
-        })
-  );
+  productSearch === ""
+    ? products
+    : products.filter((p) => {
+        const titleMatch = p.title?.toLowerCase().includes(searchLower);
+        const skuMatch = p.variants?.some(
+          (variant) => variant.sku?.toLowerCase().includes(searchLower)
+        );
+        return titleMatch || skuMatch;
+      })
+);
+
 }, [productSearch, products]);
 
 
