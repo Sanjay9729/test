@@ -1622,28 +1622,16 @@ const Authe = () => {
     fetchProducts();
   }, []);
 
- useEffect(() => {
-  if (!Array.isArray(products)) return;
-  const searchLower = productSearch.toLowerCase().trim();
-
-  setFilteredProducts(
-  productSearch === ""
-    ? products
-    : products.filter((p) => {
-        const titleMatch = p.title?.toLowerCase().includes(searchLower);
-        const skuMatch = p.variants?.some(
-          (variant) => variant.sku?.toLowerCase().includes(searchLower)
-        );
-        return titleMatch || skuMatch;
-      })
-);
-
-}, [productSearch, products]);
-
-
-
-
-
+  useEffect(() => {
+    if (!Array.isArray(products)) return;
+    setFilteredProducts(
+      productSearch.trim() === ""
+        ? products
+        : products.filter((p) =>
+            p.title.toLowerCase().includes(productSearch.toLowerCase().trim())
+          )
+    );
+  }, [productSearch, products]);
 
 
   useEffect(() => {
