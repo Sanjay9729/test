@@ -1625,14 +1625,14 @@ const Authe = () => {
  useEffect(() => {
   if (!Array.isArray(products)) return;
   const searchLower = productSearch.toLowerCase().trim();
- setFilteredProducts(
-  productSearch === ""
-    ? products
-    : products.filter((p) =>
-        (p.title?.toLowerCase().includes(searchLower)) ||
-        (p.sku?.toLowerCase().includes(searchLower))
-      )
-);
+  setFilteredProducts(
+    productSearch === ""
+      ? products
+      : products.filter((p) => 
+          (p.title && p.title.toLowerCase().includes(searchLower)) ||
+          (p.sku && p.sku.toLowerCase().includes(searchLower))
+        )
+  );
 }, [productSearch, products]);
 
 
