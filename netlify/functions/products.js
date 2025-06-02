@@ -50,11 +50,17 @@ exports.handler = async (event, context) => {
         }
 
         const allProducts = await fetchAllProducts();
-        const minimalProducts = allProducts.map((p) => ({
-            id: p.id,
-            title: p.title,
-            images: p.images,
-        }));
+       const minimalProducts = allProducts.map((p) => ({
+  id: p.id,
+  title: p.title,
+  images: p.images,
+  variants: p.variants.map((v) => ({
+    id: v.id,
+    sku: v.sku,
+    title: v.title,
+  })),
+}));
+
 
         return {
             statusCode: 200,
