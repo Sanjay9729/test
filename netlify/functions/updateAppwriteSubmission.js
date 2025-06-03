@@ -53,7 +53,6 @@ exports.handler = async function (event, context) {
   let data;
   try {
     data = JSON.parse(event.body);
-    
   } catch (err) {
     console.error('JSON Parse Error:', err);
     return {
@@ -62,7 +61,16 @@ exports.handler = async function (event, context) {
     };
   }
 
-  const { id, full_name, email, selected_product, phone, address } = data;
+  const {
+    id,
+    full_name,
+    email,
+    selected_product,
+    product_sku, // ✅ NEW
+    phone,
+    address,
+    image_file_id, // ✅ NEW
+  } = data;
 
   if (!id) {
     return {
@@ -80,15 +88,17 @@ exports.handler = async function (event, context) {
 
   try {
     const updated = await databases.updateDocument(
-      process.env.APPWRITE_DATABASE_ID,        // ✅ corrected here
+      process.env.APPWRITE_DATABASE_ID,
       process.env.APPWRITE_COLLECTION_ID,
       id,
       {
         full_name,
         email,
         selected_product,
+        product_sku,      // ✅ Added to Appwrite update payload
         phone,
         address,
+        image_file_id,    // ✅ Also included
       }
     );
 
@@ -106,5 +116,6 @@ exports.handler = async function (event, context) {
     };
   }
 };
+
 
 
