@@ -1598,7 +1598,8 @@ const Authe = () => {
   const [selectedImage, setSelectedImage] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
   const [imageFileId, setImageFileId] = useState(null);
-  
+  const [sku, setSku] = useState("");
+
   const APPWRITE_BUCKET_ID = "683e80fc0019228a6d";
 
 
@@ -1609,35 +1610,29 @@ const handleImageChange = async (e) => {
   setSelectedImage(file);
   setImagePreview(URL.createObjectURL(file));
 
+  const formData = new FormData();
+  formData.append("file", file);
+
   try {
-    const reader = new FileReader();
-    reader.readAsDataURL(file);
+    const response = await fetch("/.netlify/functions/uploadImageToAppwrite", {
+      method: "POST",
+      body: formData,
+    });
 
-    reader.onload = async () => {
-      const base64String = reader.result.split(',')[1]; // remove data:image/png;base64,
+    const result = await response.json();
 
-      const response = await fetch("/.netlify/functions/uploadImageToAppwrite", {
-        method: "POST",
-        headers: {
-          "Content-Type": file.type,
-        },
-        body: base64String,
-      });
-
-      const result = await response.json();
-
-      if (response.ok && result.fileId) {
-        setImageFileId(result.fileId);
-      } else {
-        console.error("Upload failed:", result.error);
-        alert("Image upload failed.");
-      }
-    };
+    if (response.ok && result.fileId) {
+      setImageFileId(result.fileId);
+    } else {
+      console.error("Upload failed:", result.error);
+      alert("Image upload failed.");
+    }
   } catch (err) {
     console.error("Upload error:", err);
     alert("Image upload failed.");
   }
 };
+
 
 
 
@@ -1818,6 +1813,7 @@ const validateStep = (currentStep) => {
       phone,
       address,
       selected_product: selectedProduct,
+      product_sku: sku || null, // ✅ Add this line for SKU (optional)
       user_id: session.$id,
       image_file_id: imageFileId || null // ✅ Will be null if image wasn't uploaded
     };
@@ -2097,6 +2093,15 @@ const validateStep = (currentStep) => {
   )}
   {fieldErrors.image && <p className="error">{fieldErrors.image}</p>}
 </div>
+<label>Enter SKU Number</label>
+<input
+  type="text"
+  placeholder="Enter product SKU"
+  value={sku}
+  onChange={(e) => setSku(e.target.value)}
+  className="styled-input"
+/>
+{fieldErrors.sku && <p className="error">{fieldErrors.sku}</p>}
 
     <input
       value={productSearch}
@@ -2154,7 +2159,7 @@ const validateStep = (currentStep) => {
         ))}
 
        <div className="btn-group flex justify-between mt-4 gap-4">
-  {step > 1 && step < 6 && (
+  {step > 1 && step <= 6 &&  (
     <button onClick={prevStep} className="px-4 py-2 bg-black text-white rounded hover:bg-gray-800">
       Previous
     </button>
@@ -2164,11 +2169,16 @@ const validateStep = (currentStep) => {
       Next
     </button>
   )}
-  {step === 6 && (
-    <button onClick={handleSubmit} className="px-4 py-2 bg-black text-white rounded hover:bg-gray-800" disabled={loading}>
-      {loading ? "Submitting..." : "Submit"}
-    </button>
-  )}
+{step === 6 && (
+  <button
+    onClick={handleSubmit}
+    className="px-4 py-2 bg-black text-white rounded hover:bg-gray-800"
+    disabled={loading || !selectedProduct}
+  >
+    {loading ? "Submitting..." : "Submit"}
+  </button>
+)}
+
 </div>
 
       </div>

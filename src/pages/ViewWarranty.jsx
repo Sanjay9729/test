@@ -773,7 +773,8 @@ const ViewWarranty = () => {
   const APPWRITE_API_KEY = "YOUR_APPWRITE_API_KEY"; // ⚠️ For testing only!
 
   const getImagePreviewURL = (fileId) =>
-    `${APPWRITE_ENDPOINT}/storage/buckets/${APPWRITE_BUCKET_ID}/files/${fileId}/preview?project=${APPWRITE_PROJECT_ID}&width=100%`;
+  `${APPWRITE_ENDPOINT}/storage/buckets/${APPWRITE_BUCKET_ID}/files/${fileId}/preview?project=${APPWRITE_PROJECT_ID}&width=100`;
+
 
   useEffect(() => {
     fetchData();
@@ -1057,39 +1058,44 @@ const ViewWarranty = () => {
 
                   <Text variant="headingSm" as="h6">Update Image (optional)</Text>
                   <input
-                    type="file"
-                    accept="image/*"
-                    onChange={async (e) => {
-                      const file = e.target.files[0];
-                      if (!file) return;
+  type="file"
+  accept="image/*"
+  onChange={async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
 
-                      const formData = new FormData();
-                      formData.append("file", file);
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("permissions[]", 'read("role:all")'); // ✅ PUBLIC READ ACCESS
 
-                      try {
-                        const uploadRes = await fetch(
-                          `${APPWRITE_ENDPOINT}/storage/buckets/${APPWRITE_BUCKET_ID}/files`,
-                          {
-                            method: "POST",
-                            headers: {
-                              "X-Appwrite-Project": APPWRITE_PROJECT_ID,
-                              "X-Appwrite-Key": APPWRITE_API_KEY,
-                            },
-                            body: formData,
-                          }
-                        );
-                        const result = await uploadRes.json();
-                        if (result?.$id) {
-                          setSelectedItem((prev) => ({ ...prev, image_file_id: result.$id }));
-                        } else {
-                          alert("Image upload failed.");
-                        }
-                      } catch (err) {
-                        console.error("Upload error:", err);
-                        alert("Upload failed. See console.");
-                      }
-                    }}
-                  />
+    try {
+      const uploadRes = await fetch(
+        `${APPWRITE_ENDPOINT}/storage/buckets/${APPWRITE_BUCKET_ID}/files`,
+        {
+          method: "POST",
+          headers: {
+            "X-Appwrite-Project": APPWRITE_PROJECT_ID,
+            "X-Appwrite-Key": APPWRITE_API_KEY,
+            // ❌ Don't manually set Content-Type when using FormData
+          },
+          body: formData,
+        }
+      );
+
+      const result = await uploadRes.json();
+
+      if (result?.$id) {
+        setSelectedItem((prev) => ({ ...prev, image_file_id: result.$id }));
+      } else {
+        alert("Image upload failed.");
+      }
+    } catch (err) {
+      console.error("Upload error:", err);
+      alert("Upload failed. See console.");
+    }
+  }}
+/>
+
 
                   {selectedItem.image_file_id && (
                     <img
