@@ -1553,7 +1553,8 @@
 
 
 import React, { useState, useEffect } from "react";
-import { Client, Account, Databases, ID } from "appwrite";
+import { Client, Account, Databases, ID, Storage } from "appwrite";
+
 import "./Authentication.css";
 import PhoneNumberStep from './PhoneNumberStep';
 import countryData from '../data/countryData';
@@ -1593,6 +1594,32 @@ const Authe = () => {
   const client = new Client().setEndpoint(APPWRITE_ENDPOINT).setProject(APPWRITE_PROJECT_ID);
   const account = new Account(client);
   const database = new Databases(client);
+  const storage = new Storage(client);
+const [selectedImage, setSelectedImage] = useState(null);
+const [imagePreview, setImagePreview] = useState(null);
+const [imageFileId, setImageFileId] = useState(null);
+
+
+const handleImageChange = async (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+
+  setSelectedImage(file);
+  setImagePreview(URL.createObjectURL(file));
+
+  try {
+    const uploaded = await storage.createFile(
+      "68272018001fe2451c50", // Replace with your Appwrite bucket ID
+      ID.unique(),
+      file
+    );
+    setImageFileId(uploaded.$id);
+  } catch (err) {
+    console.error("Image upload failed:", err);
+    setFieldErrors({ image: "Image upload failed." });
+  }
+};
+
 
   // Updated product fetch logic (only change)
   useEffect(() => {
@@ -1769,7 +1796,8 @@ const validateStep = (currentStep) => {
         phone,
         address,
         selected_product: selectedProduct,
-        user_id: session.$id,
+        user_id: session.$id,  image_file_id: imageFileId || null, // Include uploaded image ID
+
       };
       await database.createDocument(APPWRITE_DATABASE_ID, APPWRITE_COLLECTION_ID, ID.unique(), document);
 
@@ -2028,6 +2056,14 @@ const validateStep = (currentStep) => {
       </div>
       Select Product:
     </div>
+<div className="image-upload">
+  <label>Upload Product Image (Optional)</label>
+  <input type="file" accept="image/*" onChange={handleImageChange} />
+  {imagePreview && (
+    <img src={imagePreview} alt="Preview" style={{ width: "120px", marginTop: "10px" }} />
+  )}
+  {fieldErrors.image && <p className="error">{fieldErrors.image}</p>}
+</div>
 
     <input
       value={productSearch}
