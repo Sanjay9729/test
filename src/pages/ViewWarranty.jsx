@@ -768,12 +768,12 @@ const ViewWarranty = () => {
   const fileInputRef = useRef(null);
 
   const APPWRITE_BUCKET_ID = "683e80fc0019228a6dfa";
-const APPWRITE_ENDPOINT = "https://appwrite.appunik-team.com/v1";
-const APPWRITE_PROJECT_ID = "68271c3c000854f08575";
+  const APPWRITE_ENDPOINT = "https://appwrite.appunik-team.com/v1";
+  const APPWRITE_PROJECT_ID = "68271c3c000854f08575";
+  const APPWRITE_API_KEY = "YOUR_APPWRITE_API_KEY"; // ⚠️ For testing only!
 
-const getImagePreviewURL = (fileId) =>
-  `${APPWRITE_ENDPOINT}/storage/buckets/${APPWRITE_BUCKET_ID}/files/${fileId}/preview?project=${APPWRITE_PROJECT_ID}&width=100`;
-
+  const getImagePreviewURL = (fileId) =>
+    `${APPWRITE_ENDPOINT}/storage/buckets/${APPWRITE_BUCKET_ID}/files/${fileId}/preview?project=${APPWRITE_PROJECT_ID}&width=100`;
 
   useEffect(() => {
     fetchData();
@@ -823,12 +823,29 @@ const getImagePreviewURL = (fileId) =>
   };
 
   const handleSave = async () => {
-    const { $id, full_name, email, selected_product, phone, address } = selectedItem;
+    const {
+      $id,
+      full_name,
+      email,
+      selected_product,
+      phone,
+      address,
+      image_file_id
+    } = selectedItem;
+
     try {
       const response = await fetch('/.netlify/functions/updateAppwriteSubmission', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: $id, full_name, email, selected_product, phone, address }),
+        body: JSON.stringify({
+          id: $id,
+          full_name,
+          email,
+          selected_product,
+          phone,
+          address,
+          image_file_id
+        }),
       });
       const result = await response.json();
       if (!result.error) {
@@ -892,16 +909,20 @@ const getImagePreviewURL = (fileId) =>
       return;
     }
 
-    const header = ['Full Name', 'Email', 'Product', 'Phone', 'Address'];
+    const header = ['Full Name', 'Email', 'Product', 'Phone', 'Address', 'Image URL'];
     const csvRows = [header.join(',')];
 
     filtered.forEach(item => {
+      const imageUrl = item.image_file_id
+        ? getImagePreviewURL(item.image_file_id)
+        : '';
       const row = [
         `"${item.full_name || ''}"`,
         `"${item.email || ''}"`,
         `"${item.selected_product || ''}"`,
         `"${item.phone || ''}"`,
         `"${item.address || ''}"`,
+        `"${imageUrl}"`
       ];
       csvRows.push(row.join(','));
     });
@@ -1024,31 +1045,48 @@ const getImagePreviewURL = (fileId) =>
             >
               <Modal.Section>
                 <FormLayout>
-                  <TextField
-                    label="Full Name"
-                    value={selectedItem.full_name || ''}
-                    onChange={(val) => handleModalChange('full_name', val)}
+                  <TextField label="Full Name" value={selectedItem.full_name || ''} onChange={(val) => handleModalChange('full_name', val)} />
+                  <TextField label="Email" value={selectedItem.email || ''} onChange={(val) => handleModalChange('email', val)} />
+                  <TextField label="Product" value={selectedItem.selected_product || ''} onChange={(val) => handleModalChange('selected_product', val)} />
+                  <TextField label="Phone" value={selectedItem.phone || ''} onChange={(val) => handleModalChange('phone', val)} />
+                  <TextField label="Address" value={selectedItem.address || ''} onChange={(val) => handleModalChange('address', val)} />
+
+                  <Text variant="headingSm" as="h6">Update Image (optional)</Text>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={async (e) => {
+                      const file = e.target.files[0];
+                      if (!file) return;
+
+                      const formData = new FormData();
+                      formData.append("file", file);
+
+                      try {
+                        const uploadRes = await fetch(
+                          `${APPWRITE_ENDPOINT}/storage/buckets/${APPWRITE_BUCKET_ID}/files`,
+                          {
+                            method: "POST",
+                            headers: {
+                              "X-Appwrite-Project": APPWRITE_PROJECT_ID,
+                              "X-Appwrite-Key": APPWRITE_API_KEY,
+                            },
+                            body: formData,
+                          }
+                        );
+                        const result = await uploadRes.json();
+                        if (result?.$id) {
+                          setSelectedItem((prev) => ({ ...prev, image_file_id: result.$id }));
+                        } else {
+                          alert("Image upload failed.");
+                        }
+                      } catch (err) {
+                        console.error("Upload error:", err);
+                        alert("Upload failed. See console.");
+                      }
+                    }}
                   />
-                  <TextField
-                    label="Email"
-                    value={selectedItem.email || ''}
-                    onChange={(val) => handleModalChange('email', val)}
-                  />
-                  <TextField
-                    label="Product"
-                    value={selectedItem.selected_product || ''}
-                    onChange={(val) => handleModalChange('selected_product', val)}
-                  />
-                  <TextField
-                    label="Phone"
-                    value={selectedItem.phone || ''}
-                    onChange={(val) => handleModalChange('phone', val)}
-                  />
-                  <TextField
-                    label="Address"
-                    value={selectedItem.address || ''}
-                    onChange={(val) => handleModalChange('address', val)}
-                  />
+
                   {selectedItem.image_file_id && (
                     <img
                       src={getImagePreviewURL(selectedItem.image_file_id)}
