@@ -13,19 +13,30 @@ exports.handler = async function () {
     const res = await databases.listDocuments(
       "68271db80016565f6882", // Database ID
       "68271dcf002c6797363d", // Collection ID
-      [Query.orderDesc("$createdAt")] // Correct sorting
+      [Query.orderDesc("$createdAt")]
     );
+
+    // ✅ Clean and ensure all expected fields are returned
+    const cleaned = res.documents.map(doc => ({
+      $id: doc.$id,
+      full_name: doc.full_name || "",
+      email: doc.email || "",
+      phone: doc.phone || "",
+      address: doc.address || "",
+      selected_product: doc.selected_product || "",
+      image_file_id: doc.image_file_id || null, // ✅ Include image if available
+    }));
 
     return {
       statusCode: 200,
       headers: {
         "Content-Type": "application/json",
         "Access-Control-Allow-Origin": "*",
-        "Cache-Control": "no-store, must-revalidate", // Disable cache
+        "Cache-Control": "no-store, must-revalidate",
         "Pragma": "no-cache",
         "Expires": "0",
       },
-      body: JSON.stringify(res.documents),
+      body: JSON.stringify(cleaned),
     };
   } catch (error) {
     console.error("Appwrite fetch error:", error.message);
