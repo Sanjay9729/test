@@ -754,9 +754,6 @@ import {
   LegacyStack
 } from '@shopify/polaris';
 
-
-
-
 const ViewWarranty = () => {
   const [submissions, setSubmissions] = useState([]);
   const [filtered, setFiltered] = useState([]);
@@ -769,6 +766,14 @@ const ViewWarranty = () => {
   const [importError, setImportError] = useState('');
 
   const fileInputRef = useRef(null);
+
+  const APPWRITE_BUCKET_ID = "683e80fc0019228a6dfa";
+const APPWRITE_ENDPOINT = "https://appwrite.appunik-team.com/v1";
+const APPWRITE_PROJECT_ID = "68271c3c000854f08575";
+
+const getImagePreviewURL = (fileId) =>
+  `${APPWRITE_ENDPOINT}/storage/buckets/${APPWRITE_BUCKET_ID}/files/${fileId}/preview?project=${APPWRITE_PROJECT_ID}&width=100`;
+
 
   useEffect(() => {
     fetchData();
@@ -922,6 +927,17 @@ const ViewWarranty = () => {
       position={index}
       onClick={() => handleRowClick(index)}
     >
+      <IndexTable.Cell>
+        {item.image_file_id ? (
+          <img
+            src={getImagePreviewURL(item.image_file_id)}
+            alt="Preview"
+            style={{ width: '50px', height: 'auto', borderRadius: '4px' }}
+          />
+        ) : (
+          '—'
+        )}
+      </IndexTable.Cell>
       <IndexTable.Cell>{item.full_name || '-'}</IndexTable.Cell>
       <IndexTable.Cell>{item.email || '-'}</IndexTable.Cell>
       <IndexTable.Cell>{item.selected_product || '-'}</IndexTable.Cell>
@@ -934,9 +950,8 @@ const ViewWarranty = () => {
     <Page fullWidth>
       <Layout>
         <Layout.Section>
-          {/* BUTTONS RIGHT-ALIGNED */}
-                <div style={{ marginBottom: '10px' }}>
-            <LegacyStack alignment="center" distribution="trailing" spacing="loose" >
+          <div style={{ marginBottom: '10px' }}>
+            <LegacyStack alignment="center" distribution="trailing" spacing="loose">
               <Box paddingBlockEnd="4" style={{ display: 'flex', justifyContent: 'flex-end', gap: '16px' }}>
                 <Button onClick={() => fileInputRef.current.click()} disabled={importLoading}>
                   {importLoading ? 'Importing...' : 'Import CSV'}
@@ -952,10 +967,7 @@ const ViewWarranty = () => {
               </Box>
             </LegacyStack>
           </div>
-          {/* SEARCH FIELD */}
-         
 
-          {/* IMPORT ERROR DISPLAY */}
           {importError && (
             <Box paddingBlockEnd="4">
               <Text variant="bodyMd" as="p" color="critical" alignment="right">
@@ -964,18 +976,17 @@ const ViewWarranty = () => {
             </Box>
           )}
 
-          {/* TABLE */}
           <Card sectioned>
-             <Box paddingBlockEnd="4" style={{ marginBottom: '10px' }}>
-            <TextField
-              placeholder="Search by name, email, or product"
-              value={search}
-              onChange={handleSearch}
-              clearButton
-              onClearButtonClick={() => handleSearch('')}
-              autoComplete="off"
-            />
-          </Box>
+            <Box paddingBlockEnd="4" style={{ marginBottom: '10px' }}>
+              <TextField
+                placeholder="Search by name, email, or product"
+                value={search}
+                onChange={handleSearch}
+                clearButton
+                onClearButtonClick={() => handleSearch('')}
+                autoComplete="off"
+              />
+            </Box>
             {loading ? (
               <Box padding="6" display="flex" justifyContent="center">
                 <Text>Loading...</Text>
@@ -990,6 +1001,7 @@ const ViewWarranty = () => {
                 itemCount={filtered.length}
                 selectable={false}
                 headings={[
+                  { title: 'Image' },
                   { title: 'Full Name' },
                   { title: 'Email' },
                   { title: 'Product' },
@@ -1002,7 +1014,6 @@ const ViewWarranty = () => {
             )}
           </Card>
 
-          {/* MODAL */}
           {selectedItem && (
             <Modal
               open={modalOpen}
@@ -1038,6 +1049,13 @@ const ViewWarranty = () => {
                     value={selectedItem.address || ''}
                     onChange={(val) => handleModalChange('address', val)}
                   />
+                  {selectedItem.image_file_id && (
+                    <img
+                      src={getImagePreviewURL(selectedItem.image_file_id)}
+                      alt="Uploaded"
+                      style={{ width: '120px', marginTop: '10px', borderRadius: '8px' }}
+                    />
+                  )}
                 </FormLayout>
               </Modal.Section>
             </Modal>
@@ -1049,6 +1067,7 @@ const ViewWarranty = () => {
 };
 
 export default ViewWarranty;
+
 
 
 

@@ -1583,21 +1583,23 @@ const Authe = () => {
   const [state, setState] = useState("");
   const [zip, setZip] = useState("");
   const [country, setCountry] = useState("");
-
-
-
+  
+  
+  
   const APPWRITE_ENDPOINT = "https://appwrite.appunik-team.com/v1";
   const APPWRITE_PROJECT_ID = "68271c3c000854f08575";
   const APPWRITE_DATABASE_ID = "68271db80016565f6882";
   const APPWRITE_COLLECTION_ID = "68271dcf002c6797363d";
-
+  
   const client = new Client().setEndpoint(APPWRITE_ENDPOINT).setProject(APPWRITE_PROJECT_ID);
   const account = new Account(client);
   const database = new Databases(client);
   const storage = new Storage(client);
-const [selectedImage, setSelectedImage] = useState(null);
-const [imagePreview, setImagePreview] = useState(null);
-const [imageFileId, setImageFileId] = useState(null);
+  const [selectedImage, setSelectedImage] = useState(null);
+  const [imagePreview, setImagePreview] = useState(null);
+  const [imageFileId, setImageFileId] = useState(null);
+  
+  const APPWRITE_BUCKET_ID = "683e80fc0019228a6d";
 
 
 const handleImageChange = async (e) => {
@@ -1609,15 +1611,14 @@ const handleImageChange = async (e) => {
 
   try {
     const uploaded = await storage.createFile(
-      "68272018001fe2451c50", // Replace with your Appwrite bucket ID
+      "683e80fc0019228a6dfa", // Replace with your Appwrite bucket ID
       ID.unique(),
       file
     );
     setImageFileId(uploaded.$id);
   } catch (err) {
-    console.error("Image upload failed:", err);
-    setFieldErrors({ image: "Image upload failed." });
-  }
+    console.error("Image upload failed (optional):", err);
+        } 
 };
 
 
@@ -1779,40 +1780,53 @@ const validateStep = (currentStep) => {
   };
 
   const handleSubmit = async () => {
-    setLoading(true);
-    setFieldErrors({});
-    if (!selectedProduct) {
-      setFieldErrors({ selectedProduct: "Please select a product." });
-      setLoading(false);
-      return;
-    }
-    try {
-      const session = await account.get();
-      const address = `${addressLine1}, ${addressLine2}, ${city}, ${state}, ${zip}, ${country}`;
+  setLoading(true);
+  setFieldErrors({});
 
-      const document = {
-        full_name: fullName,
-        email,
-        phone,
-        address,
-        selected_product: selectedProduct,
-        user_id: session.$id,  image_file_id: imageFileId || null, // Include uploaded image ID
+  if (!selectedProduct) {
+    setFieldErrors({ selectedProduct: "Please select a product." });
+    setLoading(false);
+    return;
+  }
 
-      };
-      await database.createDocument(APPWRITE_DATABASE_ID, APPWRITE_COLLECTION_ID, ID.unique(), document);
+  try {
+    const session = await account.get();
+    const address = `${addressLine1}, ${addressLine2}, ${city}, ${state}, ${zip}, ${country}`;
 
-      await fetch("/.netlify/functions/sendToShopify", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(document),
-      });
-      setStep(7);
-    } catch (err) {
-      setFieldErrors({ submit: "Submission failed. Please try again." });
-    } finally {
-      setLoading(false);
-    }
-  };
+    const document = {
+      full_name: fullName,
+      email,
+      phone,
+      address,
+      selected_product: selectedProduct,
+      user_id: session.$id,
+      image_file_id: imageFileId || null // ✅ Will be null if image wasn't uploaded
+    };
+
+    // 🔥 Save to Appwrite database
+    await database.createDocument(
+      APPWRITE_DATABASE_ID,
+      APPWRITE_COLLECTION_ID,
+      ID.unique(),
+      document
+    );
+
+    // ✅ Send to Shopify (if needed)
+    await fetch("/.netlify/functions/sendToShopify", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(document)
+    });
+
+    setStep(7); // ✅ Show thank-you step
+  } catch (err) {
+    console.error("Submission failed:", err);
+    setFieldErrors({ submit: "Submission failed. Please try again." });
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   const handleSignOut = async () => {
     try {
