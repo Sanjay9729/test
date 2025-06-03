@@ -24,6 +24,8 @@ exports.handler = async function () {
       phone: doc.phone || "",
       address: doc.address || "",
       selected_product: doc.selected_product || "",
+        product_sku: doc.product_sku || "", // ✅ Add this line
+
       image_file_id: doc.image_file_id || null, // ✅ Include image if available
     }));
 

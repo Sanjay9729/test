@@ -1610,16 +1610,35 @@ const handleImageChange = async (e) => {
   setImagePreview(URL.createObjectURL(file));
 
   try {
-    const uploaded = await storage.createFile(
-      "683e80fc0019228a6dfa", // Replace with your Appwrite bucket ID
-      ID.unique(),
-      file
-    );
-    setImageFileId(uploaded.$id);
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+
+    reader.onload = async () => {
+      const base64String = reader.result.split(',')[1]; // remove data:image/png;base64,
+
+      const response = await fetch("/.netlify/functions/uploadImageToAppwrite", {
+        method: "POST",
+        headers: {
+          "Content-Type": file.type,
+        },
+        body: base64String,
+      });
+
+      const result = await response.json();
+
+      if (response.ok && result.fileId) {
+        setImageFileId(result.fileId);
+      } else {
+        console.error("Upload failed:", result.error);
+        alert("Image upload failed.");
+      }
+    };
   } catch (err) {
-    console.error("Image upload failed (optional):", err);
-        } 
+    console.error("Upload error:", err);
+    alert("Image upload failed.");
+  }
 };
+
 
 
   // Updated product fetch logic (only change)

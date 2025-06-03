@@ -773,7 +773,7 @@ const ViewWarranty = () => {
   const APPWRITE_API_KEY = "YOUR_APPWRITE_API_KEY"; // ⚠️ For testing only!
 
   const getImagePreviewURL = (fileId) =>
-    `${APPWRITE_ENDPOINT}/storage/buckets/${APPWRITE_BUCKET_ID}/files/${fileId}/preview?project=${APPWRITE_PROJECT_ID}&width=100`;
+    `${APPWRITE_ENDPOINT}/storage/buckets/${APPWRITE_BUCKET_ID}/files/${fileId}/preview?project=${APPWRITE_PROJECT_ID}&width=100%`;
 
   useEffect(() => {
     fetchData();
@@ -828,6 +828,7 @@ const ViewWarranty = () => {
       full_name,
       email,
       selected_product,
+      product_sku,
       phone,
       address,
       image_file_id
@@ -842,6 +843,7 @@ const ViewWarranty = () => {
           full_name,
           email,
           selected_product,
+          product_sku,
           phone,
           address,
           image_file_id
@@ -909,7 +911,7 @@ const ViewWarranty = () => {
       return;
     }
 
-    const header = ['Full Name', 'Email', 'Product', 'Phone', 'Address', 'Image URL'];
+    const header = ['Full Name', 'Email', 'Product', 'SKU', 'Phone', 'Address', 'Image URL'];
     const csvRows = [header.join(',')];
 
     filtered.forEach(item => {
@@ -920,6 +922,7 @@ const ViewWarranty = () => {
         `"${item.full_name || ''}"`,
         `"${item.email || ''}"`,
         `"${item.selected_product || ''}"`,
+        `"${item.product_sku || ''}"`,
         `"${item.phone || ''}"`,
         `"${item.address || ''}"`,
         `"${imageUrl}"`
@@ -953,7 +956,7 @@ const ViewWarranty = () => {
           <img
             src={getImagePreviewURL(item.image_file_id)}
             alt="Preview"
-            style={{ width: '50px', height: 'auto', borderRadius: '4px' }}
+            style={{ width: '100px', height: 'auto', borderRadius: '4px' }}
           />
         ) : (
           '—'
@@ -1048,6 +1051,7 @@ const ViewWarranty = () => {
                   <TextField label="Full Name" value={selectedItem.full_name || ''} onChange={(val) => handleModalChange('full_name', val)} />
                   <TextField label="Email" value={selectedItem.email || ''} onChange={(val) => handleModalChange('email', val)} />
                   <TextField label="Product" value={selectedItem.selected_product || ''} onChange={(val) => handleModalChange('selected_product', val)} />
+                  <TextField label="Product SKU (optional)" value={selectedItem.product_sku || ''} onChange={(val) => handleModalChange('product_sku', val)} />
                   <TextField label="Phone" value={selectedItem.phone || ''} onChange={(val) => handleModalChange('phone', val)} />
                   <TextField label="Address" value={selectedItem.address || ''} onChange={(val) => handleModalChange('address', val)} />
 
@@ -1105,6 +1109,7 @@ const ViewWarranty = () => {
 };
 
 export default ViewWarranty;
+
 
 
 
