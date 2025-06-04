@@ -34,12 +34,10 @@
 const sdk = require('node-appwrite');
 
 exports.handler = async function (event, context) {
-  console.log('Update request received');
-
   if (event.httpMethod !== 'POST') {
     return {
       statusCode: 405,
-      body: JSON.stringify({ error: 'Only POST allowed' }),
+      body: JSON.stringify({ error: 'Only POST method allowed' }),
     };
   }
 
@@ -54,7 +52,6 @@ exports.handler = async function (event, context) {
   try {
     data = JSON.parse(event.body);
   } catch (err) {
-    console.error('JSON Parse Error:', err);
     return {
       statusCode: 400,
       body: JSON.stringify({ error: 'Invalid JSON' }),
@@ -66,10 +63,10 @@ exports.handler = async function (event, context) {
     full_name,
     email,
     selected_product,
-    product_sku, // ✅ NEW
+    product_sku,
     phone,
     address,
-    image_file_id, // ✅ NEW
+    image_file_id,
   } = data;
 
   if (!id) {
@@ -87,7 +84,7 @@ exports.handler = async function (event, context) {
   const databases = new sdk.Databases(client);
 
   try {
-    const updated = await databases.updateDocument(
+    await databases.updateDocument(
       process.env.APPWRITE_DATABASE_ID,
       process.env.APPWRITE_COLLECTION_ID,
       id,
@@ -95,21 +92,18 @@ exports.handler = async function (event, context) {
         full_name,
         email,
         selected_product,
-        product_sku,      // ✅ Added to Appwrite update payload
+        product_sku,
         phone,
         address,
-        image_file_id,    // ✅ Also included
+        image_file_id,
       }
     );
-
-    console.log('Updated successfully:', updated);
 
     return {
       statusCode: 200,
       body: JSON.stringify({ success: true }),
     };
   } catch (error) {
-    console.error('Appwrite error:', error);
     return {
       statusCode: 500,
       body: JSON.stringify({ error: error.message || 'Update failed' }),

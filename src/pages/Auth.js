@@ -1554,7 +1554,6 @@
 
 import React, { useState, useEffect } from "react";
 import { Client, Account, Databases, ID, Storage } from "appwrite";
-
 import "./Authentication.css";
 import PhoneNumberStep from './PhoneNumberStep';
 import countryData from '../data/countryData';
@@ -1575,7 +1574,6 @@ const Authe = () => {
   const [otp, setOtp] = useState("");
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [otpSent, setOtpSent] = useState(false);
-
   const [justVerified, setJustVerified] = useState(false); const [addressLine1, setAddressLine1] = useState("");
 
   const [addressLine2, setAddressLine2] = useState("");
@@ -1583,9 +1581,11 @@ const Authe = () => {
   const [state, setState] = useState("");
   const [zip, setZip] = useState("");
   const [country, setCountry] = useState("");
-  
-  
-  
+  const [selectedImage, setSelectedImage] = useState(null);
+  const [imagePreview, setImagePreview] = useState(null);
+  const [imageFileId, setImageFileId] = useState(null);
+  const [sku, setSku] = useState("");
+
   const APPWRITE_ENDPOINT = "https://appwrite.appunik-team.com/v1";
   const APPWRITE_PROJECT_ID = "68271c3c000854f08575";
   const APPWRITE_DATABASE_ID = "68271db80016565f6882";
@@ -1595,12 +1595,10 @@ const Authe = () => {
   const account = new Account(client);
   const database = new Databases(client);
   const storage = new Storage(client);
-  const [selectedImage, setSelectedImage] = useState(null);
-  const [imagePreview, setImagePreview] = useState(null);
-  const [imageFileId, setImageFileId] = useState(null);
-  const [sku, setSku] = useState("");
+  
+  const APPWRITE_BUCKET_ID = "683e80fc0019228a6dfa";
 
-  const APPWRITE_BUCKET_ID = "683e80fc0019228a6d";
+  
 
 
 const handleImageChange = async (e) => {
@@ -1610,28 +1608,29 @@ const handleImageChange = async (e) => {
   setSelectedImage(file);
   setImagePreview(URL.createObjectURL(file));
 
-  const formData = new FormData();
-  formData.append("file", file);
-
   try {
-    const response = await fetch("/.netlify/functions/uploadImageToAppwrite", {
-      method: "POST",
-      body: formData,
-    });
+    // Upload the image directly to Appwrite storage
+    const response = await storage.createFile(APPWRITE_BUCKET_ID, ID.unique(), file);
 
-    const result = await response.json();
+    // Log the response from Appwrite
+    console.log("Appwrite upload response:", response);
 
-    if (response.ok && result.fileId) {
-      setImageFileId(result.fileId);
+    if (response && response.$id) {
+      setImageFileId(response.$id);  // Store the file ID returned by Appwrite
+      console.log("Image uploaded successfully. File ID:", response.$id);
     } else {
-      console.error("Upload failed:", result.error);
-      alert("Image upload failed.");
+      throw new Error("Failed to upload image. No file ID returned.");
     }
   } catch (err) {
+    // Detailed error logging
     console.error("Upload error:", err);
-    alert("Image upload failed.");
+    alert("Image upload failed. Check console for more details.");
   }
 };
+
+
+
+
 
 
 
@@ -1664,6 +1663,9 @@ const handleImageChange = async (e) => {
     fetchProducts();
   }, []);
 
+
+
+
   useEffect(() => {
     if (!Array.isArray(products)) return;
     setFilteredProducts(
@@ -1676,44 +1678,146 @@ const handleImageChange = async (e) => {
   }, [productSearch, products]);
 
 
-  useEffect(() => {
-    const checkSession = async () => {
+
+// Session auto-refresh function
+  let autoRefreshInterval;  // Define this variable here
+
+  const startAutoRefresh = () => {
+    autoRefreshInterval = setInterval(async () => {
       try {
-        const session = await account.get();
-        setIsAuthenticated(true);
-        setEmail(session.email);
-        localStorage.setItem("userId", session.$id);
-        localStorage.setItem("email", session.email);
-        setJustVerified(false);
-        localStorage.setItem("userId", session.$id);
-        localStorage.setItem("email", session.email);
-        setJustVerified(false);
-      } catch { }
+        const session = await account.get();  // Get current session
+        if (!session) {
+          console.log("Session expired, logging out...");
+          setIsAuthenticated(false);
+          localStorage.clear();
+        }
+      } catch (err) {
+        console.error("Session refresh failed:", err);
+        setIsAuthenticated(false);
+        localStorage.clear();
+      }
+    }, 15 * 60 * 1000);  // Refresh session every 15 minutes
+  };
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      startAutoRefresh();  // Start session refresh when authenticated
+    }
+    return () => {
+      clearInterval(autoRefreshInterval);  // Cleanup the interval on component unmount
     };
-    checkSession();
+  }, [isAuthenticated]);
+
+  // Handle visibility change to stop and start auto-refresh
+  const handleVisibilityChange = () => {
+    if (document.hidden) {
+      console.log("Page is hidden, stopping auto-refresh...");
+      clearInterval(autoRefreshInterval);  // Stop auto-refresh if the page is hidden
+    } else {
+      console.log("Page is visible, restarting auto-refresh...");
+      startAutoRefresh();  // Restart auto-refresh when the page becomes visible
+    }
+  };
+
+  useEffect(() => {
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
   }, []);
 
-const validateStep = (currentStep) => {
-  const errors = {};
+  // OTP and Email handling
+  const sendOtp = async () => {
+    setLoading(true);
+    setFieldErrors({});
+    setAuthMessage("");
 
-  if (currentStep === 1 && !fullName.trim()) errors.fullName = "Enter your full name.";
-  if (currentStep === 2 && !email.trim()) errors.email = "Enter your email.";
-  if (currentStep === 3 && !otp.trim()) errors.otp = "Enter the OTP.";
-  if (currentStep === 4 && !phone.trim()) errors.phone = "Enter your phone number."; // ✅ validate phone here
-  if (currentStep === 5) {
-    if (!addressLine1.trim()) errors.addressLine1 = "Enter address line 1.";
-    if (!city.trim()) errors.city = "Enter city.";
-    if (!state.trim()) errors.state = "Enter state.";
-    if (!zip.trim()) errors.zip = "Enter zip.";
-    if (!country.trim()) errors.country = "Enter country.";
-  }
-  if (currentStep === 6 && !selectedProduct) errors.selectedProduct = "Select a product.";
+    if (!email || !validateEmail(email)) {
+      setFieldErrors({ email: "Enter a valid email address." });
+      setLoading(false);
+      return;
+    }
 
-  setFieldErrors(errors);
-  return Object.keys(errors).length === 0;
+    try {
+      const response = await account.createEmailToken(ID.unique(), email);
+      localStorage.setItem("userId", response.userId);
+      setAuthMessage("📧 OTP sent to your email.");
+      setOtpSent(true);
+      setStep(3);  // Move to OTP entry step
+    } catch (err) {
+      setFieldErrors({ email: err.message || "Failed to send OTP." });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+ const verifyOtp = async () => {
+    setLoading(true);
+    setFieldErrors({});  // Reset field errors
+    setAuthMessage("");   // Clear previous auth messages
+
+    const userId = localStorage.getItem("userId");
+    const secret = otp.trim();  // OTP entered by the user
+
+    if (!userId || !secret) {
+        setFieldErrors({ otp: "Enter a valid OTP." });
+        setLoading(false);
+        return;
+    }
+
+    try {
+        // Check if there's an active session before verifying OTP
+        const session = await account.get();
+        if (session) {
+            setAuthMessage("You are already logged in!");
+            setIsAuthenticated(true);
+            setJustVerified(true);
+            nextStep();  // Proceed to the next step
+            return;  // Prevent OTP verification if user is already logged in
+        }
+
+        // Proceed to verify OTP and create a new session
+        await account.createSession(userId, secret);  // Create session after OTP verification
+        setIsAuthenticated(true);  // Mark the user as authenticated
+        setAuthMessage("✅ Verified and logged in!");  // Success message
+        setJustVerified(true);
+        nextStep();  // Proceed to the next step
+    } catch (err) {
+        setFieldErrors({ otp: "Invalid OTP. Please try again." });
+        console.error("Error verifying OTP:", err);
+    } finally {
+        setLoading(false);
+    }
 };
 
 
+  // OTP change handler (missing function)
+  const handleOtpChange = (e) => {
+    setOtp(e.target.value);
+    setFieldErrors({ ...fieldErrors, otp: "" });
+    setAuthMessage("");
+  };
+
+  // Step validation and navigation
+  const validateStep = (currentStep) => {
+    const errors = {};
+
+    if (currentStep === 1 && !fullName.trim()) errors.fullName = "Enter your full name.";
+    if (currentStep === 2 && !email.trim()) errors.email = "Enter your email.";
+    if (currentStep === 3 && !otp.trim()) errors.otp = "Enter the OTP.";
+    if (currentStep === 4 && !phone.trim()) errors.phone = "Enter your phone number.";
+    if (currentStep === 5) {
+      if (!addressLine1.trim()) errors.addressLine1 = "Enter address line 1.";
+      if (!city.trim()) errors.city = "Enter city.";
+      if (!state.trim()) errors.state = "Enter state.";
+      if (!zip.trim()) errors.zip = "Enter zip.";
+      if (!country.trim()) errors.country = "Enter country.";
+    }
+    if (currentStep === 6 && !selectedProduct) errors.selectedProduct = "Select a product.";
+
+    setFieldErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
 
   const nextStep = () => {
     if (validateStep(step)) {
@@ -1727,140 +1831,75 @@ const validateStep = (currentStep) => {
     setFieldErrors({});
   };
 
+  // Email validation
   const validateEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 
- const sendOtp = async () => {
-  setLoading(true);
-  setFieldErrors({});
-  setAuthMessage("");
-
-  if (!email || !validateEmail(email)) {
-    setFieldErrors({ email: "Enter a valid email address." });
-    setLoading(false);
-    return;
-  }
-
-  try {
-    const response = await account.createEmailToken(ID.unique(), email);
-    localStorage.setItem("userId", response.userId);
-    setAuthMessage("📧 OTP sent to your email.");
-    setOtpSent(true);
-
-    // 🔥 Move to Step 3 (OTP Entry)
-    setStep(3);
-  } catch (err) {
-    setFieldErrors({ email: err.message || "Failed to send OTP." });
-  } finally {
-    setLoading(false);
-  }
-};
+  // Handling image change
 
 
-  const verifyOtp = async () => {
+
+ 
+
+  // Handle form submission
+  const handleSubmit = async () => {
     setLoading(true);
     setFieldErrors({});
-    setAuthMessage("");
-    const userId = localStorage.getItem("userId");
-    setAuthMessage("");
-    const secret = otp.trim();
-    if (!userId || !secret) {
-      setFieldErrors({ otp: "Enter a valid OTP." });
-      setFieldErrors({ otp: "Enter a valid OTP." });
+
+    if (!selectedProduct) {
+      setFieldErrors({ selectedProduct: "Please select a product." });
       setLoading(false);
       return;
     }
+
     try {
-      await account.createSession(userId, secret);
-      setIsAuthenticated(true);
-      setAuthMessage("✅ Verified and logged in!");
-      setJustVerified(true);
-      setAuthMessage("✅ Verified and logged in!");
-      setJustVerified(true);
-      nextStep();
+      const session = await account.get();
+      const address = `${addressLine1}, ${addressLine2}, ${city}, ${state}, ${zip}, ${country}`;
+
+      const document = {
+        full_name: fullName,
+        email,
+        phone,
+        address,
+        selected_product: selectedProduct,
+        product_sku: sku || null, // Add SKU if provided
+        user_id: session.$id,
+        image_file_id: imageFileId || null // Will be null if no image uploaded
+      };
+
+      // Save to Appwrite database
+      await database.createDocument(
+        APPWRITE_DATABASE_ID,
+        APPWRITE_COLLECTION_ID,
+        ID.unique(),
+        document
+      );
+
+      // Optionally, send to Shopify (if needed)
+      await fetch("/.netlify/functions/sendToShopify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(document)
+      });
+
+      setStep(7); // Show thank-you step
     } catch (err) {
-      setFieldErrors({ otp: "Invalid OTP. Please try again." });
-      setFieldErrors({ otp: "Invalid OTP. Please try again." });
+      console.error("Submission failed:", err);
+      setFieldErrors({ submit: "Submission failed. Please try again." });
     } finally {
       setLoading(false);
     }
   };
 
-  const handleOtpChange = (e) => {
-    setOtp(e.target.value);
-    setFieldErrors({ ...fieldErrors, otp: "" });
-    setAuthMessage("");
-    setFieldErrors({ ...fieldErrors, otp: "" });
-    setAuthMessage("");
-  };
-
-  const handleSubmit = async () => {
-  setLoading(true);
-  setFieldErrors({});
-
-  if (!selectedProduct) {
-    setFieldErrors({ selectedProduct: "Please select a product." });
-    setLoading(false);
-    return;
-  }
-
-  try {
-    const session = await account.get();
-    const address = `${addressLine1}, ${addressLine2}, ${city}, ${state}, ${zip}, ${country}`;
-
-    const document = {
-      full_name: fullName,
-      email,
-      phone,
-      address,
-      selected_product: selectedProduct,
-      product_sku: sku || null, // ✅ Add this line for SKU (optional)
-      user_id: session.$id,
-      image_file_id: imageFileId || null // ✅ Will be null if image wasn't uploaded
-    };
-
-    // 🔥 Save to Appwrite database
-    await database.createDocument(
-      APPWRITE_DATABASE_ID,
-      APPWRITE_COLLECTION_ID,
-      ID.unique(),
-      document
-    );
-
-    // ✅ Send to Shopify (if needed)
-    await fetch("/.netlify/functions/sendToShopify", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(document)
-    });
-
-    setStep(7); // ✅ Show thank-you step
-  } catch (err) {
-    console.error("Submission failed:", err);
-    setFieldErrors({ submit: "Submission failed. Please try again." });
-  } finally {
-    setLoading(false);
-  }
-};
+ 
 
 
-  const handleSignOut = async () => {
-    try {
-      await account.deleteSession("current");
-      await account.deleteSession("current");
-      setIsAuthenticated(false);
-      setAuthMessage("");
-      setOtp("");
-      setJustVerified(false);
-      setAuthMessage("");
-      setOtp("");
-      setJustVerified(false);
-      localStorage.clear();
-    } catch (err) {
-      console.error("Sign out error:", err);
-      console.error("Sign out error:", err);
-    }
-  };
 
+
+
+ 
+
+  
+  
   return (
     <div className="auth-wrapper">
       <div className="logo-text">ELLA STEIN</div>
@@ -1879,7 +1918,7 @@ const validateStep = (currentStep) => {
               placeholder="Type your answer here..."
               value={fullName}
               onChange={(e) => setFullName(e.target.value)}
-              className="styled-input"
+              className="styled-input placeholder-gray-700 text-base"
             />
             {fieldErrors.fullName && <p className="error">{fieldErrors.fullName}</p>}
             <div className="ok-container">
@@ -1903,7 +1942,7 @@ const validateStep = (currentStep) => {
       Email Address:
     </div>
 
-    <p className="step-description">Please enter an email address whose inbox you access regularly.</p>
+    <p className="step-description mb-8">Please enter an email address whose inbox you access regularly.</p>
 
     <input
       type="email"
@@ -1925,28 +1964,14 @@ const validateStep = (currentStep) => {
           <span className="enter-text">press <span className="enter-key">Enter ↵</span></span>
         </div>
 
-        {/* OTP FIELD */}
-        <input
-          type="text"
-          placeholder="Enter OTP"
-          value={otp}
-          onChange={handleOtpChange}
-          maxLength={6}
-          className="styled-input"
-        />
+       
 
         {fieldErrors.otp && <p className="error">{fieldErrors.otp}</p>}
         {authMessage && <p className={authMessage.includes("✅") ? "success-message" : "info-message"}>{authMessage}</p>}
 
         {/* SIDE BY SIDE BUTTONS */}
         <div className="flex gap-4 mt-3">
-          <button
-            onClick={verifyOtp}
-            disabled={loading}
-            className="bg-black text-white text-sm px-4 py-2 rounded hover:bg-gray-800"
-          >
-            {loading ? "Verifying..." : "Verify OTP"}
-          </button>
+         
 
           {otpSent && (
             <button
@@ -1999,7 +2024,6 @@ const validateStep = (currentStep) => {
       Enter OTP:
     </div>
 
-    <p className="step-description">Enter the OTP sent to {email}.</p>
 
     <input
       type="text"
@@ -2052,7 +2076,7 @@ const validateStep = (currentStep) => {
                 </div>
                 <p>This is the address Ella Stein will use to initiate a pick-up and product replacement.</p>
                 <label>Address</label>
-                <input type="text" placeholder="65 Hansen Way" value={addressLine1} onChange={(e) => setAddressLine1(e.target.value)} />
+                <input className="text-[20px] sm:text-[18px] md:text-[16px] lg:text-[20px]" type="text" placeholder="65 Hansen Way" value={addressLine1} onChange={(e) => setAddressLine1(e.target.value)} />
 
                 <label>Address line 2</label>
                 <input type="text" placeholder="Apartment 4" value={addressLine2} onChange={(e) => setAddressLine2(e.target.value)} />
@@ -2086,14 +2110,14 @@ const validateStep = (currentStep) => {
       Select Product:
     </div>
 <div className="image-upload">
-  <label>Upload Product Image (Optional)</label>
+  <label className="text-[16px]">Upload Product Image (Optional)</label>
   <input type="file" accept="image/*" onChange={handleImageChange} />
   {imagePreview && (
     <img src={imagePreview} alt="Preview" style={{ width: "120px", marginTop: "10px" }} />
   )}
   {fieldErrors.image && <p className="error">{fieldErrors.image}</p>}
 </div>
-<label>Enter SKU Number</label>
+<label className="text-[16px]">Enter SKU Number</label>
 <input
   type="text"
   placeholder="Enter product SKU"
@@ -2107,6 +2131,7 @@ const validateStep = (currentStep) => {
       value={productSearch}
       onChange={(e) => setProductSearch(e.target.value)}
       placeholder="Search products..."
+      className="w-full"
     />
 
     <ul className="product-list">
@@ -2138,16 +2163,21 @@ const validateStep = (currentStep) => {
 
 
 {step === 7 && (
-  <div className="max-w-xl mx-auto mt-32 text-center submission_container">
+  <div className="max-w-xl mx-auto  text-center submission_container">
     {/* Removed the step number and arrow */}
-    <h1 className="text-5xl font-semibold text-gray-800 submisiion_headding">
+    <h1 className="text-2xl sm:text-3xl font-semibold text-gray-800 submisiion_headding">
       Thank you for registering your Ella Stein jewelry under our Warranty Program.
     </h1>
-    <p className="mt-4 text-base text-gray-600">
+    <p className="mt-4 text-lg sm:text-xl text-gray-600">
       Learn more about caring for your jewelry using the link below.
     </p>
-    <p className="mt-6 text-base text-black underline submisiion_button">
-      <a className="inline-block px-6 py-3 bg-[#f2e1d1] text-lg font-bold text-gray-800 rounded-md shadow-md hover:bg-[#e0cfbf] transition" href="https://www.ellastein.com/pages/jewelry-care-tips" target="_blank" rel="noreferrer">
+    <p className="mt-6">
+      <a
+        className="inline-block px-6 py-3 bg-[#f2e1d1] text-lg sm:text-xl font-bold text-gray-800 rounded-md shadow-md hover:bg-[#e0cfbf] transition"
+        href="https://www.ellastein.com/pages/jewelry-care-tips"
+        target="_blank"
+        rel="noreferrer"
+      >
         JEWELRY CARE TIPS
       </a>
     </p>

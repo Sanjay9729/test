@@ -770,10 +770,12 @@ const ViewWarranty = () => {
   const APPWRITE_BUCKET_ID = "683e80fc0019228a6dfa";
   const APPWRITE_ENDPOINT = "https://appwrite.appunik-team.com/v1";
   const APPWRITE_PROJECT_ID = "68271c3c000854f08575";
-  const APPWRITE_API_KEY = "YOUR_APPWRITE_API_KEY"; // ⚠️ For testing only!
+  const APPWRITE_API_KEY = "standard_567dccf0752c2a51d4038d2ac7125afd4b34c0029a2b5c33d8ac3689c302772f8011103e912e73bfaa798b9069056e0c94ee7168a7e04a8e396fc1b9d1a0685e453286ad2ecaf6b358fe240b79638a586d17478da3323d0a32979a7cd906276cf48a5d2cbd914e56890986f7f0ba6f96feb55e66c7cf1d8c6455df4b1db2c63a"; // ⚠️ For testing only!
 
   const getImagePreviewURL = (fileId) =>
-  `${APPWRITE_ENDPOINT}/storage/buckets/${APPWRITE_BUCKET_ID}/files/${fileId}/preview?project=${APPWRITE_PROJECT_ID}&width=100`;
+  `${APPWRITE_ENDPOINT}/storage/buckets/${APPWRITE_BUCKET_ID}/files/${fileId}/view?project=${APPWRITE_PROJECT_ID}`;
+
+
 
 
   useEffect(() => {
@@ -966,6 +968,7 @@ const ViewWarranty = () => {
       <IndexTable.Cell>{item.full_name || '-'}</IndexTable.Cell>
       <IndexTable.Cell>{item.email || '-'}</IndexTable.Cell>
       <IndexTable.Cell>{item.selected_product || '-'}</IndexTable.Cell>
+      <IndexTable.Cell>{item.product_sku || '-'}</IndexTable.Cell>  {/* Add this */}
       <IndexTable.Cell>{item.phone || '-'}</IndexTable.Cell>
       <IndexTable.Cell>{item.address || '-'}</IndexTable.Cell>
     </IndexTable.Row>
@@ -1030,6 +1033,7 @@ const ViewWarranty = () => {
                   { title: 'Full Name' },
                   { title: 'Email' },
                   { title: 'Product' },
+                  { title: 'SKU' },  
                   { title: 'Phone' },
                   { title: 'Address' },
                 ]}
@@ -1055,46 +1059,8 @@ const ViewWarranty = () => {
                   <TextField label="Product SKU (optional)" value={selectedItem.product_sku || ''} onChange={(val) => handleModalChange('product_sku', val)} />
                   <TextField label="Phone" value={selectedItem.phone || ''} onChange={(val) => handleModalChange('phone', val)} />
                   <TextField label="Address" value={selectedItem.address || ''} onChange={(val) => handleModalChange('address', val)} />
+                 
 
-                  <Text variant="headingSm" as="h6">Update Image (optional)</Text>
-                  <input
-  type="file"
-  accept="image/*"
-  onChange={async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-
-    const formData = new FormData();
-    formData.append("file", file);
-    formData.append("permissions[]", 'read("role:all")'); // ✅ PUBLIC READ ACCESS
-
-    try {
-      const uploadRes = await fetch(
-        `${APPWRITE_ENDPOINT}/storage/buckets/${APPWRITE_BUCKET_ID}/files`,
-        {
-          method: "POST",
-          headers: {
-            "X-Appwrite-Project": APPWRITE_PROJECT_ID,
-            "X-Appwrite-Key": APPWRITE_API_KEY,
-            // ❌ Don't manually set Content-Type when using FormData
-          },
-          body: formData,
-        }
-      );
-
-      const result = await uploadRes.json();
-
-      if (result?.$id) {
-        setSelectedItem((prev) => ({ ...prev, image_file_id: result.$id }));
-      } else {
-        alert("Image upload failed.");
-      }
-    } catch (err) {
-      console.error("Upload error:", err);
-      alert("Upload failed. See console.");
-    }
-  }}
-/>
 
 
                   {selectedItem.image_file_id && (

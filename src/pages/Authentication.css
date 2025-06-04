@@ -368,21 +368,7 @@ img.image-preview {
   align-items: center;
 }
 
-.error::before {
-  content: "❕";
-  font-size: 0.7rem;
-  margin-right: 8px;
-  background-color: red;
-  color: white;
-  border-radius: 50%;
-  padding: 10px;
-  line-height: 1;
-  width: 18px;
-  height: 18px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
+
 
 .info-message {
   color: #007bff;
@@ -482,7 +468,7 @@ label {
   font-weight: 600;
   font-size: 0.9rem;
   margin-bottom: 1rem;
-  color: #4a4a4a;
+  color: #453534;
 }
 
 input,
@@ -676,15 +662,12 @@ textarea {
 
 body, html {
   font-family: 'Figtree', sans-serif;
-  background-color: #c7a788; /* Updated background color */
   height: 100%;
   width: 100%;
 }
 
 .auth-wrapper {
-  height: 100vh;
-    background-color: #c7a788; /* Same background as your image */
-
+  background-color: #c7a788;
 }
 
 .right-side {
@@ -715,8 +698,11 @@ body, html {
 }
 
 input.styled-input::placeholder {
-  color: black; /* Ensures placeholder text is visible */
+    color: #9E8C77;
+    font-size: 26px;
 }
+
+
 
 .step-label {
   font-size: 1.4rem;
@@ -760,9 +746,7 @@ input.styled-input {
   }
 }
 
-input.styled-input::placeholder {
-  color: black;
-}
+
 
 .step-label {
   font-size: 1.4rem;
@@ -787,10 +771,10 @@ input.styled-input {
   margin-bottom: 1rem;
 }
 
-input.styled-input::placeholder {
-  color: #000;
+.step-description {
+  font-size: 20px;
+  color: rgba(69, 56, 52, 0.7);
 }
-
 .ok-container {
   display: flex;
   align-items: center;
@@ -1136,13 +1120,13 @@ ul.product-list {
   font-weight: bold;
   margin-top: 20px;
   margin-bottom: 5px;
+  font-size: 18px;
 }
 
 .address-step input, 
 .address-step textarea {
   width: 100%;
   max-width: 100%;
-  font-size: 16px;
   border: none;
   border-bottom: 1px solid #4d3d33;
   background-color: transparent;
@@ -1166,11 +1150,32 @@ ul.product-list {
   font-size: 14px;
 }
 
-.submisiion_headding {
-    font-size: 36px !important;
-    line-height: 1.2;
-}
+
 .submission_container{
   width: 100%;
   max-width: 720px !important;
+}
+.submisiion_button a{
+  font-size: 26px;
+}
+
+.startpage-button{
+  color: #453534;
+}
+.startpage-title {
+  color: #453534;
+}
+.startpage-background {
+  background-color: rgb(191, 165, 138);
+}
+.startpage-subtitle{
+  color: rgba(69, 56, 52, 0.7);
+}
+
+
+
+@media(max-width:768px){
+  input.styled-input::placeholder {
+    font-size: 20px;
+} 
 }
