@@ -1,6 +1,5 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import './StartPage.css';
 
 const StartPage = () => {
   const navigate = useNavigate();
@@ -21,22 +20,27 @@ const StartPage = () => {
   }, []);
 
   return (
-    <div className="startpage-background">
-      <div className="startpage-container">
-        <div className="startpage-card">
-          <div className="startpage-logo">ELLA STEIN</div>
-          <h1 className="startpage-title">Warranty Registration Form</h1>
-          <p className="startpage-subtitle">
+    <div className="startpage-background bg-[rgb(191, 165, 138)] min-h-screen flex items-center justify-center">
+      <div className="startpage-container w-full max-w-4xl px-6 py-10">
+        <div className="startpage-card  text-center">
+          <div className="startpage-logo absolute top-4 left-6 text-white font-semibold text-lg">
+            ELLA STEIN
+          </div>
+          <h1 className="startpage-title text-3xl md:text-4xl font-medium mb-4">
+            Warranty Registration Form
+          </h1>
+          <p className="startpage-subtitle text-xl font-light mb-6">
             To claim your complimentary 1-year warranty on your Ella Stein jewelry,<br />
             kindly fill out this form.
           </p>
-          <button className="startpage-button" onClick={handleStart} autoFocus>
+          <button
+            className="startpage-button bg-white text-white py-2 px-6 rounded-md font-medium text-lg hover:black-800 hover:text-white transition-all"
+            onClick={handleStart} autoFocus
+          >
             Start
           </button>
-          <div className="startpage-info">
+          <div className="startpage-info mt-4 text-sm">
             <span>press <kbd>Enter ↵</kbd></span>
-            {/* <br />
-            <small>⏲ Takes 30 sec</small> */}
           </div>
         </div>
       </div>
