@@ -1,5 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import './StartPage.css';
+
 
 const StartPage = () => {
   const navigate = useNavigate();
@@ -26,7 +28,7 @@ const StartPage = () => {
     <div className="startpage-background bg-[rgb(191, 165, 138)] min-h-screen flex items-center justify-center">
       <div className="startpage-container w-full max-w-4xl px-6 py-10">
         <div className="startpage-card  text-center">
-          <div className="startpage-logo absolute top-4 left-6 text-white font-semibold text-lg">
+          <div className="logo-text">
             ELLA STEIN
           </div>
           <h1 className="startpage-title text-3xl md:text-4xl font-medium mb-4">
