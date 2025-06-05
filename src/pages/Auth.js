@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback, useMemo} from "react";
 
 import { Client, Account, Databases, ID, Storage } from "appwrite";
 import "./Authentication.css";
@@ -39,13 +39,19 @@ const Authe = () => {
   const APPWRITE_COLLECTION_ID = "68271dcf002c6797363d";
   
   const client = new Client().setEndpoint(APPWRITE_ENDPOINT).setProject(APPWRITE_PROJECT_ID);
-  const account = new Account(client);
+  const account = useMemo(() => new Account(client), [client]);
   const database = new Databases(client);
   const storage = new Storage(client);
   
   const APPWRITE_BUCKET_ID = "683e80fc0019228a6dfa";
 
   
+const handleVisibilityChange = useCallback(() => {
+  if (document.visibilityState === "visible") {
+    console.log("Tab is active again");
+  }
+}, []);
+
 
 
 const handleImageChange = async (e) => {
@@ -126,8 +132,7 @@ const handleImageChange = async (e) => {
 // Session auto-refresh function
   const autoRefreshInterval = useRef(null);
 
-const startAutoRefresh = () => {
-  // Clear any previous interval before setting a new one
+const startAutoRefresh = useCallback(() => {
   if (autoRefreshInterval.current) {
     clearInterval(autoRefreshInterval.current);
   }
@@ -145,38 +150,34 @@ const startAutoRefresh = () => {
       setIsAuthenticated(false);
       localStorage.clear();
     }
-  }, 15 * 60 * 1000); // 15 minutes
-};
+  }, 15 * 60 * 1000);
+}, [account]); // 👈 Add dependency
 
- useEffect(() => {
+
+
+useEffect(() => {
   if (isAuthenticated) {
     startAutoRefresh();
   }
-
   return () => {
     clearInterval(autoRefreshInterval.current);
   };
-}, [isAuthenticated]);
+}, [isAuthenticated, startAutoRefresh]);
+
 
 
   // Handle visibility change to stop and start auto-refresh
- const handleVisibilityChange = () => {
-  if (document.hidden) {
-    console.log("Page is hidden, stopping auto-refresh...");
-    clearInterval(autoRefreshInterval.current);
-  } else {
-    console.log("Page is visible, restarting auto-refresh...");
-    startAutoRefresh();
-  }
-};
+useEffect(() => {
+  document.addEventListener("visibilitychange", handleVisibilityChange);
+  return () => {
+    document.removeEventListener("visibilitychange", handleVisibilityChange);
+  };
+}, [handleVisibilityChange]); // ✅ Fix: add the dependency
 
 
-  useEffect(() => {
-    document.addEventListener("visibilitychange", handleVisibilityChange);
-    return () => {
-      document.removeEventListener("visibilitychange", handleVisibilityChange);
-    };
-  }, []);
+
+
+
 
   // OTP and Email handling
   const sendOtp = async () => {
@@ -419,6 +420,7 @@ const startAutoRefresh = () => {
 
         {fieldErrors.otp && <p className="error">{fieldErrors.otp}</p>}
         {authMessage && <p className={authMessage.includes("✅") ? "success-message" : "info-message"}>{authMessage}</p>}
+        {justVerified && <p className="success-message">You're now verified!</p>}
 
         {/* SIDE BY SIDE BUTTONS */}
         <div className="flex gap-4 mt-3">
