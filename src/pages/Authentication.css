@@ -1,4 +1,7 @@
-@import url('https://fonts.googleapis.com/css2?family=Figtree:wght@300;400;500;600&display=swap');
+
+/* Reset and base */
+
+
 
 *{
   margin: 0;
@@ -12,6 +15,7 @@ body {
   margin: 0;
   box-sizing: border-box;
   font-family: 'Figtree', sans-serif;
+  /* font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; */
 }
 ul{
   list-style-type: none;
@@ -166,7 +170,7 @@ textarea:focus {
   display: flex;
   justify-content: center;
   align-items: center;
-  min-height: 100vh;  /* Ensures the background takes full viewport height */
+  min-height: 100vh;  
 }
 .auth-container {
   display: grid;
@@ -320,7 +324,7 @@ textarea:focus {
   color: white;
   text-decoration: none;
   border-radius: 4px;
-  transition: background 0.3s;
+  /* transition: background 0.3s; */
 }
 
 .home-link:hover {
@@ -335,10 +339,7 @@ textarea:focus {
 li.product-item {
   cursor: pointer;
 }
-ul.product-list {
-  padding-left: 0;
-  overflow-x: hidden;
-}
+
 img.image-preview {
   height: 100%;
   width: 100%;
@@ -376,16 +377,7 @@ img.image-preview {
 
 
 
-/* Reset and base */
-* {
-  box-sizing: border-box;
-}
 
-body, html, #root {
-  margin: 0;
-  height: 100%;
-  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
-}
 
 
 
@@ -434,7 +426,6 @@ body, html, #root {
 /* Each step occupies full viewport height */
 .step-section {
   scroll-snap-align: start;
-  min-height: calc(100vh - 140px); /* adjust for padding and buttons */
   display: none;
   flex-direction: column;
   justify-content: center;
@@ -667,10 +658,7 @@ body, html {
   padding: 30px 30px 0 30px;
 }
 
-.step-section {
-  display: none;
-  flex-direction: column;
-}
+
 
 .step-section.active {
   display: flex;
@@ -684,11 +672,7 @@ input.styled-input::placeholder {
 
 
 
-.step-label {
-  font-size: 1.4rem;
-  margin-bottom: 1rem;
-  color: #333;
-}
+
 
 .step-number {
   margin-right: 10px;

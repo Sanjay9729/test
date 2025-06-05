@@ -1,100 +1,111 @@
 .phone-input-wrapper {
-    position: relative;
-    display: flex;
-    align-items: center;
-    max-width: 450px;
-    border-bottom: 1px solid #888;
-    padding-bottom: 5px;
-  }
-  
-  .dropdown-toggle {
-    display: flex;
-    align-items: center;
-    cursor: pointer;
-    padding: 5px 10px;
-    margin-right: 10px;
-  }
-  
-  .flag {
-    width: 24px;
-    height: 16px;
-    margin-right: 5px;
-  }
-  
-  .country-code {
-    margin-right: 5px;
-  }
-  
-  .arrow {
-    font-size: 12px;
-  }
-  
-  .dropdown-box {
-    position: absolute;
-    top: 50px;
-    left: 0;
-    width: 300px;
-    max-height: 300px;
-    overflow-y: auto;
-    background-color: #d4bfa3;
-    border: 1px solid #aaa;
-    border-radius: 10px;
-    z-index: 1000;
-  }
-  
-  .search-box {
-    width: 90%;
-    padding: 8px;
-    margin: 5px;
-    border: none;
-    border-radius: 5px;
-    font-size: 1em;
-  }
-  
-  .country-list {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-  }
-  
-  .country-item {
-    display: flex;
-    align-items: center;
-    padding: 5px 10px;
-    cursor: pointer;
-  }
-  
-  .country-item:hover {
-    background-color: #c0a88b;
-  }
-  
-  .country-name {
-    flex: 1;
-  }
-  
-  .phone-input {
-    flex: 1;
-    border: none;
-    outline: none;
-    font-size: 26px;
-    background: transparent;
-    color: #333;
-  }
-  
-  .ok-container {
-    margin-top: 15px;
-  }
-  
-  .ok-button {
-    padding: 10px 20px;
-    border: none;
-    background-color: #f4e1c1;
-    border-radius: 8px;
-    font-weight: bold;
-    cursor: pointer;
-  }
-  
-  .ok-button:hover {
-    background-color: #e7d3b0;
-  }
-  
+  position: relative;
+  display: flex;
+  align-items: center;
+  max-width: 450px;
+  border-bottom: 1px solid #888;
+  padding-bottom: 5px;
+}
+
+.dropdown-toggle {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  padding: 5px 10px;
+  margin-right: 10px;
+}
+
+.flag {
+  width: 24px;
+  height: 16px;
+  margin-right: 5px;
+  object-fit: contain;
+}
+
+.country-code {
+  margin-right: 5px;
+  font-size: 1rem;
+  color: #333;
+}
+
+.arrow {
+  font-size: 12px;
+  color: #555;
+}
+
+.dropdown-box {
+  position: absolute;
+  top: 50px;
+  left: 0;
+  width: 300px;
+  max-height: 300px;
+  overflow-y: auto;
+  background-color: #d4bfa3;
+  border: 1px solid #aaa;
+  border-radius: 10px;
+  z-index: 1000;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.search-box {
+  width: 90%;
+  padding: 8px;
+  margin: 5px auto;
+  display: block;
+  border: none;
+  border-radius: 5px;
+  font-size: 1em;
+  outline: none;
+}
+
+.country-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.country-item {
+  display: flex;
+  align-items: center;
+  padding: 8px 10px;
+  cursor: pointer;
+  transition: background-color 0.2s ease-in-out;
+}
+
+.country-item:hover {
+  background-color: #c0a88b;
+}
+
+.country-name {
+  flex: 1;
+  font-size: 1rem;
+  color: #333;
+}
+
+.phone-input {
+  flex: 1;
+  border: none;
+  outline: none;
+  font-size: 1.4rem;
+  background: transparent;
+  color: #333;
+  padding: 8px 0;
+}
+
+.ok-container {
+  margin-top: 15px;
+}
+
+.ok-button {
+  padding: 10px 20px;
+  border: none;
+  background-color: #f4e1c1;
+  border-radius: 8px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.2s ease-in-out;
+}
+
+.ok-button:hover {
+  background-color: #e7d3b0;
+}
