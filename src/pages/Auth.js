@@ -623,12 +623,12 @@ useEffect(() => {
     <h1 className="text-2xl sm:text-3xl font-semibold text-gray-800 submisiion_headding">
       Thank you for registering your Ella Stein jewelry under our Warranty Program.
     </h1>
-    <p className="mt-4 text-lg sm:text-xl text-gray-600">
+    <p className="mt-4 text-lg sm:text-xl text-gray-600 submission_pera">
       Learn more about caring for your jewelry using the link below.
     </p>
     <p className="mt-6">
       <a
-        className="inline-block px-6 py-3 bg-[#f2e1d1] text-lg sm:text-xl font-bold text-gray-800 rounded-md shadow-md hover:bg-[#e0cfbf] transition"
+        className=" submission_button inline-block px-6 py-3 bg-[#f2e1d1] text-lg sm:text-xl font-bold text-gray-800 rounded-md shadow-md hover:bg-[#e0cfbf] transition "
         href="https://www.ellastein.com/pages/jewelry-care-tips"
         target="_blank"
         rel="noreferrer"

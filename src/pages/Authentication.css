@@ -8,6 +8,13 @@
   padding: 0;
   box-sizing: border-box;  
 }
+body, html {
+        background-color: #BFA58A  !important;
+
+}
+
+
+
 
 body {
   margin: 0;
@@ -31,7 +38,6 @@ ul.product-list {
     align-items: center;
     justify-content: center;
     flex-direction: column;
-    background-color: #BFA58A  !important;
 }
 
 
