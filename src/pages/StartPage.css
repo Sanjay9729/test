@@ -4,6 +4,11 @@ body, .startpage-background, .startpage-container, .startpage-card,
 .startpage-button, .startpage-info {
   font-family: 'Helvetica', 'Arial', sans-serif;
 }
+
+
+
+
+
 .startpage-background {
   background-color: #b89f86;
   height: 100vh;
@@ -29,14 +34,18 @@ body, .startpage-background, .startpage-container, .startpage-card,
   margin-bottom: 3rem;
 }
 
+
 .startpage-title {
+  color: #453534;
+  font-size: 36px;
   margin-bottom: 2rem;
+  line-height: 1.2;
 }
 
 .startpage-subtitle {
-  font-size: 1.2rem;
+  font-size: 20px;
   color: rgba(69, 56, 52, 0.7);
-  margin-bottom: 3rem;
+  margin-bottom: 2rem;
   line-height: 1.4;
 }
 

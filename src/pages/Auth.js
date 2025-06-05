@@ -490,7 +490,7 @@ useEffect(() => {
     {fieldErrors.otp && <p className="error">{fieldErrors.otp}</p>}
     {authMessage && <p className={authMessage.includes("✅") ? "success-message" : "info-message"}>{authMessage}</p>}
 
-    <div className="flex gap-4 mt-3">
+    <div className="email_btn flex gap-4 mt-3">
       <button
         onClick={verifyOtp}
         disabled={loading}
@@ -551,6 +551,7 @@ useEffect(() => {
             )}
 {num === 6 && (
   <>
+  <div className="address-step">
     <div className="step-label">
       <div className="step_number_main">
         <span className="step-number">6</span>
@@ -563,14 +564,15 @@ useEffect(() => {
       Select Product:
     </div>
 <div className="image-upload">
-  <label className="text-[16px]">Upload Product Image (Optional)</label>
+  <label className="upload_image">Upload Product Image (Optional)</label>
   <input type="file" accept="image/*" onChange={handleImageChange} />
   {imagePreview && (
     <img src={imagePreview} alt="Preview" style={{ width: "120px", marginTop: "10px" }} />
   )}
   {fieldErrors.image && <p className="error">{fieldErrors.image}</p>}
 </div>
-<label className="text-[16px]">Enter SKU Number</label>
+</div>
+<label className="upload_image">Enter SKU Number</label>
 <input
   type="text"
   placeholder="Enter product SKU"
@@ -584,7 +586,7 @@ useEffect(() => {
       value={productSearch}
       onChange={(e) => setProductSearch(e.target.value)}
       placeholder="Search products..."
-      className="w-full"
+      className="search_product_input"
     />
 
     <ul className="product-list">
