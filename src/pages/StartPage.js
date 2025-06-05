@@ -4,20 +4,23 @@ import { useNavigate } from 'react-router-dom';
 const StartPage = () => {
   const navigate = useNavigate();
 
-  const handleStart = () => {
-    console.log('Start clicked, navigating to /login');
-    navigate('/login');
-  };
+ const handleStart = React.useCallback(() => {
+  console.log('Start clicked, navigating to /login');
+  navigate('/login');
+}, [navigate]);
 
-  React.useEffect(() => {
-    const onKeyDown = (e) => {
-      if (e.key === 'Enter') {
-        handleStart();
-      }
-    };
-    window.addEventListener('keydown', onKeyDown);
-    return () => window.removeEventListener('keydown', onKeyDown);
-  }, []);
+
+ React.useEffect(() => {
+  const onKeyDown = (e) => {
+    if (e.key === 'Enter') {
+      handleStart();
+    }
+  };
+  window.addEventListener('keydown', onKeyDown);
+  return () => window.removeEventListener('keydown', onKeyDown);
+}, [handleStart]);
+
+
 
   return (
     <div className="startpage-background bg-[rgb(191, 165, 138)] min-h-screen flex items-center justify-center">
