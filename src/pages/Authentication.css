@@ -204,17 +204,6 @@ textarea:focus {
   margin-bottom: 20px;
 }
 
-.step-circle {
-  width: 30px;
-  height: 30px;
-  border-radius: 50%;
-  background-color: #ccc;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  margin: 0 10px;
-  font-size: 14px;
-}
 
 
 
@@ -274,10 +263,7 @@ textarea:focus {
   margin-top: 10px;
 }
 
-.message {
-  margin-top: 10px;
-  color: red;
-}
+
 /* Authentication.css */
 .email-input-group {
   display: flex;
@@ -387,12 +373,7 @@ img.image-preview {
 }
 
 
-.product-list {
-  max-height: 200px;
-  overflow-y: auto;
-  padding-left: 0;
-  list-style: none;
-}
+
 
 
 /* Reset and base */
@@ -517,7 +498,6 @@ textarea {
   border-radius: 6px;
   user-select: none;
   color: #4a4a4a;
-  transition: background-color 0.3s ease;
 }
 
 .product-item:hover {
