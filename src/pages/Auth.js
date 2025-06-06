@@ -271,17 +271,15 @@ useEffect(() => {
     return Object.keys(errors).length === 0;
   };
 
-  const nextStep = () => {
-    if (validateStep(step)) {
-      setStep((prev) => Math.min(prev + 1, 7));
-      setFieldErrors({});
-    }
-  };
-
-  const prevStep = () => {
-    setStep((prev) => Math.max(prev - 1, 1));
+const nextStep = () => {
+  if (validateStep(step)) {
+    setStep(step + 1 > 7 ? 7 : step + 1);  // Update step without using prev
     setFieldErrors({});
-  };
+  }
+};
+
+
+
 
   // Email validation
   const validateEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
