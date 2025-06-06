@@ -974,12 +974,49 @@ useEffect(() => {
 }, [handleVisibilityChange]); // ✅ Fix: add the dependency
 
 
+// UPDATED: Clear session on page load and require fresh login
 useEffect(() => {
   const clearSessionOnLoad = async () => {
+    try {
+      // Check if there's an existing session
+      const session = await account.get();
+      if (session) {
+        // If session exists, delete it to force fresh login
+        await account.deleteSession("current");
+        console.log("Previous session cleared on page load");
+      }
+    } catch (error) {
+      // If no session exists or error occurred, that's fine
+      console.log("No existing session to clear");
+    } finally {
+      // Always set authentication to false on page load
+      setIsAuthenticated(false);
+      setStep(1); // Reset to first step
+      setAuthMessage("");
+      setOtp("");
+      setOtpSent(false);
+      setJustVerified(false);
+      setUserId(false);
+      
+      // Clear any stored data
+      setFullName("");
+      setEmail("");
+      setPhone("");
+      setSelectedProduct("");
+      setAddressLine1("");
+      setAddressLine2("");
+      setCity("");
+      setState("");
+      setZip("");
+      setCountry("");
+      setImagePreview(null);
+      setImageFileId(null);
+      setSku("");
+    }
   };
 
   clearSessionOnLoad();
-}, [account]); // Add `account` as a dependency
+}, []); // Empty dependency array means this runs once on mount
 
 
 
