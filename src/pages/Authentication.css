@@ -13,9 +13,6 @@ body, html {
 
 }
 
-
-
-
 body {
   margin: 0;
   box-sizing: border-box;
@@ -156,6 +153,8 @@ textarea:focus {
   border: none;
   cursor: pointer;
   font-weight: 500;
+  border-radius: 4px;
+
 }
 
 .prev-btn {
@@ -745,6 +744,7 @@ input.styled-input {
 .step-description {
   font-size: 20px;
   color: rgba(69, 56, 52, 0.7);
+  line-height: 1.4;
 }
 .ok-container {
   display: flex;
@@ -760,7 +760,7 @@ input.styled-input {
   font-weight: bold;
   padding: 10px 20px;
   border: none;
-  border-radius: 6px;
+  border-radius: 4px;
   cursor: pointer;
   box-shadow: 1px 1px 5px rgba(0, 0, 0, 0.2);
 }
@@ -1183,7 +1183,7 @@ input.search_product_input {
     font-size: 18px; 
   }
   .right-side {
-    max-width: 316px;
+    max-width: 536px;
     padding: 15px;
   }
   .step_number_main {
@@ -1209,10 +1209,55 @@ input.search_product_input {
 .submission_button{
     
     font-size: 18px;
+  }
+  .btn-group {
+    justify-content: start;
+    padding-left: 24px;
+} 
 }
 
-    
+
+@media(max-width:600px){
+  .right-side {
+        max-width: 350px;
+    }
+}
 
 
- 
+@media(max-width:375px){
+  .right-side {
+    max-width: 335px;
+    padding: 15px;
+  }
+  .step-number {
+    margin-right: 0px;
+    font-size: 18px;
+  }
+  .step_number_main svg {
+    width: 13px;
+    line-height: 12px;
+    display: flex
+
+  } 
+  .step-label {
+    font-size: 1.2rem;
+  }
+  .auth-wrapper input::placeholder, .auth-wrapper textarea::placeholder {
+    font-size: 18px;
+  }
+  .step-section {
+    padding-left: 24px;
+  }
+  .step_number_main {
+    margin-right: -6px;
+    gap: 4px;
+  }
+
+
+}
+
+@media(max-width:320px){
+  .right-side {
+    max-width: 290px;
+  }
 }
