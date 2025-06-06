@@ -974,37 +974,12 @@ useEffect(() => {
 }, [handleVisibilityChange]); // ✅ Fix: add the dependency
 
 
-// UPDATED: Clear session on page load and require fresh login
 useEffect(() => {
   const clearSessionOnLoad = async () => {
-    try {
-      // Check if there's an existing session
-      const session = await account.get();
-      if (session) {
-        // If session exists, delete it to force fresh login
-        await account.deleteSession("current");
-        console.log("Previous session cleared on page load");
-      }
-    } catch (error) {
-      // If no session exists or error occurred, that's fine
-      console.log("No existing session to clear");
-    } finally {
-      // Always set authentication to false on page load
-      setIsAuthenticated(false);
-      setStep(1); // Reset to first step
-      setAuthMessage("");
-      setOtp("");
-      setOtpSent(false);
-      setJustVerified(false);
-      setUserId(false);
-
-      // Do NOT clear form fields here, only reset session and authentication-related states
-    }
   };
 
   clearSessionOnLoad();
 }, [account]); // Add `account` as a dependency
-
 
 
 
@@ -1205,17 +1180,7 @@ const nextStep = () => {
     }
   };
 
- 
-
-
-
-
-
- 
-
-  
-  
-  return (
+return (
     <div className="auth-wrapper">
       <div className="logo-text">ELLA STEIN</div>
       <div className="right-side">
