@@ -547,6 +547,10 @@ useEffect(() => {
                 <input type="text" placeholder="United States" value={country} onChange={(e) => setCountry(e.target.value)} />
 
                 {fieldErrors.address && <p className="error">{fieldErrors.address}</p>}
+                <div className="ok-container">
+      <button onClick={nextStep} className="ok-button">OK</button>
+      <span className="enter-text">press <span className="enter-key">Enter ↵</span></span>
+    </div>
               </div>
             )}
 {num === 6 && (
@@ -644,16 +648,8 @@ useEffect(() => {
         ))}
 
        <div className="btn-group flex justify-between mt-4 gap-4">
-  {step > 1 && step <= 6 &&  (
-    <button onClick={prevStep} className="px-4 py-2 bg-black text-white rounded hover:bg-gray-800">
-      Previous
-    </button>
-  )}
-  {step < 6 && (
-    <button onClick={nextStep} className="px-4 py-2 bg-black text-white rounded hover:bg-gray-800">
-      Next
-    </button>
-  )}
+ 
+ 
 {step === 6 && (
   <button
     onClick={handleSubmit}
