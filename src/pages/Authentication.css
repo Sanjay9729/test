@@ -8,10 +8,6 @@
   padding: 0;
   box-sizing: border-box;  
 }
-body, html {
-        background-color: #BFA58A  !important;
-
-}
 
 body {
   margin: 0;
@@ -33,6 +29,7 @@ ul.product-list {
   display: flex;
   flex-direction: column;
   min-height: 100vh;
+  background: #bfa58a;
 }
 
 
