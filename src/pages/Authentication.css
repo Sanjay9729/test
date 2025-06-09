@@ -30,12 +30,11 @@ ul.product-list {
 }
 
 .auth-wrapper {
-    height: 100vh;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-direction: column;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
 }
+
 
 
 
@@ -465,6 +464,7 @@ img.image-preview {
 
 
 
+
 label {
   font-weight: 600;
   font-size: 0.9rem;
@@ -648,13 +648,17 @@ textarea {
 
 
 .right-side {
-    margin: 0 auto;
-
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 40px 20px;
   width: 100%;
-  max-width: 720px; /* Set max-width similar to the image */
-  padding: 15px;
-  position: relative;
+  max-width: 720px;
+  margin: 0 auto;
 }
+
+
 
 .logo-text {
   font-size: 1.2rem;
@@ -662,17 +666,21 @@ textarea {
   letter-spacing: 1px;
   color: white;
   padding: 30px 30px 0 30px;
-  position: absolute;
+  position: fixed;
     top: 0;
     left: 0;
 }
 
-
-
 .step-section.active {
   display: flex;
+  flex-direction: column;
+  justify-content: flex-start; /* 👈 this fixes the vertical alignment */
+  width: 100%;
   animation: slideUp 0.6s ease forwards;
+  padding-top: 30px; /* optional: gives breathing space from top */
 }
+
+
 
 input.styled-input::placeholder {
     color: #9E8C77;
@@ -1078,7 +1086,6 @@ ul.product-list {
 /* Address Step Specific Styling */
 .address-step {
   padding: 20px 0;
-  margin-top: 425px;
 }
 input.search_product_input {
     max-width: 100%;
@@ -1167,6 +1174,12 @@ input.search_product_input {
 .startpage-subtitle{
   color: rgba(69, 56, 52, 0.7);
 }
+/* Set placeholder font-size to 16px globally */
+.auth-wrapper input::placeholder,
+.auth-wrapper textarea::placeholder {
+  font-size: 20px !important;
+}
+
 
 @media(max-width:768px){
   input.styled-input::placeholder {
@@ -1198,9 +1211,7 @@ input.search_product_input {
 .auth-wrapper input::placeholder, .auth-wrapper textarea::placeholder {
     font-size: 20px;
 }
-.address-step {
-    margin-top: 470px;
-}
+
 
 .submisiion_headding {
     font-size:24px;
@@ -1252,6 +1263,42 @@ input.search_product_input {
     margin-right: -6px;
     gap: 4px;
   }
+  .step-label {
+   
+    margin-bottom: 0.6rem;
+}
+.step-description {
+  font-size: 16px;
+}
+input.styled-input {
+ 
+  margin-bottom: 0rem;
+}
+.btn-group {
+ 
+  margin-top: 10px;
+}
+.startpage-title {
+  font-size: 25px;
+  
+}
+.startpage-subtitle {
+  font-size: 18px;
+  margin-bottom: 0.6rem;
+}
+input.styled-input {
+ 
+  padding: 10px 0px;
+  
+}
+.prev-btn, .btn-group button {
+  padding: 0.5rem 1.2rem;
+  
+}
+
+
+
+
 
 
 }
