@@ -2,6 +2,8 @@ import React, { useState, useRef, useEffect } from "react";
 import countryData from "../data/countryData";
 import "./PhoneNumberStep.css";
 
+
+
 const PhoneNumberStep = ({ phone, setPhone, nextStep, fieldErrors }) => {
   const [search, setSearch] = useState("");
   const [showDropdown, setShowDropdown] = useState(false);
@@ -23,6 +25,13 @@ const PhoneNumberStep = ({ phone, setPhone, nextStep, fieldErrors }) => {
   const filteredCountries = countryData.filter((c) =>
     c.name.toLowerCase().includes(search.toLowerCase())
   );
+
+  const handleEnterKey = (e) => {
+  if (e.key === "Enter") {
+    e.preventDefault();
+    nextStep();
+  }
+};
 
   const handleSelectCountry = (country) => {
     setSelectedCountry(country);
@@ -114,7 +123,9 @@ const PhoneNumberStep = ({ phone, setPhone, nextStep, fieldErrors }) => {
           pattern="[0-9]*"
           value={phone}
           onChange={handlePhoneChange}
-          placeholder={getPhonePlaceholder(selectedCountry.code)} // Display correct placeholder
+          placeholder={getPhonePlaceholder(selectedCountry.code)} 
+           onKeyDown={handleEnterKey}
+
           className="phone-input"
         />
       </div>
