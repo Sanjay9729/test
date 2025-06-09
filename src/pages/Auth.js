@@ -2988,6 +2988,10 @@ const Authe = () => {
   const [imagePreview, setImagePreview] = useState(null);
   const [imageFileId, setImageFileId] = useState(null);
   const [sku, setSku] = useState("");
+  const address2Ref = useRef(null);
+  const cityRef = useRef(null);
+
+
 
   const APPWRITE_ENDPOINT = "https://appwrite.appunik-team.com/v1";
   const APPWRITE_PROJECT_ID = "68271c3c000854f08575";
@@ -3247,18 +3251,67 @@ const verifyOtp = async () => {
       if (!zip.trim()) errors.zip = "Enter zip.";
       if (!country.trim()) errors.country = "Enter country.";
     }
-    if (currentStep === 6 && !selectedProduct) errors.selectedProduct = "Select a product.";
+     if (currentStep === 6) {
+  const hasImage = !!imageFileId;
+  const hasSku = !!sku.trim();
+  if (!hasImage && !hasSku) {
+    errors.generalImageOrSku = "Please upload an image or enter SKU number to continue.";
+  }
+}
 
-    setFieldErrors(errors);
-    return Object.keys(errors).length === 0;
-  };
 
+  setFieldErrors(errors);
+  return Object.keys(errors).length === 0;
+};
 const nextStep = () => {
   if (validateStep(step)) {
     setStep(step + 1 > 7 ? 7 : step + 1);  // Update step without using prev
     setFieldErrors({});
   }
 };
+
+const handleEnterKey = async (e) => {
+  if (e.key !== "Enter") return;
+  e.preventDefault();
+
+  switch (step) {
+    case 1:
+      if (validateStep(1)) nextStep();
+      break;
+    case 2:
+      if (validateStep(2)) await sendOtp();
+      break;
+    case 3:
+      if (justVerified) nextStep();
+      else if (validateStep(3)) await verifyOtp();
+      break;
+    case 4:
+      if (validateStep(4)) nextStep();
+      break;
+   case 5:
+  console.log("Enter pressed on step 5");
+  if (validateStep(5)) {
+    console.log("Validation passed for step 5");
+    nextStep();
+  } else {
+    console.log("Validation failed for step 5");
+  }
+  break;
+    case 6:
+      if (validateStep(6)) await handleSubmit();
+      break;
+    default:
+      break;
+  }
+};
+
+const focusNextField = (ref) => {
+  if (ref?.current) {
+    ref.current.focus();
+  }
+};
+
+
 
  const prevStep = () => {
     setStep((prev) => Math.max(prev - 1, 1));
@@ -3273,11 +3326,17 @@ const nextStep = () => {
     setLoading(true);
     setFieldErrors({});
 
-    if (!selectedProduct) {
-      setFieldErrors({ selectedProduct: "Please select a product." });
-      setLoading(false);
-      return;
-    }
+   const hasImage = !!imageFileId;
+const hasSku = !!sku.trim();
+
+if (!hasImage && !hasSku) {
+  setFieldErrors({
+    generalImageOrSku: "Please upload an image or enter SKU number.",
+  });
+  setLoading(false);
+  return;
+}
+
 
     try {
       const session = await account.get();
@@ -3336,6 +3395,7 @@ return (
               placeholder="Type your answer here..."
               value={fullName}
               onChange={(e) => setFullName(e.target.value)}
+              onKeyDown={handleEnterKey}
               className="styled-input placeholder-gray-700 text-base"
             />
             {fieldErrors.fullName && <p className="error">{fieldErrors.fullName}</p>}
@@ -3367,6 +3427,7 @@ return (
       placeholder="name@example.com"
       value={email}
       onChange={(e) => setEmail(e.target.value)}
+      onKeyDown={handleEnterKey}
       className="styled-input"
     />
 
@@ -3437,6 +3498,7 @@ return (
       value={otp}
       onChange={handleOtpChange}
       maxLength={6}
+      onKeyDown={handleEnterKey}
       className="styled-input"
       style={{ fontSize: '16px', letterSpacing: '2px', textAlign: 'left' }}
     />
@@ -3482,22 +3544,52 @@ return (
                 </div>
                 <p>This is the address Ella Stein will use to initiate a pick-up and product replacement.</p>
                 <label>Address</label>
-                <input className=" " type="text" placeholder="65 Hansen Way" value={addressLine1} onChange={(e) => setAddressLine1(e.target.value)} />
+                <input className=" " type="text" placeholder="65 Hansen Way" value={addressLine1} onChange={(e) => setAddressLine1(e.target.value)}   onKeyDown={(e) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      focusNextField(address2Ref);
+    }
+  }} />
 
                 <label>Address line 2</label>
-                <input type="text" placeholder="Apartment 4" value={addressLine2} onChange={(e) => setAddressLine2(e.target.value)} />
+                <input type="text" placeholder="Apartment 4" value={addressLine2} onChange={(e) => setAddressLine2(e.target.value)}    onKeyDown={(e) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      focusNextField(cityRef);
+    }
+  }}/>
 
                 <label>City/Town</label>
-                <input type="text" placeholder="Palo Alto" value={city} onChange={(e) => setCity(e.target.value)} />
+                <input type="text" placeholder="Palo Alto" value={city} onChange={(e) => setCity(e.target.value)}    onKeyDown={(e) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      focusNextField(cityRef);
+    }
+  }}/>
 
                 <label>State/Region/Province</label>
-                <input type="text" placeholder="California" value={state} onChange={(e) => setState(e.target.value)} />
+                <input type="text" placeholder="California" value={state} onChange={(e) => setState(e.target.value)}    onKeyDown={(e) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      focusNextField(cityRef);
+    }
+  }}/>
 
                 <label>Zip/Post code</label>
-                <input type="text" placeholder="94304" value={zip} onChange={(e) => setZip(e.target.value)} />
+                <input type="text" placeholder="94304" value={zip} onChange={(e) => setZip(e.target.value)}   onKeyDown={(e) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      focusNextField(address2Ref);
+    }
+  }}/>
 
                 <label>Country</label>
-                <input type="text" placeholder="United States" value={country} onChange={(e) => setCountry(e.target.value)} />
+                <input type="text" placeholder="United States" value={country} onChange={(e) => setCountry(e.target.value)}   onKeyDown={(e) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      focusNextField(address2Ref);
+    }
+  }} />
 
                 {fieldErrors.address && <p className="error">{fieldErrors.address}</p>}
                 <div className="ok-container">
@@ -3508,38 +3600,45 @@ return (
             )}
 {num === 6 && (
   <>
-  <div className="address-step">
-    <div className="step-label">
-      <div className="step_number_main">
-        <span className="step-number">6</span>
-        <span>
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="black" viewBox="0 0 16 16">
-            <path fillRule="evenodd" clipRule="evenodd" d="M8.47 1.97a.75.75 0 0 1 1.06 0l4.897 4.896a1.25 1.25 0 0 1 0 1.768L9.53 13.53a.75.75 0 0 1-1.06-1.06l3.97-3.97H1.75a.75.75 0 1 1 0-1.5h10.69L8.47 3.03a.75.75 0 0 1 0-1.06Z" />
-          </svg>
-        </span>
+    <div className="address-step">
+      <div className="step-label">
+        <div className="step_number_main">
+          <span className="step-number">6</span>
+          <span>
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="black" viewBox="0 0 16 16">
+              <path fillRule="evenodd" clipRule="evenodd" d="M8.47 1.97a.75.75 0 0 1 1.06 0l4.897 4.896a1.25 1.25 0 0 1 0 1.768L9.53 13.53a.75.75 0 0 1-1.06-1.06l3.97-3.97H1.75a.75.75 0 1 1 0-1.5h10.69L8.47 3.03a.75.75 0 0 1 0-1.06Z" />
+            </svg>
+          </span>
+        </div>
+        Select Product:
       </div>
-      Select Product:
+
+      <div className="image-upload">
+        <div className="address-step">
+    <p>Please upload a product image or enter a SKU number.</p>
+</div>
+        <label className="upload_image">Upload Product Image</label>
+        <input type="file" accept="image/*" onChange={handleImageChange} />
+        {imagePreview && (
+          <img src={imagePreview} alt="Preview" style={{ width: "120px", marginTop: "10px" }} />
+        )}
+      </div>
     </div>
-<div className="image-upload">
-  <label className="upload_image">Upload Product Image (Optional)</label>
-  <input type="file" accept="image/*" onChange={handleImageChange} />
-  {imagePreview && (
-    <img src={imagePreview} alt="Preview" style={{ width: "120px", marginTop: "10px" }} />
-  )}
-  {fieldErrors.image && <p className="error">{fieldErrors.image}</p>}
-</div>
-</div>
-<label className="upload_image">Enter SKU Number</label>
-<input
-  type="text"
-  placeholder="Enter product SKU"
-  value={sku}
-  onChange={(e) => setSku(e.target.value)}
-  className="styled-input"
-/>
-{fieldErrors.sku && <p className="error">{fieldErrors.sku}</p>}
 
+    <label className="upload_image">Enter SKU Number</label>
+    <input
+      type="text"
+      placeholder="Enter product SKU"
+      value={sku}
+      onChange={(e) => setSku(e.target.value)}
+      handleEnterKey={handleEnterKey}
+      className="styled-input"
+    />
 
+    {/* ✅ Combined error message */}
+    {fieldErrors.generalImageOrSku && (
+      <p className="error">{fieldErrors.generalImageOrSku}</p>
+    )}
 
     <input
       value={productSearch}
@@ -3548,31 +3647,76 @@ return (
       className="search_product_input"
     />
 
-    <ul className="product-list">
-      {loadingProducts ? (
-        <li>Loading...</li>
-      ) : fieldErrors.products ? (
-        <li>{fieldErrors.products}</li>
-      ) : (
-        filteredProducts.map((product) => (
-          <li
-            key={product.id}
-            className={`product-item ${selectedProduct === product.title ? "selected" : ""}`}
-            onClick={() => setSelectedProduct(product.title)}
-          >
-            {product.images?.[0]?.src && (
-              <img src={product.images[0].src} alt={product.title} className="product-image" />
-            )}
-            <span>{product.title}</span>
-          </li>
-        ))
-      )}
-    </ul>
+   <ul className="product-list">
+  {loadingProducts ? (
+    <li>Loading...</li>
+  ) : fieldErrors.products ? (
+    <li>{fieldErrors.products}</li>
+  ) : (
+    filteredProducts.map((product) => (
+      <li
+        key={product.id}
+        className={`product-item ${selectedProduct === product.title ? "selected" : ""}`}
+        onClick={() => setSelectedProduct(product.title)}
+      >
+        {product.images?.[0]?.src && (
+          <img src={product.images[0].src} alt={product.title} className="product-image" />
+        )}
+        <span>{product.title}</span>
+      </li>
+    ))
+  )}
+</ul>
+
+{/* Cross button outside the product list - only show when a product is selected */}
+{selectedProduct && (
+  <div className="selected-product-info" style={{ 
+    marginTop: '15px', 
+    padding: '8px', 
+    backgroundColor: '#f0f8ff', 
+    borderRadius: '4px',
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center'
+  }}>
+    <span style={{ fontSize: '14px', color: '#333' }}>
+      Selected: <strong>{selectedProduct}</strong>
+    </span>
+    <button
+      onClick={() => setSelectedProduct("")}
+      style={{
+        background: 'none',
+        border: 'none',
+        cursor: 'pointer',
+        padding: '5px',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        borderRadius: '3px'
+      }}
+      title="Remove selection"
+      onMouseEnter={(e) => e.target.style.backgroundColor = '#ffebee'}
+      onMouseLeave={(e) => e.target.style.backgroundColor = 'transparent'}
+    >
+      <svg 
+        xmlns="http://www.w3.org/2000/svg" 
+        width="18" 
+        height="18" 
+        fill="red" 
+        viewBox="0 0 16 16"
+        style={{ transition: 'all 0.2s ease' }}
+      >
+        <path d="M2.146 2.854a.5.5 0 1 1 .708-.708L8 7.293l5.146-5.147a.5.5 0 0 1 .708.708L8.707 8l5.147 5.146a.5.5 0 0 1-.708.708L8 8.707l-5.146 5.147a.5.5 0 0 1-.708-.708L7.293 8 2.146 2.854Z"/>
+      </svg>
+    </button>
+  </div>
+)}
 
     <p className="error">{fieldErrors.selectedProduct}</p>
     <p className="error">{fieldErrors.submit}</p>
   </>
 )}
+
 
 {step === 7 && (
   <div className="max-w-xl mx-auto  text-center submission_container">
@@ -3592,6 +3736,7 @@ return (
       >
         JEWELRY CARE TIPS
       </a>
+      <span className="enter-text enter_tips_btn">  press <span className="enter-key">Enter ↵</span></span>
     </p>
   </div>
 )}
@@ -3610,7 +3755,7 @@ return (
   <button
     onClick={handleSubmit}
     className="px-4 py-2 bg-black text-white rounded hover:bg-gray-800"
-    disabled={loading || !selectedProduct}
+   disabled={loading}
   >
     {loading ? "Submitting..." : "Submit"}
   </button>

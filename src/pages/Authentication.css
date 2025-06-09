@@ -275,10 +275,6 @@ textarea {
   margin-top: 10px;
 }
 
-.btn-group {
-  display: flex;
-  justify-content: space-between;
-}
 
 .prev-btn, button {
   padding: 10px 20px;
@@ -503,7 +499,7 @@ textarea {
   display: flex;
   align-items: center;
   gap: 1rem;
-  padding: 0.4rem 0.7rem;
+  padding: 0.4rem 0.7rem 0.4rem 0;
   cursor: pointer;
   border-radius: 6px;
   user-select: none;
@@ -515,7 +511,7 @@ textarea {
 }
 
 .product-item.selected {
-  background-color: #6f5b40;
+  background-color: #6f5b4033;
   color: white;
 }
 
@@ -661,14 +657,20 @@ textarea {
 
 
 .logo-text {
+  background-color: #bfa58a;
   font-size: 1.2rem;
   font-weight: 600;
   letter-spacing: 1px;
   color: white;
-  padding: 30px 30px 0 30px;
+  padding: 25px 30px;
+  width: 100%;
   position: fixed;
-    top: 0;
-    left: 0;
+  top: 0;
+  left: 0;
+  z-index: 1;
+}
+.startpage-background .logo-text{
+  width: auto;
 }
 
 .step-section.active {
@@ -780,6 +782,10 @@ input.styled-input {
 .enter-text {
   font-size: 0.9em;
   color: #333;
+  display: inline-block;
+}
+.enter_tips_btn{
+  margin-left: 16px;;
 }
 
 .enter-key {
@@ -798,22 +804,12 @@ ul.product-list {
   max-height: 200px;
 }
 
-.product-item {
-  display: flex;
-  align-items: center;
-  padding: 0.5rem;
-  border-radius: 6px;
-  cursor: pointer;
-}
 
 .product-item:hover {
   background-color: #a9927340;
 }
 
-.product-item.selected {
-  background-color: #6f5b40;
-  color: white;
-}
+
 
 .product-image {
   width: 40px;
@@ -889,10 +885,7 @@ ul.product-list {
   background-color: #a9927340;
 }
 
-.product-item.selected {
-  background-color: #6f5b40;
-  color: white;
-}
+
 
 .otp-btn, .signout-btn, .nav-btn, .submit-btn {
   padding: 0.7rem 1.5rem;
@@ -1179,7 +1172,9 @@ input.search_product_input {
 .auth-wrapper textarea::placeholder {
   font-size: 20px !important;
 }
-
+.image-upload .address-step {
+    padding: 0;
+}
 
 @media(max-width:768px){
   input.styled-input::placeholder {
@@ -1200,14 +1195,12 @@ input.search_product_input {
     padding: 15px;
   }
   .step_number_main {
-    margin-right: 5px;
+    margin-right: 22px;
   }
   .step-description {
     font-size: 18px;
 }
-.step-section {
- padding-left: 8px;
-}
+
 .auth-wrapper input::placeholder, .auth-wrapper textarea::placeholder {
     font-size: 20px;
 }
@@ -1223,7 +1216,7 @@ input.search_product_input {
   }
   .btn-group {
     justify-content: start;
-    padding-left: 24px;
+    margin-top: 16PX;
 } 
 }
 
@@ -1238,10 +1231,10 @@ input.search_product_input {
 @media(max-width:375px){
   .right-side {
     max-width: 335px;
-    padding: 15px;
+    padding: 32px;
   }
   .step-number {
-    margin-right: 0px;
+    margin-right: 4px;
     font-size: 18px;
   }
   .step_number_main svg {
@@ -1256,11 +1249,7 @@ input.search_product_input {
   .auth-wrapper input::placeholder, .auth-wrapper textarea::placeholder {
     font-size: 18px;
   }
-  .step-section {
-    padding-left: 24px;
-  }
   .step_number_main {
-    margin-right: -6px;
     gap: 4px;
   }
   .step-label {
@@ -1274,10 +1263,7 @@ input.styled-input {
  
   margin-bottom: 0rem;
 }
-.btn-group {
- 
-  margin-top: 10px;
-}
+
 .startpage-title {
   font-size: 25px;
   
@@ -1295,6 +1281,14 @@ input.styled-input {
   padding: 0.5rem 1.2rem;
   
 }
+    .step_number_main {
+        margin-right: 10px;
+    }
+
+.enter_tips_btn {
+    margin-top: 12px;
+}
+
 
 
 
@@ -1307,4 +1301,19 @@ input.styled-input {
   .right-side {
     max-width: 290px;
   }
+  .address-step label {
+    font-size: 16px;
+  }
+  .auth-wrapper input::placeholder, .auth-wrapper textarea::placeholder {
+    font-size: 18px !important; 
+  }
+  .address-step input, .address-step textarea {
+    padding: 10px 0;
+    margin-bottom: 15px;
+  }
+
+  .address-step label {
+    margin-bottom: 0;
+  }
+
 }
