@@ -113,6 +113,11 @@ const countryData = [
     name: "Benin",
     code: "+229",
     flag: "https://flagcdn.com/w20/bj.png"
+  },
+  {
+    name: "India",
+    code: "+91",
+    flag: "https://flagcdn.com/w20/in.png"
   }
 ];
 
