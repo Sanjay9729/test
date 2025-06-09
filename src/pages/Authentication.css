@@ -282,6 +282,7 @@ textarea {
   color: white;
   border: none;
   cursor: pointer;
+  border-radius: 4px;
 }
 
 .prev-btn:hover, button:hover {
@@ -1177,6 +1178,12 @@ input.search_product_input {
 }
 
 @media(max-width:768px){
+  .step-section.active {
+  
+    padding-top: 40px;
+}
+
+
   input.styled-input::placeholder {
     font-size: 20px;
   } 
@@ -1289,6 +1296,10 @@ input.styled-input {
     margin-top: 12px;
 }
 
+.prev-btn, button {
+  
+    padding: 9px 16px;
+}
 
 
 
