@@ -2,9 +2,10 @@
   position: relative;
   display: flex;
   align-items: center;
-  max-width: 450px;
   border-bottom: 1px solid #888;
   padding-bottom: 5px;
+  width: 100%;
+  max-width: 450px;
 }
 
 .dropdown-toggle {
@@ -92,20 +93,6 @@
   padding: 8px 0;
 }
 
-.ok-container {
-  margin-top: 15px;
-}
 
-.ok-button {
-  padding: 10px 20px;
-  border: none;
-  background-color: #f4e1c1;
-  border-radius: 8px;
-  font-weight: bold;
-  cursor: pointer;
-  transition: background-color 0.2s ease-in-out;
-}
 
-.ok-button:hover {
-  background-color: #e7d3b0;
-}
+

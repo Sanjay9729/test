@@ -170,36 +170,12 @@ textarea:focus {
   color: white;
   transition: background-color 0.2s ease-in-out;
 }
-.prev-btn, .btn-group button:hover,
-.btn-group button:not(.prev-btn):hover {
-  background-color: #ccc;
-  color: #000;
-}
+
 .auth-background {
   display: flex;
   justify-content: center;
   align-items: center;
   min-height: 100vh;  
-}
-.auth-container {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  max-width: 1200px;
-  gap: 20px;
-  padding: 20px;
-}
-
-.form-container {
-  background-color: white;
-  padding: 30px;
-  border-radius: 10px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-}
-
-.image-container {
-  display: flex;
-  justify-content: center;
-  align-items: flex-start;
 }
 
 .auth-image {
@@ -229,17 +205,11 @@ textarea:focus {
   margin-bottom: 20px;
 }
 
-.input, .textarea {
-  width: 100%;
-  padding: 10px;
-  border-radius: 5px;
-  border: 1px solid #ccc;
-  max-width: 100%;
-}
+
 input,
 textarea {
   font-size: 1.3rem;
-  padding: 0.8rem 1rem;
+  padding:15px 10px;
   border: none;
   border-bottom: 1px solid #888;
   background: transparent;
@@ -248,7 +218,10 @@ textarea {
   max-width: 420px;
   resize: none;
   font-family: inherit;
+   width: 100%;
+  max-width: 100%;
 }
+
 
 .upload_image{
   font-size: 16px;
@@ -705,7 +678,6 @@ input.styled-input::placeholder {
 
 input.styled-input {
   width: 100%;
-  max-width: 720px;
   padding: 15px 10px;
   font-size: 1.2rem;
   border: none;
@@ -735,22 +707,8 @@ input.styled-input {
   color: #333;
 }
 
-
-
-input.styled-input {
-  width: 100%;
-  max-width: 720px;
-  padding: 15px 10px;
-  font-size: 1.2rem;
-  border: none;
-  border-bottom: 1px solid #999;
-  background-color: transparent;
-  color: #333;
-  margin-bottom: 1rem;
-}
-
 .step-description {
-  font-size: 20px;
+  font-size: 18px;
   color: rgba(69, 56, 52, 0.7);
   line-height: 1.4;
 }
@@ -758,13 +716,13 @@ input.styled-input {
   display: flex;
   align-items: center;
   gap: 10px;
-  margin-top: 0.6rem;
+  margin-top: 15px;
 }
 
 .ok-button {
   display: inline-block;
   background-color: #fdf6ec;
-  color: #333;
+  color: #453834;
   font-weight: bold;
   padding: 10px 20px;
   border: none;
@@ -773,9 +731,7 @@ input.styled-input {
   box-shadow: 1px 1px 5px rgba(0, 0, 0, 0.2);
 }
 
-.ok-button:hover {
-  background-color: #f0e6d2;
-}
+
 
 .enter-text {
   font-size: 0.9em;
@@ -959,14 +915,7 @@ ul.product-list {
 .complete-link:hover {
   background-color: #4e3f2d;
 }
-.phone-input-wrapper {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 1rem;
-  border-bottom: 1px solid #999;
-  max-width: 720px;
-}
+
 
 .country-code-select {
   background-color: transparent;
@@ -1002,27 +951,8 @@ ul.product-list {
   gap: 10px;
 }
 
-.ok-button {
-  background-color: #fdf6ec;
-  color: #333;
-  font-weight: bold;
-  padding: 10px 20px;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  box-shadow: 1px 1px 5px rgba(0, 0, 0, 0.2);
-}
 
-.ok-button:hover {
-  background-color: #f0e6d2;
-}
-.custom-phone-input {
-  position: relative;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  max-width: 600px;
-}
+
 
 .country-dropdown {
   display: flex;
@@ -1083,7 +1013,7 @@ input.search_product_input {
 }
 
 .address-step p {
-  font-size: 16px;
+  font-size: 18px;
   color: #4d3d33;
   margin-bottom: 20px;
 }
@@ -1093,7 +1023,7 @@ input.search_product_input {
   font-weight: bold;
   margin-top: 20px;
   margin-bottom: 5px;
-  font-size: 18px;
+  font-size: 16px;
 }
 
 .address-step input, 
@@ -1108,6 +1038,9 @@ input.search_product_input {
   color: #4d3d33;
 }
 
+.upload_image_span{
+  font-size: 16px;
+}
 
 .address-step input::placeholder,
 .address-step textarea::placeholder {
@@ -1174,6 +1107,14 @@ input.search_product_input {
     padding: 0;
 }
 
+.submit_btn {
+    background-color: #f4e1c1 !important;
+    color: #453834 !important;
+    font-weight: bold;
+}
+
+
+
 @media(max-width:768px){
   .step-section.active {
   
@@ -1194,16 +1135,18 @@ input.search_product_input {
     margin-right: 3px;
     font-size: 18px; 
   }
+  .phone-input-wrapper,
   .right-side {
-    max-width: 536px;
-    padding: 15px;
+    max-width: 100% !important; 
   }
+  .auth-wrapper {
+    padding: 60px;
+  }
+  
   .step_number_main {
     margin-right: 22px;
   }
-  .step-description {
-    font-size: 18px;
-}
+      
 
 .auth-wrapper input::placeholder, .auth-wrapper textarea::placeholder {
     font-size: 20px;
@@ -1222,21 +1165,26 @@ input.search_product_input {
     justify-content: start;
     margin-top: 16PX;
 } 
+.address-step p,
+.upload_image_span{
+  font-size: 16px;
+}
 }
 
 
 @media(max-width:600px){
-  .right-side {
-        max-width: 350px;
+      .auth-wrapper {
+        padding: 44px;
     }
+
 }
 
 
 @media(max-width:375px){
-  .right-side {
-    max-width: 335px;
-    padding: 32px;
-  }
+   .auth-wrapper {
+        padding: 30px;
+    }
+  
   .step-number {
     margin-right: 4px;
     font-size: 18px;
@@ -1306,9 +1254,7 @@ input.styled-input {
 }
 
 @media(max-width:320px){
-  .right-side {
-    max-width: 290px;
-  }
+ 
   .address-step label {
     font-size: 16px;
   }
@@ -1324,4 +1270,20 @@ input.styled-input {
     margin-bottom: 0;
   }
 
+}
+
+
+@media (min-width:769px){
+  .prev-btn, .btn-group button:hover,
+.btn-group button:not(.prev-btn):hover {
+  background-color: #ccc;
+  color: #000;
+}
+.submit_btn:hover{
+  background-color: #000 !important;
+  color: #fff !important;
+}
+.ok-button:hover {
+  background-color: #f0e6d2;
+}
 }
