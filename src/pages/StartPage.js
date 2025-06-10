@@ -25,7 +25,7 @@ const StartPage = () => {
 
 
   return (
-    <div className="startpage-background bg-[rgb(191, 165, 138)] min-h-screen flex items-center justify-center">
+    <div className="startpage-background bg-[rgb(191, 165, 138)] min-h-screen flex items-center justify-center ">
       <div className="startpage-container w-full max-w-4xl px-6 py-10">
         <div className="startpage-card  text-center">
           <div className="logo-text">

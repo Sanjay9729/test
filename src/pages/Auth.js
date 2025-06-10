@@ -2988,9 +2988,16 @@ const Authe = () => {
   const [imagePreview, setImagePreview] = useState(null);
   const [imageFileId, setImageFileId] = useState(null);
   const [sku, setSku] = useState("");
-  const address2Ref = useRef(null);
-  const cityRef = useRef(null);
+ 
+// Refs
+const address1Ref = useRef(null);
+const address2Ref = useRef(null);
+const cityRef = useRef(null);
+const stateRef = useRef(null);
+const zipRef = useRef(null);
+const countryRef = useRef(null);
 
+const emailInputRef = useRef(null);
 
 
   const APPWRITE_ENDPOINT = "https://appwrite.appunik-team.com/v1";
@@ -3245,11 +3252,9 @@ const verifyOtp = async () => {
     if (currentStep === 3 && !otp.trim()) errors.otp = "Enter the OTP.";
     if (currentStep === 4 && !phone.trim()) errors.phone = "Enter your phone number.";
     if (currentStep === 5) {
-      if (!addressLine1.trim()) errors.addressLine1 = "Enter address line 1.";
-      if (!city.trim()) errors.city = "Enter city.";
-      if (!state.trim()) errors.state = "Enter state.";
-      if (!zip.trim()) errors.zip = "Enter zip.";
-      if (!country.trim()) errors.country = "Enter country.";
+      if (!addressLine1.trim()) errors.addressLine1 = "Please enter your address.";
+    if (!city.trim()) errors.city = "Please enter your city.";
+    if (!country.trim()) errors.country = "Please enter your country.";
     }
      if (currentStep === 6) {
   const hasImage = !!imageFileId;
@@ -3306,6 +3311,7 @@ const handleEnterKey = async (e) => {
 };
 
 const focusNextField = (ref) => {
+  console.log("Attempting to focus:", ref); // Add this
   if (ref?.current) {
     ref.current.focus();
   }
@@ -3313,10 +3319,83 @@ const focusNextField = (ref) => {
 
 
 
- const prevStep = () => {
-    setStep((prev) => Math.max(prev - 1, 1));
-    setFieldErrors({});
-  };
+// const prevStep = () => {
+//   setFieldErrors({});
+
+//   setStep((prev) => {
+//     const newStep = Math.max(prev - 1, 1);
+
+//     // If returning to step 3 (OTP step), reset OTP-related state
+//     if (newStep === 3) {
+//       setOtp("");
+//       setAuthMessage("");
+//       setJustVerified(false);
+//       setIsAuthenticated(false);
+//     }
+
+//     // If returning to step 2 (email step), reset email-related state
+//     if (newStep === 2) {
+//       setEmail("");
+//       setUserId(false);
+//       setAuthMessage(""); // ✅ THIS is the key line to fix your issue
+//       setJustVerified(false); // optional, for safety
+//     }
+
+//     return newStep;
+//   });
+// };
+
+const prevStep = () => {
+  setFieldErrors({});
+
+  setStep((prev) => {
+    const newStep = Math.max(prev - 1, 1);
+
+    // Step-specific resets
+    switch (newStep) {
+      case 1: // Full Name step
+        setFullName("");
+        break;
+      case 2: // Email step
+        setEmail("");
+        setUserId(false);
+        setIsAuthenticated(false);
+        setJustVerified(false);
+        setAuthMessage("");
+        break;
+      case 3: // OTP step
+        setOtp("");
+        setIsAuthenticated(false);
+        setJustVerified(false);
+        setAuthMessage("");
+        break;
+      case 4: // Phone number step
+        setPhone("");
+        break;
+      case 5: // Address step
+        setAddressLine1("");
+        setAddressLine2("");
+        setCity("");
+        setState("");
+        setZip("");
+        setCountry("");
+        break;
+      case 6: // Product/SKU step
+        setSelectedProduct("");
+        setSku("");
+        setImageFileId(null);
+        setImagePreview(null);
+        break;
+      default:
+        break;
+    }
+
+    return newStep;
+  });
+};
+
+
+
 
   // Email validation
   const validateEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
@@ -3423,6 +3502,8 @@ return (
     <p className="step-description mb-8">Please enter an email address whose inbox you access regularly.</p>
 
     <input
+      ref={emailInputRef} // 👈 Add this line
+
       type="email"
       placeholder="name@example.com"
       value={email}
@@ -3544,54 +3625,69 @@ return (
                 </div>
                 <p>This is the address Ella Stein will use to initiate a pick-up and product replacement.</p>
                 <label>Address</label>
-                <input className=" " type="text" placeholder="65 Hansen Way" value={addressLine1} onChange={(e) => setAddressLine1(e.target.value)}   onKeyDown={(e) => {
+                
+                <input  ref={address1Ref} className=" "  type="text" placeholder="65 Hansen Way" value={addressLine1} onChange={(e) => setAddressLine1(e.target.value)}   
+      onKeyDown={(e) => {
     if (e.key === "Enter") {
       e.preventDefault();
       focusNextField(address2Ref);
     }
-  }} />
+  }}
+   />
+  {fieldErrors.addressLine1 && <p className="error">{fieldErrors.addressLine1}</p>}
+
 
                 <label>Address line 2</label>
-                <input type="text" placeholder="Apartment 4" value={addressLine2} onChange={(e) => setAddressLine2(e.target.value)}    onKeyDown={(e) => {
+                <input ref={address2Ref} type="text" placeholder="Apartment 4" value={addressLine2} onChange={(e) => setAddressLine2(e.target.value)}     
+                 onKeyDown={(e) => {
     if (e.key === "Enter") {
       e.preventDefault();
       focusNextField(cityRef);
     }
-  }}/>
+  }}
+
+                />
 
                 <label>City/Town</label>
-                <input type="text" placeholder="Palo Alto" value={city} onChange={(e) => setCity(e.target.value)}    onKeyDown={(e) => {
+                <input ref={cityRef} type="text" placeholder="Palo Alto" value={city} onChange={(e) => setCity(e.target.value)}    
+                 onKeyDown={(e) => {
     if (e.key === "Enter") {
       e.preventDefault();
-      focusNextField(cityRef);
+      focusNextField(stateRef);
     }
-  }}/>
+  }}
+                />
+                  {fieldErrors.city && <p className="error">{fieldErrors.city}</p>}
+
 
                 <label>State/Region/Province</label>
-                <input type="text" placeholder="California" value={state} onChange={(e) => setState(e.target.value)}    onKeyDown={(e) => {
+                <input ref={stateRef} type="text" placeholder="California" value={state} onChange={(e) => setState(e.target.value)}     
+                onKeyDown={(e) => {
     if (e.key === "Enter") {
       e.preventDefault();
-      focusNextField(cityRef);
+      focusNextField(zipRef);
     }
-  }}/>
+  }}
+                />
 
                 <label>Zip/Post code</label>
-                <input type="text" placeholder="94304" value={zip} onChange={(e) => setZip(e.target.value)}   onKeyDown={(e) => {
+                <input ref={zipRef} type="text" placeholder="94304" value={zip} onChange={(e) => setZip(e.target.value)} 
+                 onKeyDown={(e) => {
     if (e.key === "Enter") {
       e.preventDefault();
-      focusNextField(address2Ref);
+      focusNextField(countryRef);
     }
-  }}/>
+  }}
+                />
+                  {fieldErrors.zip && <p className="error">{fieldErrors.zip}</p>}
+
 
                 <label>Country</label>
-                <input type="text" placeholder="United States" value={country} onChange={(e) => setCountry(e.target.value)}   onKeyDown={(e) => {
-    if (e.key === "Enter") {
-      e.preventDefault();
-      focusNextField(address2Ref);
-    }
-  }} />
+                <input ref={countryRef} type="text" placeholder="United States" value={country} onChange={(e) => setCountry(e.target.value)}   onKeyDown={handleEnterKey} />
 
                 {fieldErrors.address && <p className="error">{fieldErrors.address}</p>}
+                  {fieldErrors.country && <p className="error">{fieldErrors.country}</p>}
+
                 <div className="ok-container">
       <button onClick={nextStep} className="ok-button">OK</button>
       <span className="enter-text">press <span className="enter-key">Enter ↵</span></span>
@@ -3618,7 +3714,7 @@ return (
     <p>Please upload a product image or enter a SKU number.</p>
 </div>
         <label className="upload_image">Upload Product Image</label>
-        <input type="file" accept="image/*" onChange={handleImageChange} />
+        <input className="upload_image_span" type="file" accept="image/*" onChange={handleImageChange} />
         {imagePreview && (
           <img src={imagePreview} alt="Preview" style={{ width: "120px", marginTop: "10px" }} />
         )}
@@ -3754,7 +3850,7 @@ return (
 {step === 6 && (
   <button
     onClick={handleSubmit}
-    className="px-4 py-2 bg-black text-white rounded hover:bg-gray-800"
+    className="submit_btn px-4 py-2 bg-black text-white rounded hover:bg-gray-800"
    disabled={loading}
   >
     {loading ? "Submitting..." : "Submit"}

@@ -26,12 +26,15 @@ const PhoneNumberStep = ({ phone, setPhone, nextStep, fieldErrors }) => {
     c.name.toLowerCase().includes(search.toLowerCase())
   );
 
-  const handleEnterKey = (e) => {
+const handleEnterKey = (e) => {
   if (e.key === "Enter") {
     e.preventDefault();
-    nextStep();
+    if (/^\d+$/.test(phone)) {
+      nextStep(); // only allow if phone is numeric
+    }
   }
 };
+
 
   const handleSelectCountry = (country) => {
     setSelectedCountry(country);
@@ -40,9 +43,16 @@ const PhoneNumberStep = ({ phone, setPhone, nextStep, fieldErrors }) => {
   };
 
   const handlePhoneChange = (e) => {
-    const inputValue = e.target.value;
-    setPhone(inputValue);  // Update the phone number state
-  };
+  const inputValue = e.target.value;
+
+  // Allow only digits
+  if (/^\d*$/.test(inputValue)) {
+    setPhone(inputValue);
+  } else {
+    setPhone(inputValue); // still update if needed
+  }
+};
+
 
   // Mapping of countries to phone number formats
   const phoneFormats = {
@@ -131,9 +141,21 @@ const PhoneNumberStep = ({ phone, setPhone, nextStep, fieldErrors }) => {
       </div>
 
       {fieldErrors.phone && <p className="error">{fieldErrors.phone}</p>}
+        {phone && !/^\d+$/.test(phone) && (
+  <p className="error">Numbers only please</p>
+)}
 
       <div className="ok-container">
-        <button onClick={nextStep} className="ok-button">OK</button>
+<button
+  onClick={() => {
+    if (/^\d+$/.test(phone)) {
+      nextStep(); // Only go next if phone is numeric
+    }
+  }}
+  className="ok-button"
+>
+  OK
+</button>
         <span className="enter-text">press <span className="enter-key">Enter ↵</span></span>
       </div>
     </section>
