@@ -1,91 +1,87 @@
 const sdk = require("node-appwrite");
 const Busboy = require("busboy");
 
-exports.handler = async (event) => {
-  return new Promise((resolve, reject) => {
-    // Appwrite client
+exports.handler = async function (event) {
+  return new Promise((resolve) => {
     const client = new sdk.Client()
-      .setEndpoint("https://appwrite.appunik-team.com/v1")
-      .setProject("68271c3c000854f08575")
-      .setKey("standard_c1538acc84a7b3b527c2dd68b5f50f4232202104f4400f3c0479d2e941cf8d9ca2d2827976f42fd3a6b8c4decade4b764c1d7950329fdf6ad0f6f5dd17d277db95d66a656d7a8afefddce8cb2dd2ccf72c5410cd78e0e0d1b96043de3267fc268e6811131cc3255c1ad9ae872f8dcd62ca107c0deb2487cf63c2feb236ad9846");
+      .setEndpoint(process.env.APPWRITE_ENDPOINT)
+      .setProject(process.env.APPWRITE_PROJECT_ID)
+      .setKey(process.env.APPWRITE_API_KEY);
 
     const storage = new sdk.Storage(client);
 
-    const fileChunks = [];
-    let oldFileId = null;
-    let fileFound = false;
-
     const contentType = event.headers['content-type'] || event.headers['Content-Type'];
-
-    if (!contentType?.includes('multipart/form-data')) {
-      return resolve({
-        statusCode: 400,
-        body: JSON.stringify({ error: 'Invalid Content-Type' }),
-      });
-    }
-
     const busboy = new Busboy({ headers: { 'content-type': contentType } });
 
-    busboy.on("file", (fieldname, file, filename, encoding, mimetype) => {
-      console.log(`📦 Receiving file: ${filename}`);
-      fileFound = true;
+    let oldFileId = null;
+    const fileChunks = [];
+    let fileReceived = false;
 
-      file.on("data", (data) => {
-        fileChunks.push(data);
+    busboy.on("file", (_fieldname, file, filename) => {
+      console.log("📦 Receiving file:", filename);
+      fileReceived = true;
+
+      file.on("data", (chunk) => {
+        fileChunks.push(chunk);
       });
 
       file.on("end", () => {
-        console.log(`✅ File received: ${filename}`);
+        console.log("✅ File fully received:", filename);
       });
     });
 
-    busboy.on("field", (fieldname, value) => {
+    busboy.on("field", (fieldname, val) => {
       if (fieldname === "oldFileId") {
-        oldFileId = value;
+        oldFileId = val;
       }
     });
 
     busboy.on("finish", async () => {
       try {
-        const fileBuffer = Buffer.concat(fileChunks);
-
-        if (!fileFound || fileBuffer.length === 0) {
+        if (!fileReceived || fileChunks.length === 0) {
           return resolve({
             statusCode: 400,
             body: JSON.stringify({ error: "File not found in payload" }),
           });
         }
 
-        const result = await storage.createFile(
-          "683e80fc0019228a6dfa",
+        const buffer = Buffer.concat(fileChunks);
+        const uploaded = await storage.createFile(
+          "683e80fc0019228a6dfa", // your actual bucket ID
           sdk.ID.unique(),
-          fileBuffer
+          buffer
         );
 
         if (oldFileId) {
           try {
             await storage.deleteFile("683e80fc0019228a6dfa", oldFileId);
-            console.log("🗑️ Old file deleted:", oldFileId);
+            console.log("🗑️ Deleted old file:", oldFileId);
           } catch (err) {
             console.warn("⚠️ Failed to delete old file:", err.message);
           }
         }
 
-        resolve({
+        return resolve({
           statusCode: 200,
-          body: JSON.stringify({ fileId: result.$id }),
+          body: JSON.stringify({ fileId: uploaded.$id }),
         });
       } catch (err) {
         console.error("❌ Upload failed:", err.message);
-        resolve({
+        return resolve({
           statusCode: 500,
           body: JSON.stringify({ error: err.message }),
         });
       }
     });
 
-    // 🔥 Important: decode the base64 Netlify body!
-    const buffer = Buffer.from(event.body, "base64");
-    busboy.end(buffer);
+    try {
+      const buffer = Buffer.from(event.body, "base64");
+      busboy.end(buffer);
+    } catch (e) {
+      return resolve({
+        statusCode: 400,
+        body: JSON.stringify({ error: "Invalid request body" }),
+      });
+    }
   });
 };
