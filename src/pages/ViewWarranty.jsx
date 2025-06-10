@@ -433,34 +433,6 @@ const ViewWarranty = () => {
   const handleModalChange = (field, value) => {
     setSelectedItem((prev) => ({ ...prev, [field]: value }));
   };
-const handleImageUpload = async (file) => {
-  if (!file) return;
-  console.log("Uploading file:", file.name);
-
-  const formData = new FormData();
-  formData.append('file', file);
-  formData.append('oldFileId', selectedItem.image_file_id);
-
-  try {
-    const res = await fetch('/.netlify/functions/uploadAndReplaceImage', {
-      method: 'POST',
-      body: formData,
-    });
-
-    const result = await res.json();
-    console.log("Upload result:", result);
-
-    if (res.ok && result.fileId) {
-      handleModalChange('image_file_id', result.fileId);
-    } else {
-      alert(result.error || 'Image upload failed');
-    }
-  } catch (err) {
-    console.error("Image upload error:", err);
-    alert('Image upload error: ' + err.message);
-  }
-};
-
 
   const handleSave = async () => {
     const {
@@ -757,25 +729,15 @@ const handleImageUpload = async (file) => {
     />
 
     {selectedItem.image_file_id && (
-  <>
-    <Text variant="bodyMd" as="p">Uploaded Image:</Text>
-    <img
-      src={getImagePreviewURL(selectedItem.image_file_id)}
-      alt="Uploaded"
-      style={{ width: '120px', marginTop: '8px', borderRadius: '8px' }}
-    />
-  </>
-)}
-<Text variant="bodyMd" as="p">Replace Image:</Text>
-<input
-  type="file"
-  accept="image/*"
-   onChange={(e) => {
-    console.log("File selected:", e.target.files[0]);
-    handleImageUpload(e.target.files[0]);
-  }}
-/>
-
+      <>
+        <Text variant="bodyMd" as="p">Uploaded Image:</Text>
+        <img
+          src={getImagePreviewURL(selectedItem.image_file_id)}
+          alt="Uploaded"
+          style={{ width: '120px', marginTop: '8px', borderRadius: '8px' }}
+        />
+      </>
+    )}
   </FormLayout>
 </Modal.Section>
 
