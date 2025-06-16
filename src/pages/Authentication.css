@@ -10,6 +10,7 @@ body {
   font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif !important;
 }
 
+
 ul{
   list-style-type: none;
 }
@@ -316,8 +317,8 @@ ul.product-list {
 
 
   .product-image {
-    width: 40px;
-    height: 40px;
+    width: 100px;
+    height: 100px;
     object-fit: cover;
     margin-right: 10px;
   }
@@ -416,17 +417,6 @@ ul.product-list {
   }
 
 
-
-
-  label {
-    font-weight: 600;
-    font-size: 0.9rem;
-    margin-bottom: 1rem;
-    color: #453534;
-  }
-
-
-
   .auth-wrapper input::placeholder,
   .auth-wrapper textarea::placeholder {
     color: #9E8C77;
@@ -446,37 +436,19 @@ ul.product-list {
     overflow-y: auto;
     padding-left: 0;
     list-style: none;
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
   }
 
-
-  .product-item {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    padding: 0.4rem 0.7rem 0.4rem 0;
-    cursor: pointer;
-    border-radius: 6px;
-    user-select: none;
-    color: #4a4a4a;
-  }
-
-  .product-item:hover {
-    background-color: #a9927340;
-  }
-
-  .product-item.selected {
+.product-item.selected {
     background-color: #6f5b4033;
     color: white;
   }
-
-  .product-image {
-    width: 40px;
-    height: 40px;
-    object-fit: cover;
-    border-radius: 4px;
+  .product-item span {
+    font-size: 16px;
   }
 
-  .otp-btn,
+.otp-btn,
   .nav-btn,
   .submit-btn {
     padding: 0.7rem 1.5rem;
@@ -742,7 +714,7 @@ ul.product-list {
 
   .product-item {
     display: flex;
-    align-items: center;
+    flex-direction: column;
     gap: 1rem;
     padding: 0.4rem 0.7rem;
     cursor: pointer;
@@ -1013,7 +985,16 @@ ul.product-list {
       color: #453834 !important;
       font-weight: bold;
   }
-
+.search_prdouct_headding{
+  margin: 10px 0 15px;
+}
+.category_headding{
+   margin-top: 30px;
+}
+.subheadding_product {
+    position: absolute;
+    left: -22px;
+}
 
 
   @media(max-width:768px){
@@ -1213,3 +1194,225 @@ ul.product-list {
 
 
   }
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  .address-autocomplete-wrapper {
+  position: relative;
+  font-size: 16px;
+}
+
+.address-autocomplete-wrapper .address-input-container {
+  position: relative;
+}
+
+.address-autocomplete-wrapper .suggestion-box {
+  position: absolute;
+  top: 100%;
+  width: 100%;
+  background: white;
+  border: 1px solid #ccc;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  z-index: 1000;
+  border-radius: 4px;
+  max-height: 240px;
+  overflow-y: auto;
+  font-size: 14px;
+}
+
+.address-autocomplete-wrapper .suggestion-header {
+  padding: 6px 10px;
+  border-bottom: 1px solid #eee;
+  font-weight: 600;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #f9f9f9;
+  font-size: 14px;
+}
+
+.address-autocomplete-wrapper .close-suggestions {
+  background: transparent;
+  border: none;
+  font-size: 14px;
+  cursor: pointer;
+  color: #888;
+}
+
+.address-autocomplete-wrapper .suggestions-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.address-autocomplete-wrapper .suggestion-item {
+  padding: 10px 12px;
+  border-bottom: 1px solid #eee;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.address-autocomplete-wrapper .suggestion-item:hover {
+  background-color: #f5f5f5;
+}
+.no-image {
+  width: 60px;
+  height: 60px;
+  background-color: #f3f3f3;
+  color: #999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  border-radius: 4px;
+}
+.custom-select {
+  width: 100%;
+  max-width: 100%;
+  border-radius: 0;
+  padding: 0.75rem 1rem;
+  padding-right: 2.5rem; /* Extra space for dropdown arrow */
+  font-size: 1rem;
+  color: #1f2937; /* gray-800 */
+  background-color: transparent;
+  appearance: none;
+  background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23000'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7' /%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.75rem center; /* controls arrow spacing */
+  background-size: 1.25rem 1.25rem;
+  border: 0;
+  border-bottom: 1px solid #999;
+}
+
+.custom-select:focus {
+  outline: none;
+  box-shadow: none;
+}
+select {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+}
+.selected-box {
+  margin: 16px 0;
+  padding: 12px;
+  background: #fffaf3;
+  border: 1px solid #e1d8c8;
+  border-radius: 8px;
+}
+
+.selected-heading {
+  margin-bottom: 10px;
+  font-size: 16px;
+  font-weight: 600;
+  color: #222;
+}
+
+
+
+.selected-sku-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  background: #ffffff;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  position: relative;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+}
+
+.sku-thumbnail {
+  object-fit: cover;
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+
+.sku-product-title {
+  font-size: 14px;
+  color: #333;
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sku-remove-btn {
+    background: #ff4d4f;
+    color: #fff;
+    border: none;
+    border-radius: 30px;
+    width: 30px;
+    height: 30px;
+    font-size: 14px;
+    line-height: 30px;
+    cursor: pointer;
+    display: flex
+;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+}
+.sku-suggestions ul {
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.sku-suggestions li{
+  cursor: pointer;
+}
+
+
+
+
+
+
+.selected-box {
+  margin-top: 16px;
+  background: #f9f9f9;
+  padding: 12px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+}
+
+.selected-heading {
+  margin-bottom: 8px;
+  font-weight: 600;
+}
+
+
+.selected-sku-card,
+.selected-category-card {
+  display: flex;
+  align-items: center;
+  background-color: #fff;
+  border: 1px solid #ccc;
+  padding: 6px 8px;
+  border-radius: 6px;
+  gap: 8px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.sku-thumbnail,
+.category-thumbnail {
+  width: 40px;
+  height: 40px;
+  object-fit: cover;
+  border-radius: 4px;
+}
+
+
+.selected-box .prev-btn, button {
+    padding: 8px 12px;
+   
+}
