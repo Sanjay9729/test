@@ -4,7 +4,7 @@ import "./PhoneNumberStep.css";
 
 
 
-const PhoneNumberStep = ({ phone, setPhone, nextStep, fieldErrors }) => {
+const PhoneNumberStep = ({ phone, setPhone, nextStep, fieldErrors, setFieldErrors }) => {
   const [search, setSearch] = useState("");
   const [showDropdown, setShowDropdown] = useState(false);
   const [selectedCountry, setSelectedCountry] = useState(
@@ -42,16 +42,19 @@ const handleEnterKey = (e) => {
     setPhone("");  // Clear phone number when country code is changed
   };
 
-  const handlePhoneChange = (e) => {
+const handlePhoneChange = (e) => {
   const inputValue = e.target.value;
 
-  // Allow only digits
   if (/^\d*$/.test(inputValue)) {
     setPhone(inputValue);
-  } else {
-    setPhone(inputValue); // still update if needed
+
+    // ✅ Clear error if user starts typing again
+    if (fieldErrors.phone) {
+      setFieldErrors(prev => ({ ...prev, phone: "" }));
+    }
   }
 };
+
 
 
   // Mapping of countries to phone number formats
