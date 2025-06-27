@@ -37,6 +37,7 @@
     const [showProducts, setShowProducts] = useState(false);
     const [skuFilteredProducts, setSkuFilteredProducts] = useState([]);
     const [showSkuProducts, setShowSkuProducts] = useState(false);
+    const [highlightedIndex, setHighlightedIndex] = useState(-1);
     const address2Ref = useRef(null);
     const cityRef = useRef(null);
     const stateRef = useRef(null);
@@ -145,6 +146,7 @@ const handleVisibilityChange = useCallback(() => {
       const fetchProducts = async () => {
         try {
           const res = await fetch("/.netlify/functions/products");
+          
           const data = await res.json();
           if (Array.isArray(data)) {
             setProducts(
@@ -462,21 +464,33 @@ const handleSkuProductSelect = (product) => {
       if (currentStep === 1 && !fullName.trim()) errors.fullName = "Enter your full name.";
       if (currentStep === 2 && !email.trim()) errors.email = "Enter your email.";
       if (currentStep === 3 && !otp.trim()) errors.otp = "Enter the OTP.";
-      if (currentStep === 4 && !phone.trim()) errors.phone = "Enter your phone number.";
+      if (currentStep === 4) { if (!phone.trim()) { errors.phone = "Enter your phone number.";
+          } else if (!/^\d{10}$/.test(phone.trim())) {
+              errors.phone = "Please enter a valid 10-digit phone number.";
+          }
+      }
       if (currentStep === 5) {
         if (!addressLine1.trim()) errors.addressLine1 = "Please enter your address.";
       if (!city.trim()) errors.city = "Please enter your city.";
       if (!country.trim()) errors.country = "Please enter your country.";
       }
-    if (currentStep === 6) {
-    const hasImage = !!imageFileId;
-    const hasSku = !!sku.trim();
-    const hasCategoryProduct = selectedCategoryProducts.length > 0;
+    
+       if (currentStep === 6) {
+    const hasImage = !!imageFileId; // Check if an image is uploaded
+    const hasSku = !!sku.trim();    // Check if SKU is entered
+    const hasCategoryProduct = selectedCategoryProducts.length > 0; // Check if any category product is selected
 
-    if (!hasSku && !hasCategoryProduct && !hasImage) {
-      errors.generalImageOrSku = "Please upload an image, enter a SKU, or select a product from category.";
+    // Image/SKU Error: Either image or SKU must be provided
+    if (!hasSku && !hasImage) {
+      errors.generalImageOrSku = "Please select a product from category.";
     }
-  }
+
+    // Category Product Error: If no product is selected from the category
+    if (!hasCategoryProduct) {
+      errors.selectedCategoryProduct = "Please select a product from the category.";
+    }
+}
+
 
   setFieldErrors(errors);
     return Object.keys(errors).length === 0;
@@ -596,8 +610,35 @@ const handleCategoryProductSelect = (product) => {
 };
 
 const handleSubmit = async () => {
+   console.log("handleSubmit triggered"); // Debug log
   setLoading(true);
   setFieldErrors({});
+
+ const isImageUploaded = !!imageFileId;   // Check if an image is uploaded
+  const isSkuEntered = sku.trim().length > 0; // Check if SKU is entered
+  const hasCategoryProduct = selectedCategoryProducts.length > 0; // Check if any category product is selected
+
+  // Separate image/SKU error validation
+  if (!isImageUploaded && !isSkuEntered) {
+    setFieldErrors(prev => ({
+      ...prev,
+      generalImageOrSku: "Please upload an image or enter a SKU.",
+    }));
+  }
+
+  // Separate category product validation
+  if (!hasCategoryProduct) {
+    setFieldErrors(prev => ({
+      ...prev,
+      selectedCategoryProduct: "Please select a product from the category.",
+    }));
+    setLoading(false);
+    return; // Prevent submission
+  }
+  if (Object.keys(fieldErrors).length > 0) {
+    setLoading(false);
+    return; // Stop the form submission if there are errors
+  }
 
   const nothingSelected =
     !imageFileId &&
@@ -664,6 +705,11 @@ const handleSubmit = async () => {
     setLoading(false);
   }
 };
+
+const clearFieldError = (fieldName) => {
+  setFieldErrors(prev => ({ ...prev, [fieldName]: "" }));
+};
+
 
  return (
       <div className="auth-wrapper ">
@@ -808,7 +854,7 @@ const handleSubmit = async () => {
   )}
 
   {step === 4 && (
-            <PhoneNumberStep phone={phone} setPhone={setPhone} nextStep={nextStep} fieldErrors={fieldErrors} />
+            <PhoneNumberStep phone={phone} setPhone={setPhone} nextStep={nextStep} fieldErrors={fieldErrors} setFieldErrors={setFieldErrors}/>
           )}
 
           {[5, 6, 7].map((num) => (
@@ -827,22 +873,56 @@ const handleSubmit = async () => {
                   <div className="address-autocomplete-wrapper">
     <label>Address</label>
     <div className="address-input-container">
-     <input
-  type="text"
-  placeholder="Start typing address..."
-  value={addressLine1}
- onChange={(e) => {
+    <input
+    type="text"
+    placeholder="Start typing address..."
+    value={addressLine1}
+   onChange={(e) => {
   setAddressLine1(e.target.value);
-  setHasSelectedAddress(false); 
+ clearFieldError("addressLine1");
+  setFieldErrors(prev => ({ ...prev, addressLine1: "" })); // Clear error
+  setHasSelectedAddress(false);
   setAddressSuggestions([]);
   setCity("");
   setState("");
   setZip("");
   setCountry("");
+  setHighlightedIndex(-1);
 }}
 
+
+ onKeyDown={(e) => {
+    if (addressSuggestions.length === 0) return;
+
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      setHighlightedIndex((prev) => Math.min(prev + 1, addressSuggestions.length - 1));
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault();
+      setHighlightedIndex((prev) => Math.max(prev - 1, 0));
+    } else if (e.key === "Enter" && highlightedIndex >= 0) {
+      e.preventDefault();
+      const selected = addressSuggestions[highlightedIndex];
+      const props = selected.properties;
+
+      setAddressLine1(props.name || props.street || "");
+      setAddressLine2(props.city || props.locality || "");
+      setCity(props.city || props.locality || "");
+      clearFieldError("city");
+      setState(props.state || "");
+      setZip(props.postcode || "");
+      setCountry(props.country || "");
+      clearFieldError("country");
+      setAddressSuggestions([]);
+      setHasSelectedAddress(true);
+      setTimeout(() => address2Ref.current?.focus(), 150);
+    }
+  }}
   onBlur={() => {
-    setTimeout(() => setAddressSuggestions([]), 200);
+    setTimeout(() => {
+      setAddressSuggestions([]);
+      setHighlightedIndex(-1);
+    }, 200);
   }}
   className="styled-input"
 />
@@ -859,34 +939,43 @@ const handleSubmit = async () => {
         ✖
       </button>
     </div>
-    <ul className="suggestions-list">
-      {addressSuggestions.map((item, idx) => {
-        const props = item.properties;
+   <ul className="suggestions-list">
+  {addressSuggestions.map((item, idx) => {
+    const props = item.properties;
+    const isActive = idx === highlightedIndex;
 
-        return (
-        <li
-  key={idx}
-  className="suggestion-item"
-  onClick={() => {
-    setAddressLine1(props.name || props.street || "");
-    setAddressLine2(props.city || props.locality || "");
-    setCity(props.city || props.locality || "");
-    setState(props.state || "");
-    setZip(props.postcode || "");
-    setCountry(props.country || "");
-    setAddressSuggestions([]);
+    return (
+      <li
+        key={idx}
+        className={`suggestion-item ${isActive ? "highlighted" : ""}`}
+        onMouseEnter={() => setHighlightedIndex(idx)}
+       onClick={() => {
+        setAddressLine1(props.name || props.street || "");
+        clearFieldError("addressLine1");
 
-    setHasSelectedAddress(true); 
+        setAddressLine2(props.city || props.locality || "");
+        
+        setCity(props.city || props.locality || "");
+        clearFieldError("city");
 
-    setTimeout(() => address2Ref.current?.focus(), 150);
-  }}
->
-  {props.name}, {props.street}, {props.city}, {props.state}, {props.country}
-</li>
+        setState(props.state || "");
+        setZip(props.postcode || "");
 
-        );
-      })}
+        setCountry(props.country || "");
+        clearFieldError("country");
+
+        setAddressSuggestions([]);
+        setHasSelectedAddress(true);
+        setTimeout(() => address2Ref.current?.focus(), 150);
+      }}
+
+      >
+        {props.name}, {props.street}, {props.city}, {props.state}, {props.country}
+      </li>
+    );
+  })}
     </ul>
+
   </div>
 )}
 
@@ -905,7 +994,11 @@ const handleSubmit = async () => {
   />
 
                   <label>City/Town</label>
-                  <input ref={cityRef} type="text" placeholder="Palo Alto" value={city} onChange={(e) => setCity(e.target.value)}    
+                  <input ref={cityRef} type="text" placeholder="Palo Alto" value={city} onChange={(e) => {
+setCity(e.target.value);
+  setFieldErrors(prev => ({ ...prev, city: "" }));
+}}
+    
                   onKeyDown={(e) => {
       if (e.key === "Enter") {
         e.preventDefault();
@@ -939,7 +1032,11 @@ const handleSubmit = async () => {
 
 
                   <label>Country</label>
-                  <input ref={countryRef} type="text" placeholder="United States" value={country} onChange={(e) => setCountry(e.target.value)}   onKeyDown={handleEnterKey} />
+                  <input ref={countryRef} type="text" placeholder="United States" value={country} onChange={(e) => {
+  setCountry(e.target.value);
+  setFieldErrors(prev => ({ ...prev, country: "" }));
+}}
+   onKeyDown={handleEnterKey} />
 
                   {fieldErrors.address && <p className="error">{fieldErrors.address}</p>}
                     {fieldErrors.country && <p className="error">{fieldErrors.country}</p>}
@@ -1004,14 +1101,16 @@ const handleSubmit = async () => {
                       <img src={product.images[0].src} alt={product.title} width="100" height="100" />
                     )}
                     <div>
-                      <span>{product.title}</span><br />
-                      <small>{product.product_type}</small>
+                      <span>{product.title}</span>
                     </div>
                   </li>
                 ))}
               </ul>
             )}
           </div>
+
+
+
         )}
           
         {selectedSkuProducts.length > 0 && (
@@ -1041,6 +1140,13 @@ const handleSubmit = async () => {
             </div>
           </div>
         )}
+
+              {fieldErrors.generalImageOrSku && (
+  <p className="error" style={{ marginTop: '10px', color: 'red' }}>
+    {fieldErrors.generalImageOrSku}
+  </p>
+)}
+
 
         </div>
         <label className="upload_image search_prdouct_headding">
@@ -1092,34 +1198,7 @@ const handleSubmit = async () => {
             )}
           </ul>
         )}
-      {showProducts && selectedCategory && (
-        <ul className="product-list">
-          {loadingProducts ? (
-            <li>Loading...</li>
-          ) : filteredProducts.length === 0 ? (
-            <li>No products found in this category.</li>
-          ) : (
-            filteredProducts.map((product) => {
-              const isSelectedInCategory = selectedCategoryProducts.some((p) => p.id === product.id);
-              const isSelectedViaSku = selectedSkuProducts.some((p) => p.id === product.id);
-              if (isSelectedViaSku) return null;
-              
-              return (
-                <li
-                  key={product.id}
-                  className={`product-item ${isSelectedInCategory ? "selected" : ""}`}
-                  onClick={() => handleCategoryProductSelect(product)}
-                >
-                  {product.images?.[0]?.src && (
-                    <img src={product.images[0].src} alt={product.title} className="product-image" />
-                  )}
-                  <span>{product.title}</span>
-                </li>
-              );
-            }).filter(Boolean)
-          )}
-        </ul>
-      )}
+     
 
               {selectedCategoryProducts.length > 0 && (
     <div className="selected-box">
@@ -1149,8 +1228,11 @@ const handleSubmit = async () => {
     </div>
   )}
 
-      {fieldErrors.generalImageOrSku && <p className="error">{fieldErrors.generalImageOrSku}</p>}
-
+{fieldErrors.selectedCategoryProduct && (
+  <p className="error" style={{ marginTop: '10px', color: 'red' }}>
+    {fieldErrors.selectedCategoryProduct}
+  </p>
+)}
       <p className="error">{fieldErrors.selectedProduct}</p>
         <p className="error">{fieldErrors.submit}</p>
       </div>
