@@ -143,34 +143,31 @@ const handleVisibilityChange = useCallback(() => {
     }, [products]);
   
     useEffect(() => {
-      const fetchProducts = async () => {
-        try {
-          const res = await fetch("/.netlify/functions/products");
-          
-          const data = await res.json();
-          if (Array.isArray(data)) {
-            setProducts(
-  data.map((p) => ({
-    ...p,
-    tags: Array.isArray(p.tags) ? p.tags : [],
-  }))
-);
-            setFilteredProducts(data);
-          } else {
-            setProducts([]);
-            setFilteredProducts([]);
-            setFieldErrors({ products: "Invalid products data." });
-          }
-        } catch {
-          setProducts([]);
-          setFilteredProducts([]);
-          setFieldErrors({ products: "Failed to load products." });
-        } finally {
-          setLoadingProducts(false);
-        }
-      };
-      fetchProducts();
-    }, []);
+  const fetchProducts = async () => {
+    try {
+      const res = await fetch("/.netlify/functions/products");
+      const data = await res.json();
+      console.log("Fetched products:", data); // Add logging here
+      if (Array.isArray(data)) {
+        setProducts(data);
+        setFilteredProducts(data);
+      } else {
+        setProducts([]);
+        setFilteredProducts([]);
+        setFieldErrors({ products: "Invalid products data." });
+      }
+    } catch (err) {
+      console.error("Error fetching products:", err); // Add logging here
+      setProducts([]);
+      setFilteredProducts([]);
+      setFieldErrors({ products: "Failed to load products." });
+    } finally {
+      setLoadingProducts(false);
+    }
+  };
+  fetchProducts();
+}, []);
+
 
   useEffect(() => {
       if (!products || products.length === 0) return;
