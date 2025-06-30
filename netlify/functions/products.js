@@ -7,7 +7,7 @@ const API_VERSION = process.env.API_VERSION || '2024-01';
 
 async function fetchAllProducts() {
   let allProducts = [];
-  let url = `https://${SHOP}/admin/api/${API_VERSION}/products.json?limit=250`;
+  let url = `https://${SHOP}/admin/api/${API_VERSION}/products.json?limit=250&status=active`;
   let hasNextPage = true;
 
   while (hasNextPage && url) {
