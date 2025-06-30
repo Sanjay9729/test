@@ -3,6 +3,7 @@
   import axios from 'axios';
   import "./Authentication.css";
   import PhoneNumberStep from './PhoneNumberStep';
+  import logo from '../assets/Ella stein logo.png';
 
   const Authe = () => {
     const [step, setStep] = useState(1);
@@ -147,7 +148,7 @@ const handleVisibilityChange = useCallback(() => {
     try {
       const res = await fetch("/.netlify/functions/products");
       const data = await res.json();
-      console.log("Fetched products:", data); // Add logging here
+      console.log("Fetched products:", data); 
       if (Array.isArray(data)) {
         setProducts(data);
         setFilteredProducts(data);
@@ -157,7 +158,7 @@ const handleVisibilityChange = useCallback(() => {
         setFieldErrors({ products: "Invalid products data." });
       }
     } catch (err) {
-      console.error("Error fetching products:", err); // Add logging here
+      console.error("Error fetching products:", err);
       setProducts([]);
       setFilteredProducts([]);
       setFieldErrors({ products: "Failed to load products." });
@@ -292,17 +293,12 @@ const handleSkuProductSelect = (product) => {
   setSelectedSkuProducts(prev => {
     const exists = prev.some(p => p.id === product.id);
     if (exists) {
-      // Remove if already selected in SKU
       return prev.filter(p => p.id !== product.id);
     } else {
-      // Remove from category if exists there
       setSelectedCategoryProducts(prevCat => prevCat.filter(p => p.id !== product.id));
-      // Add to SKU selection
       return [...prev, product];
     }
   });
-  
-  // Clear search after selection
   setShowSkuProducts(false);
   setSku('');
 };
@@ -473,16 +469,14 @@ const handleSkuProductSelect = (product) => {
       }
     
        if (currentStep === 6) {
-    const hasImage = !!imageFileId; // Check if an image is uploaded
-    const hasSku = !!sku.trim();    // Check if SKU is entered
-    const hasCategoryProduct = selectedCategoryProducts.length > 0; // Check if any category product is selected
+    const hasImage = !!imageFileId;
+    const hasSku = !!sku.trim(); 
+    const hasCategoryProduct = selectedCategoryProducts.length > 0;
 
-    // Image/SKU Error: Either image or SKU must be provided
     if (!hasSku && !hasImage) {
       errors.generalImageOrSku = "Please select a product from category.";
     }
 
-    // Category Product Error: If no product is selected from the category
     if (!hasCategoryProduct) {
       errors.selectedCategoryProduct = "Please select a product from the category.";
     }
@@ -597,25 +591,22 @@ const handleCategoryProductSelect = (product) => {
   setSelectedCategoryProducts(prev => {
     const exists = prev.some(p => p.id === product.id);
     if (exists) {
-      // Remove if already selected in category
       return prev.filter(p => p.id !== product.id);
     } else {
-      // Add to category selection
       return [...prev, product];
     }
   });
 };
 
 const handleSubmit = async () => {
-   console.log("handleSubmit triggered"); // Debug log
+   console.log("handleSubmit triggered");
   setLoading(true);
   setFieldErrors({});
 
- const isImageUploaded = !!imageFileId;   // Check if an image is uploaded
-  const isSkuEntered = sku.trim().length > 0; // Check if SKU is entered
-  const hasCategoryProduct = selectedCategoryProducts.length > 0; // Check if any category product is selected
+ const isImageUploaded = !!imageFileId;
+  const isSkuEntered = sku.trim().length > 0; 
+  const hasCategoryProduct = selectedCategoryProducts.length > 0;
 
-  // Separate image/SKU error validation
   if (!isImageUploaded && !isSkuEntered) {
     setFieldErrors(prev => ({
       ...prev,
@@ -623,18 +614,17 @@ const handleSubmit = async () => {
     }));
   }
 
-  // Separate category product validation
   if (!hasCategoryProduct) {
     setFieldErrors(prev => ({
       ...prev,
       selectedCategoryProduct: "Please select a product from the category.",
     }));
     setLoading(false);
-    return; // Prevent submission
+    return; 
   }
   if (Object.keys(fieldErrors).length > 0) {
     setLoading(false);
-    return; // Stop the form submission if there are errors
+    return;
   }
 
   const nothingSelected =
@@ -694,7 +684,7 @@ const handleSubmit = async () => {
       body: JSON.stringify(document),
     });
 
-    setStep(7); // success
+    setStep(7); 
   } catch (err) {
     console.error("Submission failed:", err);
     setFieldErrors({ submit: `Submission failed: ${err?.message || "Unknown error"}` });
@@ -710,7 +700,9 @@ const clearFieldError = (fieldName) => {
 
  return (
       <div className="auth-wrapper ">
-        <div className="logo-text">ELLA STEIN</div>
+        <div className="logo-text logo-image">
+          <img src={logo} alt="Ella Stein Logo" />
+        </div>
         <div className="right-side">
           {step === 1 && (
             <section className="step-section active slide-up">
@@ -877,7 +869,7 @@ const clearFieldError = (fieldName) => {
    onChange={(e) => {
   setAddressLine1(e.target.value);
  clearFieldError("addressLine1");
-  setFieldErrors(prev => ({ ...prev, addressLine1: "" })); // Clear error
+  setFieldErrors(prev => ({ ...prev, addressLine1: "" })); 
   setHasSelectedAddress(false);
   setAddressSuggestions([]);
   setCity("");
@@ -1105,10 +1097,7 @@ setCity(e.target.value);
               </ul>
             )}
           </div>
-
-
-
-        )}
+         )}
           
         {selectedSkuProducts.length > 0 && (
           <div className="selected-box">
