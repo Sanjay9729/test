@@ -44,9 +44,6 @@ const StartPage = () => {
           >
             Start
           </button>
-          <div className="startpage-info mt-4 text-sm">
-            <span>press <kbd>Enter ↵</kbd></span>
-          </div>
         </div>
       </div>
     </div>

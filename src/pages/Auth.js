@@ -223,6 +223,7 @@ const handleSuggestionClick = async (item) => {
       handleSuggestionClick(selected);
     }
   };
+  
 
 
   // Handle input field focus
@@ -249,23 +250,36 @@ const handleAddressChange = (e) => {
   setAddressLine1(value);
   clearFieldError("addressLine1");
   setFieldErrors(prev => ({ ...prev, addressLine1: "" }));
-  
-  // If user is typing something different from the last selected address
+
+  // If the user is typing something different from the last selected address
   if (value !== lastSelectedAddress) {
     setHasSelectedAddress(false);
     setLastSelectedAddress(""); // Clear last selected address
   }
-  
-  // Clear other fields if user is typing new address
+
+  // Clear other fields if the user is typing a new address
   if (value.trim() !== lastSelectedAddress && hasSelectedAddress) {
     setCity("");
     setState("");
     setZip("");
     setHasSelectedAddress(false);
   }
-  
+
   setHighlightedIndex(-1);
+   setShowSuggestions(true);
+
+  // Fetch suggestions after typing a delay to avoid unnecessary API calls
+  if (value.trim().length > 1) { // Minimum length check for better user experience
+    const timeoutId = setTimeout(() => {
+      fetchGoogleSuggestions(value);
+    }, 300); // Adding delay to avoid too many API calls
+
+    return () => clearTimeout(timeoutId);
+  } else {
+    setAddressSuggestions([]); // Clear suggestions if input is too short
+  }
 };
+
 
 useEffect(() => {
   // Fetch suggestions if user has typed something and it's different from last selected
@@ -601,72 +615,73 @@ useEffect(() => {
   };
 
 
-  const verifyOtp = async () => {
-    setLoading(true);
-    setFieldErrors({});
+ const verifyOtp = async () => {
+  setLoading(true);
+  setFieldErrors({});
+  setAuthMessage("");
+
+  const secret = otp.trim();
+  console.log("OTP entered:", secret);
+
+  if (!userId) {
+    setFieldErrors({ otp: "Session expired. Please request a new OTP." });
+    setLoading(false);
+    return;
+  }
+
+  if (!secret) {
+    setFieldErrors({ otp: "Please enter the OTP." });
+    setLoading(false);
+    return;
+  }
+
+  if (secret.length !== 6) {
+    setFieldErrors({ otp: "OTP must be 6 digits." });
+    setLoading(false);
+    return;
+  }
+
+  try {
+    const session = await account.createSession(userId, secret);
+    console.log("OTP verified successfully, session created:", session);
+
+    // Set all success states
+    setIsAuthenticated(true);
+    setJustVerified(true);  // Mark OTP as verified
+    setAuthMessage("✅ OTP verified successfully!");
+    setOtp("");
+
+    // Store verification status in localStorage
+    localStorage.setItem("isVerified", "true");
+    localStorage.setItem("currentStep", "4");
+
+    // Move to next step after a brief delay to show success message
+    setTimeout(() => {
+      setStep(4);
+    }, 1500);
+
+  } catch (err) {
+    console.error("OTP verification failed:", err);
+
+    if (err.message.includes("Invalid credentials") ||
+      err.message.includes("token") ||
+      err.code === 401) {
+      setFieldErrors({ otp: "Invalid OTP. Please check and try again." });
+    } else if (err.message.includes("expired")) {
+      setFieldErrors({ otp: "OTP has expired. Please request a new one." });
+      setUserId(false);
+    } else {
+      setFieldErrors({ otp: "Verification failed. Please try again." });
+    }
+
+    setIsAuthenticated(false);
+    setJustVerified(false);
     setAuthMessage("");
+  } finally {
+    setLoading(false); // Reset the loading state
+  }
+};
 
-    const secret = otp.trim();
-    console.log("OTP entered:", secret);
-
-    if (!userId) {
-      setFieldErrors({ otp: "Session expired. Please request a new OTP." });
-      setLoading(false);
-      return;
-    }
-
-    if (!secret) {
-      setFieldErrors({ otp: "Please enter the OTP." });
-      setLoading(false);
-      return;
-    }
-
-    if (secret.length !== 6) {
-      setFieldErrors({ otp: "OTP must be 6 digits." });
-      setLoading(false);
-      return;
-    }
-
-    try {
-      const session = await account.createSession(userId, secret);
-      console.log("OTP verified successfully, session created:", session);
-
-      // Set all success states
-      setIsAuthenticated(true);
-      setJustVerified(true);
-      setAuthMessage("✅ OTP verified successfully!");
-      setOtp("");
-
-      // Store verification status in localStorage
-      localStorage.setItem("isVerified", "true");
-      localStorage.setItem("currentStep", "4");
-
-      // Move to next step after a brief delay to show success message
-      setTimeout(() => {
-        setStep(4);
-      }, 1500);
-
-    } catch (err) {
-      console.error("OTP verification failed:", err);
-
-      if (err.message.includes("Invalid credentials") ||
-        err.message.includes("token") ||
-        err.code === 401) {
-        setFieldErrors({ otp: "Invalid OTP. Please check and try again." });
-      } else if (err.message.includes("expired")) {
-        setFieldErrors({ otp: "OTP has expired. Please request a new one." });
-        setUserId(false);
-      } else {
-        setFieldErrors({ otp: "Verification failed. Please try again." });
-      }
-
-      setIsAuthenticated(false);
-      setJustVerified(false);
-      setAuthMessage("");
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleOtpChange = (e) => {
     const value = e.target.value.replace(/\D/g, '');
@@ -715,19 +730,16 @@ useEffect(() => {
     }
   }, []);
 
-  useEffect(() => {
-    const savedUserId = localStorage.getItem("userId");
-    const isVerified = localStorage.getItem("isVerified");
+useEffect(() => {
+  const isVerified = localStorage.getItem("isVerified");
 
-    if (savedUserId) {
-      setUserId(savedUserId);
-    }
+  if (isVerified === "true") {
+    setJustVerified(true);
+    setIsAuthenticated(true);
+    setAuthMessage("✅ OTP verified successfully!"); // Show the success message on page load
+  }
+}, []);
 
-    if (isVerified === "true") {
-      setJustVerified(true);
-      setIsAuthenticated(true);
-    }
-  }, []);
 
 
   const nextStep = () => {
@@ -1022,8 +1034,7 @@ useEffect(() => {
             />
             {fieldErrors.fullName && <p className="error">{fieldErrors.fullName}</p>}
             <div className="ok-container">
-              <button onClick={nextStep} className="ok-button">OK</button>
-              <span className="enter-text">press <span className="enter-key">Enter ↵</span></span>
+              <button onClick={nextStep} className="ok-button">Submit</button>
             </div>
           </section>
         )}
@@ -1068,7 +1079,7 @@ useEffect(() => {
               </>
             ) : (
               <>
-                <div>
+                {/* <div>
                   <button
                     onClick={async () => {
                       try {
@@ -1087,7 +1098,7 @@ useEffect(() => {
                   >
                     Sign Out
                   </button>
-                </div>
+                </div> */}
                 <p className="success-message">✅ Verified and logged in!</p>
               </>
             )}
@@ -1128,7 +1139,7 @@ useEffect(() => {
             <div className="email_btn flex gap-4 mt-3">
               <button
                 onClick={verifyOtp}
-                disabled={loading || otp.length !== 6}
+                disabled={loading || otp.length !== 6 || justVerified}  // Disable if OTP is verified
                 className="bg-black text-white text-sm px-4 py-2 rounded hover:bg-gray-800 disabled:bg-gray-400"
               >
                 {loading ? "Verifying..." : "Verify OTP"}
@@ -1136,7 +1147,7 @@ useEffect(() => {
 
               <button
                 onClick={sendOtp}
-                disabled={loading}
+                disabled={loading || justVerified}  // Disable if OTP is verified
                 className="resend_button bg-gray-200 text-black text-sm px-4 py-2 rounded hover:bg-gray-300"
               >
                 {loading ? "Resending..." : "Resend OTP"}
@@ -1173,7 +1184,7 @@ useEffect(() => {
         <div className="address-input-container">
           <input
             type="text"
-            placeholder="Start typing address, business name, or number..."
+            placeholder="65 Hansen Way"
             value={addressLine1}
        onChange={handleAddressChange}
             onFocus={handleFocus} // Show suggestions when input is focused
@@ -1189,35 +1200,35 @@ useEffect(() => {
                 <button
                   className="close-suggestions"
                  onClick={() => {
-            setAddressSuggestions([]);
-            setShowSuggestions(false);
-          }}
+                    setAddressSuggestions([]);
+                    setShowSuggestions(false);
+                  }}
                 >
                   ✖
                 </button>
               </div>
               <ul className="suggestions-list">
-        {addressSuggestions.map((item, idx) => {
-          const isActive = idx === highlightedIndex;
-          const addressParts = item.description.split(', ');
-          const mainAddress = addressParts[0] || item.description;
-          const location = addressParts.slice(1).join(', ');
+                {addressSuggestions.map((item, idx) => {
+                  const isActive = idx === highlightedIndex;
+                  const addressParts = item.description.split(', ');
+                  const mainAddress = addressParts[0] || item.description;
+                  const location = addressParts.slice(1).join(', ');
 
-          return (
-            <li
-              key={item.place_id || idx}
-              className={`suggestion-item ${isActive ? "highlighted" : ""}`}
-              onMouseEnter={() => setHighlightedIndex(idx)}
-              onClick={() => handleSuggestionClick(item)}
-            >
-              <div className="suggestion-row">
-                <span className="suggestion-number">{mainAddress}</span>
-                <span className="suggestion-location">{location}</span>
-              </div>
-            </li>
-          );
-        })}
-      </ul>
+                  return (
+                    <li
+                      key={item.place_id || idx}
+                      className={`suggestion-item ${isActive ? "highlighted" : ""}`}
+                      onMouseEnter={() => setHighlightedIndex(idx)}
+                      onClick={() => handleSuggestionClick(item)}
+                    >
+                      <div className="suggestion-row">
+                        <span className="suggestion-number">{mainAddress}</span>
+                        <span className="suggestion-location">{location}</span>
+                      </div>
+                    </li>
+                  );
+                })}
+              </ul>
             </div>
           )}
         </div>
@@ -1315,8 +1326,7 @@ useEffect(() => {
       </div>
 
       <div className="ok-container">
-        <button onClick={nextStep} className="ok-button">OK</button>
-        <span className="enter-text">press <span className="enter-key">Enter ↵</span></span>
+        <button onClick={nextStep} className="ok-button">Submit</button>
       </div>
     </div>
                 
@@ -1557,30 +1567,33 @@ useEffect(() => {
           </section>
         ))}
 
-        <div className="btn-group flex justify-between mt-4 gap-4">
-          {step > 1 && step <= 6 && (
-            <button onClick={prevStep} className="">
-              Previous
-            </button>
-          )}
+       <div className={`btn-group mt-4 gap-4 ${step === 6 ? 'btn-left-right' : 'btn-right'}`}>
+  {step === 6 && (
+    <button
+      onClick={handleSubmit}
+      className="submit_btn"
+      disabled={loading}
+    >
+      {loading ? "Submitting..." : "Submit"}
+    </button>
+  )}
+  
+  {(step === 2 || step === 3) && (
+    <button onClick={nextStep} className="ok-button">
+      Submit
+    </button>
+  )}
 
-          {/* Show Next button only in steps 2 and 3 */}
-          {(step === 2 || step === 3) && (
-            <button onClick={nextStep} className="next-btn">
-              Next
-            </button>
-          )}
+  {step > 1 && step <= 6 && (
+    <button className="previous_btn" onClick={prevStep}>
+      Back
+    </button>
+  )}
+  
+</div>
 
-          {step === 6 && (
-            <button
-              onClick={handleSubmit}
-              className="submit_btn px-4 py-2 bg-black text-white rounded hover:bg-gray-800"
-              disabled={loading}
-            >
-              {loading ? "Submitting..." : "Submit"}
-            </button>
-          )}
-        </div>
+
+
 
       </div>
     </div>
