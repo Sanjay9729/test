@@ -2,8 +2,6 @@ import React, { useState, useRef, useEffect } from "react";
 import countryData from "../data/countryData";
 import "./PhoneNumberStep.css";
 
-
-
 const PhoneNumberStep = ({ phone, setPhone, nextStep, fieldErrors, setFieldErrors }) => {
   const [search, setSearch] = useState("");
   const [showDropdown, setShowDropdown] = useState(false);
@@ -11,6 +9,20 @@ const PhoneNumberStep = ({ phone, setPhone, nextStep, fieldErrors, setFieldError
     countryData.find(c => c.name === "United States") || countryData[0]
   );
   const dropdownRef = useRef();
+
+  useEffect(() => {
+    const storedPhone = localStorage.getItem("phone");
+    if (storedPhone) {
+      setPhone(storedPhone); // Set the phone to state
+    }
+  }, [setPhone]);
+
+  // Save the phone number to localStorage whenever it changes
+  useEffect(() => {
+    if (phone) {
+      localStorage.setItem("phone", phone);
+    }
+  }, [phone]);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -26,15 +38,17 @@ const PhoneNumberStep = ({ phone, setPhone, nextStep, fieldErrors, setFieldError
     c.name.toLowerCase().includes(search.toLowerCase())
   );
 
-const handleEnterKey = (e) => {
-  if (e.key === "Enter") {
-    e.preventDefault();
-    if (/^\d+$/.test(phone)) {
-      nextStep(); // only allow if phone is numeric
+  const handleEnterKey = (e) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      // Proceed only if the phone number is exactly 10 digits
+      if (/^\d{10}$/.test(phone)) {
+        nextStep(); // Allow if phone is 10 digits
+      } else {
+        setFieldErrors({ phone: "Phone number must be 10 digits" }); // Show error message
+      }
     }
-  }
-};
-
+  };
 
   const handleSelectCountry = (country) => {
     setSelectedCountry(country);
@@ -42,38 +56,34 @@ const handleEnterKey = (e) => {
     setPhone("");  // Clear phone number when country code is changed
   };
 
-const handlePhoneChange = (e) => {
-  const inputValue = e.target.value;
+  const handlePhoneChange = (e) => {
+    const inputValue = e.target.value;
 
-  if (/^\d*$/.test(inputValue)) {
-    setPhone(inputValue);
+    if (/^\d*$/.test(inputValue)) {
+      setPhone(inputValue);
 
-    // ✅ Clear error if user starts typing again
-    if (fieldErrors.phone) {
-      setFieldErrors(prev => ({ ...prev, phone: "" }));
+      // Clear error if user starts typing again
+      if (fieldErrors.phone) {
+        setFieldErrors(prev => ({ ...prev, phone: "" }));
+      }
     }
-  }
-};
-
-
+  };
 
   // Mapping of countries to phone number formats
   const phoneFormats = {
     "+1": "(201) 555-0123", // United States
     "+93": "070 123 4567",   // Afghanistan
     "+44": "07400 123456",   // United Kingdom
-    "+91": "0811234 56789",     // India
-    "+61": "04112 345 678",   // Australia
+    "+91": "0811234 56789",  // India
+    "+61": "04112 345 678",  // Australia
     "+33": "06 12 34 56 78", // France
-    "+49": "01512 3456789", // Germany
+    "+49": "01512 3456789",  // Germany
     "+81": "090-1234-5678",  // Japan
     "+55": "(11) 96123-456", // Brazil
-    "+34": "612 34 56 78",    // Spain
+    "+34": "612 34 56 78",   // Spain
     "+27": "071 123 4567",   // South Africa
-    "+358": "041 2345678",   //Aland islands
-    "+355": "067 212 3456",   // Albania
-
-    // Add more countries as needed
+    "+358": "041 2345678",   // Aland islands
+    "+355": "067 212 3456",  // Albania
   };
 
   // Function to get the phone number placeholder format for the selected country
@@ -85,7 +95,7 @@ const handlePhoneChange = (e) => {
     <section className="step-section active slide-up">
       <div className="step-label">
         <div className="step_number_main">
-          <span className="step-number">3</span>
+          <span className="step-number">4</span>
           <span>
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="black" viewBox="0 0 16 16" className="shouldFlipIfRtl">
               <path fillRule="evenodd" clipRule="evenodd" d="M8.47 1.97a.75.75 0 0 1 1.06 0l4.897 4.896a1.25 1.25 0 0 1 0 1.768L9.53 13.53a.75.75 0 0 1-1.06-1.06l3.97-3.97H1.75a.75.75 0 1 1 0-1.5h10.69L8.47 3.03a.75.75 0 0 1 0-1.06Z"></path>
@@ -137,28 +147,32 @@ const handlePhoneChange = (e) => {
           value={phone}
           onChange={handlePhoneChange}
           placeholder={getPhonePlaceholder(selectedCountry.code)} 
-           onKeyDown={handleEnterKey}
-
+          onKeyDown={handleEnterKey}
           className="phone-input"
         />
       </div>
 
       {fieldErrors.phone && <p className="error">{fieldErrors.phone}</p>}
-        {phone && !/^\d+$/.test(phone) && (
-  <p className="error">Numbers only please</p>
-)}
+      {phone && !/^\d+$/.test(phone) && (
+        <p className="error">Numbers only please</p>
+      )}
+      {/* {phone && phone.length !== 10 && (
+        <p className="error">Phone number must be exactly 10 digits</p>
+      )} */}
 
       <div className="ok-container">
-<button
-  onClick={() => {
-    if (/^\d+$/.test(phone)) {
-      nextStep(); // Only go next if phone is numeric
-    }
-  }}
-  className="ok-button"
->
-  OK
-</button>
+        <button
+          onClick={() => {
+            if (/^\d{10}$/.test(phone)) {
+              nextStep(); // Proceed only if the phone number is 10 digits
+            } else {
+              setFieldErrors({ phone: "Phone number must be exactly 10 digits" });
+            }
+          }}
+          className="ok-button"
+        >
+          OK
+        </button>
         <span className="enter-text">press <span className="enter-key">Enter ↵</span></span>
       </div>
     </section>
