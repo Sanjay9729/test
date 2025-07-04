@@ -1070,7 +1070,6 @@ useEffect(() => {
                   <button onClick={sendOtp} className="ok-button" disabled={loading}>
                     {loading ? "Sending..." : "Send OTP"}
                   </button>
-                  <span className="enter-text">press <span className="enter-key">Enter ↵</span></span>
                 </div>
 
                 {fieldErrors.otp && <p className="error">{fieldErrors.otp}</p>}
@@ -1567,7 +1566,7 @@ useEffect(() => {
           </section>
         ))}
 
-       <div className={`btn-group mt-4 gap-4 ${step === 6 ? 'btn-left-right' : 'btn-right'}`}>
+<div className={`btn-group mt-4 gap-4 ${step === 2 || step === 3 || step ===6 ? 'btn-left' : 'btn-right'}`}>
   {step === 6 && (
     <button
       onClick={handleSubmit}
@@ -1577,7 +1576,7 @@ useEffect(() => {
       {loading ? "Submitting..." : "Submit"}
     </button>
   )}
-  
+
   {(step === 2 || step === 3) && (
     <button onClick={nextStep} className="ok-button">
       Submit
@@ -1589,8 +1588,8 @@ useEffect(() => {
       Back
     </button>
   )}
-  
 </div>
+
 
 
 
