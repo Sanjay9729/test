@@ -407,11 +407,22 @@ textarea {
 }
 
 /* For other steps (default behavior): Align buttons to the right */
-.btn-right {
-  display: flex;
-  justify-content: flex-end;
-  width: 100%;
+
+/* Align buttons to the left in Step 3 */
+/* For Step 3: Justify content to be space-between */
+.btn-left {
+    display: flex;
+    justify-content: space-between; /* Buttons spaced out */
+    width: 100%;
 }
+
+/* For all other steps: Justify content to be aligned to the end */
+.btn-right {
+    display: flex;
+    justify-content: flex-end; /* Align buttons to the right */
+    width: 100%;
+}
+
 
 /* Optional: If you want to style the buttons individually, you can do so here */
 .submit_btn,
