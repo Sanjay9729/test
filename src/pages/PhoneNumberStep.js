@@ -171,9 +171,8 @@ const PhoneNumberStep = ({ phone, setPhone, nextStep, fieldErrors, setFieldError
           }}
           className="ok-button"
         >
-          OK
+          Submit
         </button>
-        <span className="enter-text">press <span className="enter-key">Enter ↵</span></span>
       </div>
     </section>
   );
