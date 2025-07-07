@@ -1152,6 +1152,7 @@ useEffect(() => {
                 {loading ? "Resending..." : "Resend OTP"}
               </button>
             </div>
+            
           </section>
         )}
 
@@ -1350,7 +1351,7 @@ useEffect(() => {
                   <div className="image-upload">
                     <p>Please upload a product image or enter a SKU number.</p>
                     <label className="upload_image">
-                      <span className="subheadding_product" style={{ fontSize: '18px' }}>●</span> Upload Image/ Take picture
+                      <span className="subheadding_product" style={{ fontSize: '18px' }}>●</span> Upload Image
                     </label>
 
                     <input
@@ -1380,7 +1381,7 @@ useEffect(() => {
                   </div>
 
                   <label className="upload_image">
-                    <span className="subheadding_product" style={{ fontSize: '18px' }}>●</span> Enter SKU or Product name
+                    <span className="subheadding_product" style={{ fontSize: '18px' }}>●</span> Search Product (Enter Product name or SKU) 
                   </label>
                   <div ref={skuInputRef} style={{ position: 'relative' }}>
                     <input
@@ -1559,7 +1560,6 @@ useEffect(() => {
                   >
                     JEWELRY CARE TIPS
                   </a>
-                  <span className="enter-text enter_tips_btn">  press <span className="enter-key">Enter ↵</span></span>
                 </p>
               </div>
             )}

@@ -43,7 +43,6 @@ ul.product-list {
 .auth-background, .container, .card {
   font-family: 'Figtree', sans-serif;
 }
-
 .container {
   max-width: 550px;
   width: 100%;
@@ -537,6 +536,7 @@ input.styled-input {
 
 .step-label {
   font-size: 1.4rem;
+  font-weight: 600;
   margin-bottom: 1rem;
   color: var(--dark-text);
 }
@@ -742,7 +742,7 @@ input.search_product_input {
 }
 .address-step label {
   display: block;
-  font-weight: bold;
+  font-weight: 500;
   margin-top: 20px;
   margin-bottom: 5px;
   font-size: 16px;
