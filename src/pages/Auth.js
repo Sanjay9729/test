@@ -68,11 +68,11 @@ const Authe = () => {
   const storage = new Storage(client);
   const APPWRITE_BUCKET_ID = "683e80fc0019228a6dfa"
 
-  account.get().then(response => {
-    // console.log('Account Info:', response);
-  }).catch(error => {
-    console.error('Error fetching account info:', error);
-  });
+  // account.get().then(response => {
+  //   // console.log('Account Info:', response);
+  // }).catch(error => {
+  //   console.error('Error fetching account info:', error);
+  // });
 
 
 
@@ -387,19 +387,18 @@ useEffect(() => {
   }, []);
 
 
-  useEffect(() => {
-    if (!products || products.length === 0) return;
-    const sample = products.slice(0, 30).map((p, i) => ({
-      i,
-      title: p.title,
-      type: p.type,
-      product_type: p.product_type,
-      tags: p.tags,
-      vendor: p.vendor,
-      handle: p.handle
-    }));
-    console.table(sample);
-  }, [products]);
+  // useEffect(() => {
+  //   if (!products || products.length === 0) return;
+  //   const sample = products.slice(0, 30).map((p, i) => ({
+  //     i,
+  //     title: p.title,
+  //     type: p.type,
+  //     product_type: p.product_type,
+  //     tags: p.tags,
+  //     vendor: p.vendor,
+  //     handle: p.handle
+  //   }));
+  // }, [products]);
 
   useEffect(() => {
     if (products.length > 0 && !loadingProducts) {
@@ -614,8 +613,7 @@ useEffect(() => {
     }
   };
 
-
- const verifyOtp = async () => {
+const verifyOtp = async () => {
   setLoading(true);
   setFieldErrors({});
   setAuthMessage("");
@@ -642,20 +640,26 @@ useEffect(() => {
   }
 
   try {
+    // Create session with the OTP
     const session = await account.createSession(userId, secret);
     console.log("OTP verified successfully, session created:", session);
 
-    // Set all success states
+    // Verify the session is working by getting user info
+    const userInfo = await account.get();
+    console.log("User authenticated:", userInfo);
+
+    // Set success states
     setIsAuthenticated(true);
-    setJustVerified(true);  // Mark OTP as verified
+    setJustVerified(true);
     setAuthMessage("✅ OTP verified successfully!");
     setOtp("");
 
-    // Store verification status in localStorage
+    // Store verification status
     localStorage.setItem("isVerified", "true");
     localStorage.setItem("currentStep", "4");
+    localStorage.setItem("sessionId", session.$id); // Store session ID
 
-    // Move to next step after a brief delay to show success message
+    // Move to next step
     setTimeout(() => {
       setStep(4);
     }, 1500);
@@ -664,8 +668,8 @@ useEffect(() => {
     console.error("OTP verification failed:", err);
 
     if (err.message.includes("Invalid credentials") ||
-      err.message.includes("token") ||
-      err.code === 401) {
+        err.message.includes("token") ||
+        err.code === 401) {
       setFieldErrors({ otp: "Invalid OTP. Please check and try again." });
     } else if (err.message.includes("expired")) {
       setFieldErrors({ otp: "OTP has expired. Please request a new one." });
@@ -678,9 +682,45 @@ useEffect(() => {
     setJustVerified(false);
     setAuthMessage("");
   } finally {
-    setLoading(false); // Reset the loading state
+    setLoading(false);
   }
 };
+const checkSession = useCallback(async () => {
+  try {
+    const session = await account.get();
+    console.log("Session check successful:", session);
+    setIsAuthenticated(true);
+    return true;
+  } catch (err) {
+    console.error("Session check failed:", err);
+    setIsAuthenticated(false);
+    setJustVerified(false);
+    return false;
+  }
+}, [account]);  // Add `account` as a dependency
+
+useEffect(() => {
+  const checkStoredAuth = async () => {
+    const isVerified = localStorage.getItem("isVerified");
+    const sessionId = localStorage.getItem("sessionId");
+
+    if (isVerified === "true" && sessionId) {
+      const sessionValid = await checkSession();
+      if (sessionValid) {
+        setJustVerified(true);
+        setIsAuthenticated(true);
+        setAuthMessage("✅ OTP verified successfully!");
+      } else {
+        localStorage.removeItem("isVerified");
+        localStorage.removeItem("sessionId");
+        setIsAuthenticated(false);
+        setJustVerified(false);
+      }
+    }
+  };
+
+  checkStoredAuth();
+}, [checkSession]); // Use `checkSession` as a dependency now
 
 
   const handleOtpChange = (e) => {
@@ -858,141 +898,188 @@ useEffect(() => {
 
 
 
-  const clearFormData = () => {
-    // Clear state
-    setFullName("");
-    setEmail("");
-    setPhone("");
-    setProductSearch("");
-    // setProducts([]);
-    // setFilteredProducts([]);
-    setFieldErrors({});
-    setOtp("");
-    setUserId(false);
-    setAddressLine1("");
-    setAddressLine2("");
-    setCity("");
-    setState("");
-    setZip("");
-    setCountry("");
-    setSku("");
-    setSelectedSkuProducts([]);
-    setSelectedCategoryProducts([]);
-    setHasSelectedAddress(false);
-    setShowCategories(false);
-    setSelectedCategory("");
-    setShowProducts(false);
-    setSkuFilteredProducts([]);
-    setShowSkuProducts(false);
-    setHighlightedIndex(-1);
-    setImagePreview([]);
-    setImageFileId([]);
-    setIsAuthenticated(false);
-    setJustVerified(false);
+const clearFormData = () => {
+  // Clear state
+  setFullName("");
+  setEmail("");
+  setPhone("");
+  setProductSearch("");
+  setFieldErrors({});
+  setOtp("");
+  setUserId(false);
+  setAddressLine1("");
+  setAddressLine2("");
+  setCity("");
+  setState("");
+  setZip("");
+  setCountry("");
+  setSku("");
+  setSelectedSkuProducts([]);
+  setSelectedCategoryProducts([]);
+  setHasSelectedAddress(false);
+  setShowCategories(false);
+  setSelectedCategory("");
+  setShowProducts(false);
+  setSkuFilteredProducts([]);
+  setShowSkuProducts(false);
+  setHighlightedIndex(-1);
+  setImagePreview([]);
+  setImageFileId([]);
+  setIsAuthenticated(false);
+  setJustVerified(false);
 
-    // ✅ Clear localStorage for form data fields
-    localStorage.removeItem("email");
-    localStorage.removeItem("fullName");
-    localStorage.removeItem("currentStep");
-    localStorage.removeItem("phone");
-    localStorage.removeItem("userId");
-    localStorage.removeItem("isVerified");
-
-    // Clear all address-related fields from localStorage
-    localStorage.removeItem("addressLine1");
-    localStorage.removeItem("addressLine2");
-    localStorage.removeItem("city");
-    localStorage.removeItem("state");
-    localStorage.removeItem("zip");
-    localStorage.removeItem("country");
-
-    // Clear SKU-related data from localStorage
-    localStorage.removeItem("sku");
-    localStorage.removeItem("selectedSkuProducts");
-    localStorage.removeItem("selectedCategoryProducts");
-    localStorage.removeItem("showCategories");
-    localStorage.removeItem("selectedCategory");
-    localStorage.removeItem("showProducts");
-    localStorage.removeItem("skuFilteredProducts");
-    localStorage.removeItem("showSkuProducts");
-  };
+  // Clear localStorage
+  localStorage.removeItem("email");
+  localStorage.removeItem("fullName");
+  localStorage.removeItem("currentStep");
+  localStorage.removeItem("phone");
+  localStorage.removeItem("userId");
+  localStorage.removeItem("isVerified");
+  localStorage.removeItem("sessionId"); // Clear session ID
+  localStorage.removeItem("addressLine1");
+  localStorage.removeItem("addressLine2");
+  localStorage.removeItem("city");
+  localStorage.removeItem("state");
+  localStorage.removeItem("zip");
+  localStorage.removeItem("country");
+};
 
 
+// const refreshSession = async () => {
+//   try {
+//     // Create a new session using the current one
+//     const currentSession = await account.get();
+//     console.log("Session refreshed:", currentSession);
+//     return currentSession;
+//   } catch (err) {
+//     console.error("Session refresh failed:", err);
+//     setIsAuthenticated(false);
+//     setJustVerified(false);
+//     return null;
+//   }
+// };
+
+// const debugAuth = async () => {
+//   try {
+//     const session = await account.get();
+//     console.log("Current session:", session);
+//     console.log("Session ID:", session.$id);
+//     console.log("User ID:", session.userId);
+//     console.log("Is authenticated:", isAuthenticated);
+//     console.log("Just verified:", justVerified);
+//   } catch (err) {
+//     console.error("Debug auth failed:", err);
+//   }
+// };
+
+// 6. Add a helper function to check authentication before critical operations
+// const ensureAuthenticated = async () => {
+//   try {
+//     const session = await account.get();
+//     return session;
+//   } catch (err) {
+//     console.error("Authentication check failed:", err);
+//     setIsAuthenticated(false);
+//     setJustVerified(false);
+//     setFieldErrors({ submit: "Please log in again. Your session has expired." });
+//     setStep(2);
+//     throw new Error("Authentication required");
+//   }
+// };
 
 
-  const handleSubmit = async () => {
-    console.log("Submit button clicked.");
-    setLoading(true);
-    setFieldErrors({}); // Clear any existing field errors
 
-    // Allow submission even if no category or SKU product is selected in Step 6
-    const hasCategoryProduct = selectedCategoryProducts.length > 0;
-    const hasSkuProduct = selectedSkuProducts.length > 0;
 
-    // If no products or images are selected, still allow submission (no error message for this case)
-    if (!hasCategoryProduct && !hasSkuProduct) {
-      console.log("No products or images selected, but submission will proceed.");
-    }
 
+// Here are the key fixes needed for your authentication issues:
+
+// 1. Fix the handleSubmit function to properly handle authentication
+const handleSubmit = async () => {
+  console.log("Submit button clicked.");
+  setLoading(true);
+  setFieldErrors({});
+
+  try {
+    // First, verify the user is authenticated
+    let session;
     try {
-      console.log("Submitting document...");
-      const session = await account.get();
-      const address = `${addressLine1}, ${addressLine2}, ${city}, ${state}, ${zip}, ${country}`;
-
-      let skuTitles = [];
-      if (selectedSkuProducts.length > 0) {
-        skuTitles = selectedSkuProducts.map(p => p.title);
-      } else if (sku.trim()) {
-        skuTitles = [sku.trim()];
-      }
-
-      let categoryTitles = selectedCategoryProducts.map(p => p.title);
-      const skuString = skuTitles.join(", ");
-      const categoryString = categoryTitles.join(", ");
-
-      const document = {
-        full_name: fullName,
-        email,
-        phone,
-        address,
-        user_id: session.$id,
-        product_sku: skuString,
-        selected_product: categoryString,
-        image_file_id: imageFileId.join(", "), // Ensure the file ID is passed here
-      };
-
-      // Submit data to Appwrite Database
-      await database.createDocument(
-        APPWRITE_DATABASE_ID,
-        APPWRITE_COLLECTION_ID,
-        ID.unique(),
-        document
-      );
-      console.log("Document submitted to Appwrite.");
-
-      // Send data to Shopify (via a serverless function or API)
-      await fetch("/.netlify/functions/sendToShopify", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(document),
-      });
-
-      console.log("Document sent to Shopify.");
-
-      // After successful submission, move to Step 7 (Thank You Page)
-      setStep(7);
-      console.log("Step set to 7: Thank You Page.");
-
-      // Clear the form data for the next user
-      clearFormData();
-      setAuthMessage(""); // Clear any verification success messages
-    } catch (err) {
-      console.error("Submission failed:", err);
-      setFieldErrors({ submit: `Submission failed: ${err?.message || "Unknown error"}` });
-    } finally {
-      setLoading(false); // Reset the loading state
+      session = await account.get();
+      console.log("Current session:", session);
+    } catch (sessionError) {
+      console.error("No valid session found:", sessionError);
+      setFieldErrors({ submit: "Please log in again. Your session has expired." });
+      setIsAuthenticated(false);
+      setJustVerified(false);
+      setStep(2); // Redirect to email step
+      return;
     }
-  };
+
+    // Prepare the document data
+    const address = `${addressLine1}, ${addressLine2}, ${city}, ${state}, ${zip}, ${country}`;
+
+    let skuTitles = [];
+    if (selectedSkuProducts.length > 0) {
+      skuTitles = selectedSkuProducts.map(p => p.title);
+    } else if (sku.trim()) {
+      skuTitles = [sku.trim()];
+    }
+
+    let categoryTitles = selectedCategoryProducts.map(p => p.title);
+    const skuString = skuTitles.join(", ");
+    const categoryString = categoryTitles.join(", ");
+
+    const document = {
+      full_name: fullName,
+      email,
+      phone,
+      address,
+      user_id: session.$id, // Use the session ID
+      product_sku: skuString,
+      selected_product: categoryString,
+      image_file_id: imageFileId.join(", "),
+    };
+
+    console.log("Document to submit:", document);
+
+    // Submit to Appwrite Database
+    await database.createDocument(
+      APPWRITE_DATABASE_ID,
+      APPWRITE_COLLECTION_ID,
+      ID.unique(),
+      document
+    );
+    console.log("Document submitted to Appwrite.");
+
+    // Send to Shopify
+    await fetch("/.netlify/functions/sendToShopify", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(document),
+    });
+
+    console.log("Document sent to Shopify.");
+
+    // Success - move to thank you page
+    setStep(7);
+    clearFormData();
+    setAuthMessage("");
+
+  } catch (err) {
+    console.error("Submission failed:", err);
+    
+    // Handle specific authentication errors
+    if (err.message.includes("missing scope") || err.message.includes("guests")) {
+      setFieldErrors({ submit: "Authentication expired. Please log in again." });
+      setIsAuthenticated(false);
+      setJustVerified(false);
+      setStep(2);
+    } else {
+      setFieldErrors({ submit: `Submission failed: ${err?.message || "Unknown error"}` });
+    }
+  } finally {
+    setLoading(false);
+  }
+};
 
   const clearFieldError = (fieldName) => {
     setFieldErrors(prev => ({ ...prev, [fieldName]: "" }));
