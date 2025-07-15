@@ -1432,11 +1432,11 @@ const handleSubmit = async () => {
                         </svg>
                       </span>
                     </div>
-                    Select Product:
+                    Upload a product image or enter a SKU number:
                   </div>
 
                   <div className="image-upload">
-                    <p>Please upload a product image or enter a SKU number.</p>
+                    {/* <p>Please upload a product image or enter a SKU number.</p> */}
                     <label className="upload_image">
                       <span className="subheadding_product" style={{ fontSize: '18px' }}>●</span> Upload Image
                     </label>
@@ -1659,7 +1659,7 @@ const handleSubmit = async () => {
           </section>
         ))}
 
-{step !== 1 && step !== 7 && (
+{/* {step !== 1 && step !== 7 && (
   <div className={`btn-group mt-4 gap-4 ${step === 2 || step === 3 || step === 6 ? 'btn-left' : 'btn-right'}`}>
     {step === 6 && (
       <button
@@ -1683,7 +1683,35 @@ const handleSubmit = async () => {
       </button>
     )}
   </div>
+)} */}
+
+{step !== 1 && step !== 7 && (
+  <div className={`btn-group mt-4 gap-4 ${step === 2 || step === 3 || step === 6 ? 'btn-left' : 'btn-right'}`}>
+    {step === 6 && (
+      <button
+        onClick={handleSubmit}
+        className="submit_btn"
+        disabled={loading}
+      >
+        {loading ? "Submitting..." : "Submit"}
+      </button>
+    )}
+
+    {/* Hide Submit button for steps 2 and 3, show for steps 4 and 5 */}
+    {(step === 4 || step === 5) && (
+      <button onClick={nextStep} className="ok-button">
+        Submit
+      </button>
+    )}
+
+    {step > 1 && step <= 6 && (
+      <button className="previous_btn" onClick={prevStep}>
+        Back
+      </button>
+    )}
+  </div>
 )}
+
 
 
 
