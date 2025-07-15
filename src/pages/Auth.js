@@ -1103,7 +1103,7 @@ const handleSubmit = async () => {
       </div>
       <div className="right-side">
         {step === 1 && (
-          <section className="step-section active slide-up">
+          <section className="step-section active slide-up name_step">
             <div className="step-label">
               <div className="step_number_main flex items-center absolute right-full mr-[140%] mt-5">
                 <span className="step-number">1</span>
@@ -1121,7 +1121,7 @@ const handleSubmit = async () => {
             />
             {fieldErrors.fullName && <p className="error">{fieldErrors.fullName}</p>}
             <div className="ok-container">
-              <button onClick={nextStep} className="ok-button">Submit</button>
+              <button onClick={nextStep} className="ok-button name_submit_btn">Submit</button>
             </div>
           </section>
         )}
@@ -1153,7 +1153,7 @@ const handleSubmit = async () => {
             {fieldErrors.email && <p className="error">{fieldErrors.email}</p>}
             {!isAuthenticated ? (
               <>
-                <div className="ok-container mb-3">
+                <div className="send_btn mb-3">
                   <button onClick={sendOtp} className="ok-button" disabled={loading}>
                     {loading ? "Sending..." : "Send OTP"}
                   </button>
@@ -1412,9 +1412,9 @@ const handleSubmit = async () => {
         </div>
       </div>
 
-      <div className="ok-container">
+      {/* <div className="ok-container">
         <button onClick={nextStep} className="ok-button">Submit</button>
-      </div>
+      </div> */}
     </div>
                 
             )}
@@ -1622,8 +1622,14 @@ const handleSubmit = async () => {
         </p>
       )} */}
 
-                  <p className="error">{fieldErrors.selectedProduct}</p>
-                  <p className="error">{fieldErrors.submit}</p>
+                 {fieldErrors.selectedProduct && (
+  <p className="error">{fieldErrors.selectedProduct}</p>
+)}
+
+{fieldErrors.submit && (
+  <p className="error">{fieldErrors.submit}</p>
+)}
+
                 </div>
               </>
             )}
@@ -1653,29 +1659,33 @@ const handleSubmit = async () => {
           </section>
         ))}
 
-<div className={`btn-group mt-4 gap-4 ${step === 2 || step === 3 || step ===6 ? 'btn-left' : 'btn-right'}`}>
-  {step === 6 && (
-    <button
-      onClick={handleSubmit}
-      className="submit_btn"
-      disabled={loading}
-    >
-      {loading ? "Submitting..." : "Submit"}
-    </button>
-  )}
+{step !== 1 && step !== 7 && (
+  <div className={`btn-group mt-4 gap-4 ${step === 2 || step === 3 || step === 6 ? 'btn-left' : 'btn-right'}`}>
+    {step === 6 && (
+      <button
+        onClick={handleSubmit}
+        className="submit_btn"
+        disabled={loading}
+      >
+        {loading ? "Submitting..." : "Submit"}
+      </button>
+    )}
 
-  {(step === 2 || step === 3) && (
-    <button onClick={nextStep} className="ok-button">
-      Submit
-    </button>
-  )}
+    {(step === 2 || step === 3 || step === 4 || step === 5) && (
+      <button onClick={nextStep} className="ok-button">
+        Submit
+      </button>
+    )}
 
-  {step > 1 && step <= 6 && (
-    <button className="previous_btn" onClick={prevStep}>
-      Back
-    </button>
-  )}
-</div>
+    {step > 1 && step <= 6 && (
+      <button className="previous_btn" onClick={prevStep}>
+        Back
+      </button>
+    )}
+  </div>
+)}
+
+
 
 
 
