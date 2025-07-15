@@ -160,7 +160,7 @@ const PhoneNumberStep = ({ phone, setPhone, nextStep, fieldErrors, setFieldError
         <p className="error">Phone number must be exactly 10 digits</p>
       )} */}
 
-      <div className="ok-container">
+      {/* <div className="ok-container">
         <button
           onClick={() => {
             if (/^\d{10}$/.test(phone)) {
@@ -173,7 +173,7 @@ const PhoneNumberStep = ({ phone, setPhone, nextStep, fieldErrors, setFieldError
         >
           Submit
         </button>
-      </div>
+      </div> */}
     </section>
   );
 };

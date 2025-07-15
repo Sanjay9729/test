@@ -418,7 +418,7 @@ textarea {
 /* For all other steps: Justify content to be aligned to the end */
 .btn-right {
     display: flex;
-    justify-content: flex-end; /* Align buttons to the right */
+    justify-content: space-between; /* Align buttons to the right */
     width: 100%;
 }
 
@@ -434,13 +434,6 @@ button {
   cursor: pointer;
   transition: background-color 0.3s;
 }
-
-.submit_btn:hover,
-.next-btn:hover,
-button:hover {
-  background-color: gray;
-}
-
 .thank-you h2 {
   font-size: 2rem;
   font-weight: 700;
@@ -680,11 +673,7 @@ input.styled-input {
 .styled-phone-input::placeholder {
   color: black;
 }
-.ok-container {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
+
 .country-dropdown {
   display: flex;
   align-items: center;
@@ -1022,8 +1011,34 @@ select {
 }
 
 @media(max-width:768px){
-  .step-section.active {
-    padding-top: 40px;
+  .btn-group.mt-4.gap-4.btn-right,
+  .btn-group.mt-4.gap-4.btn-left,
+  .name_step .ok-container{
+    margin-top: 50%;
+  }
+  .address-step input, .address-step textarea{
+    margin-bottom: 0;
+  }
+  .send_btn.mb-3 {
+    margin-top: 20px;
+}
+
+
+  .btn-group{
+    margin-top: 0px;
+  }
+  .address-step {
+    padding: 20px 0 0 0;
+  }
+  .address-step .input-group {
+    margin-bottom: 0;
+  }  
+  .btn-group,
+  .name_submit_btn {
+    justify-content: center;
+  }  
+  .ok-container{
+    justify-content: center;
   }
   input.styled-input {
     margin-top: 10px;
@@ -1063,7 +1078,7 @@ select {
   }
   .btn-group {
     justify-content: space-between;
-    margin-top: 16PX;
+    width: 100%;
   } 
   .address-step p,
   .upload_image_span{
@@ -1116,7 +1131,7 @@ select {
     margin-bottom: 0.6rem;
   }
   input.styled-input {
-    padding: 10px 10px;
+    padding: 10px 0px;
   }
   .prev-btn, .btn-group button {
     padding: 0.5rem 1.2rem;
@@ -1178,6 +1193,11 @@ select {
   }
   .complete-link:hover {
     background-color: #4e3f2d;
+  }
+  .submit_btn:hover,
+  .next-btn:hover,  
+  button:hover {
+    background-color: gray;
   }
 }
 
