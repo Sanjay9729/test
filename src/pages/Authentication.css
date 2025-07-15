@@ -334,8 +334,8 @@ textarea {
 .sku-suggestions ul,
 .product-list {
   margin-top: 1rem;
-  max-height: 300px;
-  overflow-y: auto;
+  overflow-y: scroll;
+   display: block; 
   padding-left: 0;
   list-style: none;
   display: grid;
@@ -970,9 +970,10 @@ select {
     justify-content: center;
     padding: 0;
 }
-.sku-suggestions ul {
-    max-height: 300px;
-    overflow-y: auto;
+.sku-suggestions {
+  max-height: 300px;  /* Limit the height of the suggestions container */
+  overflow-y: scroll; /* Ensure the scrollbar is always visible */
+  display: block;     /* Make sure the suggestions are block level and not collapsed */
 }
 .sku-suggestions li{
   cursor: pointer;
