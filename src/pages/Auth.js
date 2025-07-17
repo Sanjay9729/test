@@ -1686,40 +1686,32 @@ const handleSubmit = async () => {
 )} */}
 
 {step !== 1 && step !== 7 && (
-  <div className={`btn-group mt-4 gap-4 ${step === 2 || step === 3 || step === 6 ? 'btn-left' : 'btn-right'}`}>
+  <div className="btn-group mt-4 gap-4 d-flex justify-between" style={{ display: 'flex', justifyContent: 'space-between' }}>
+    {step > 1 && step <= 6 && (
+      <button className="previous_btn test" onClick={prevStep}>
+        Back
+      </button>
+    )}
+
     {step === 6 && (
       <button
         onClick={handleSubmit}
-        className="submit_btn"
+        className="submit_btn test2"
         disabled={loading}
       >
         {loading ? "Submitting..." : "Submit"}
       </button>
     )}
 
-    {/* Hide Submit button for steps 2 and 3, show for steps 4 and 5 */}
     {(step === 4 || step === 5) && (
       <button onClick={nextStep} className="ok-button">
         Submit
       </button>
     )}
-
-    {step > 1 && step <= 6 && (
-      <button className="previous_btn" onClick={prevStep}>
-        Back
-      </button>
-    )}
   </div>
 )}
 
-
-
-
-
-
-
-
-      </div>
+  </div>
     </div>
   );
 };
