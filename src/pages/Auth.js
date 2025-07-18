@@ -1002,14 +1002,14 @@ const handleSubmit = async () => {
   setFieldErrors({});
 
   // ✅ Validate Step 6: Require either image or SKU selection
-  const hasImage = imageFileId && imageFileId.length > 0;
-  const hasSkuSelected = selectedSkuProducts && selectedSkuProducts.length > 0;
+  // const hasImage = imageFileId && imageFileId.length > 0;
+  // const hasSkuSelected = selectedSkuProducts && selectedSkuProducts.length > 0;
 
-  if (!hasImage && !hasSkuSelected) {
-    setFieldErrors({ generalImageOrSku: "Please upload an image or select a product or SKU." });
-    setLoading(false);
-    return;
-  }
+  // if (!hasImage && !hasSkuSelected) {
+  //   setFieldErrors({ generalImageOrSku: "Please upload an image or select a product or SKU." });
+  //   setLoading(false);
+  //   return;
+  // }
 
   try {
     // ✅ Check if session is still valid
@@ -1202,6 +1202,7 @@ const handleSubmit = async () => {
                 <p className="success-message">✅ Verified and logged in!</p>
               </>
             )}
+            
           </section>
         )}
 
@@ -1240,7 +1241,7 @@ const handleSubmit = async () => {
               <button
                 onClick={verifyOtp}
                 disabled={loading || otp.length !== 6 || justVerified}  // Disable if OTP is verified
-                className="bg-black text-white text-sm px-4 py-2 rounded hover:bg-gray-800 disabled:bg-gray-400"
+                className="verify_btn"
               >
                 {loading ? "Verifying..." : "Verify OTP"}
               </button>
@@ -1700,13 +1701,29 @@ const handleSubmit = async () => {
 )} */}
 
 {step !== 1 && step !== 7 && (
-  <div className="btn-group mt-4 gap-4 d-flex justify-between" style={{ display: 'flex', justifyContent: 'space-between' }}>
+  <div
+    className="btn-group mt-4 gap-4"
+    style={{
+      display: 'flex',
+      justifyContent: 'space-between', // Make space between buttons
+      width: '100%', // Ensure the width covers the container
+    }}
+  >
+    {/* Back button */}
     {step > 1 && step <= 6 && (
       <button className="previous_btn test" onClick={prevStep}>
         Back
       </button>
     )}
 
+    {/* Submit button */}
+    {(step === 2 || step === 3 || step === 4 || step === 5) && (
+      <button onClick={nextStep} className="ok-button">
+        Submit
+      </button>
+    )}
+
+    {/* Submit button for step 6 */}
     {step === 6 && (
       <button
         onClick={handleSubmit}
@@ -1716,14 +1733,10 @@ const handleSubmit = async () => {
         {loading ? "Submitting..." : "Submit"}
       </button>
     )}
-
-    {(step === 4 || step === 5) && (
-      <button onClick={nextStep} className="ok-button">
-        Submit
-      </button>
-    )}
   </div>
 )}
+
+
 
   </div>
     </div>
