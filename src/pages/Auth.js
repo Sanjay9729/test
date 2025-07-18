@@ -92,7 +92,7 @@ const Authe = () => {
     if (storedPhone && storedPhone !== phone) {
       setPhone(storedPhone);
     }
-  }, [step, phone]);
+  }, [setPhone]);
 
 
   const handleEmailChange = (e) => {
@@ -743,13 +743,19 @@ useEffect(() => {
 
     console.log("Validation errors:", errors);
 
-    if (currentStep === 6 && selectedCategoryProducts.length === 0) {
-      errors.selectedCategoryProduct = "Please select a product from the category.";
-      console.log("Category product not selected.");
-    }
+   if (currentStep === 6) {
+    const hasImage = imageFileId && imageFileId.length > 0;
+    const hasSkuSelected = selectedSkuProducts && selectedSkuProducts.length > 0;
 
-    setFieldErrors(errors);
-    return Object.keys(errors).length === 0;
+    if (!hasImage && !hasSkuSelected) {
+      errors.generalImageOrSku = "Please upload an image or select a product via SKU.";
+    }
+  }
+   console.log("Validation errors:", errors);
+  setFieldErrors(errors);
+  return Object.keys(errors).length === 0;
+
+   
   };
 
 
@@ -999,8 +1005,18 @@ const handleSubmit = async () => {
   setLoading(true);
   setFieldErrors({});
 
+  // ✅ Validate Step 6: Require either image or SKU selection
+  const hasImage = imageFileId && imageFileId.length > 0;
+  const hasSkuSelected = selectedSkuProducts && selectedSkuProducts.length > 0;
+
+  if (!hasImage && !hasSkuSelected) {
+    setFieldErrors({ generalImageOrSku: "Please upload an image or select a product or SKU." });
+    setLoading(false);
+    return;
+  }
+
   try {
-    // First, verify the user is authenticated
+    // ✅ Check if session is still valid
     let session;
     try {
       session = await account.get();
@@ -1014,9 +1030,10 @@ const handleSubmit = async () => {
       return;
     }
 
-    // Prepare the document data
+    // ✅ Prepare address
     const address = `${addressLine1}, ${addressLine2}, ${city}, ${state}, ${zip}, ${country}`;
 
+    // ✅ Prepare product strings
     let skuTitles = [];
     if (selectedSkuProducts.length > 0) {
       skuTitles = selectedSkuProducts.map(p => p.title);
@@ -1024,16 +1041,17 @@ const handleSubmit = async () => {
       skuTitles = [sku.trim()];
     }
 
-    let categoryTitles = selectedCategoryProducts.map(p => p.title);
+    const categoryTitles = selectedCategoryProducts.map(p => p.title);
     const skuString = skuTitles.join(", ");
     const categoryString = categoryTitles.join(", ");
 
+    // ✅ Prepare document for Appwrite & Shopify
     const document = {
       full_name: fullName,
       email,
       phone,
       address,
-      user_id: session.$id, // Use the session ID
+      user_id: session.$id, // Session user ID
       product_sku: skuString,
       selected_product: categoryString,
       image_file_id: imageFileId.join(", "),
@@ -1041,7 +1059,7 @@ const handleSubmit = async () => {
 
     console.log("Document to submit:", document);
 
-    // Submit to Appwrite Database
+    // ✅ Submit to Appwrite Database
     await database.createDocument(
       APPWRITE_DATABASE_ID,
       APPWRITE_COLLECTION_ID,
@@ -1050,7 +1068,7 @@ const handleSubmit = async () => {
     );
     console.log("Document submitted to Appwrite.");
 
-    // Send to Shopify
+    // ✅ Submit to Shopify backend
     await fetch("/.netlify/functions/sendToShopify", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -1059,15 +1077,14 @@ const handleSubmit = async () => {
 
     console.log("Document sent to Shopify.");
 
-    // Success - move to thank you page
+    // ✅ Move to thank-you step and reset
     setStep(7);
     clearFormData();
     setAuthMessage("");
 
   } catch (err) {
     console.error("Submission failed:", err);
-    
-    // Handle specific authentication errors
+
     if (err.message.includes("missing scope") || err.message.includes("guests")) {
       setFieldErrors({ submit: "Authentication expired. Please log in again." });
       setIsAuthenticated(false);
@@ -1080,6 +1097,7 @@ const handleSubmit = async () => {
     setLoading(false);
   }
 };
+
 
   const clearFieldError = (fieldName) => {
     setFieldErrors(prev => ({ ...prev, [fieldName]: "" }));

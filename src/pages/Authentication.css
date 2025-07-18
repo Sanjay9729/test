@@ -1026,7 +1026,7 @@ select {
 
 
   .btn-group{
-    margin-top: 0px;
+    margin-top: 100px;
   }
   .address-step {
     padding: 20px 0 0 0;
@@ -1039,7 +1039,7 @@ select {
     justify-content: center;
   }  
   .ok-container{
-    justify-content: center;
+    justify-content: left;
   }
   input.styled-input {
     margin-top: 10px;

@@ -56,18 +56,20 @@ const PhoneNumberStep = ({ phone, setPhone, nextStep, fieldErrors, setFieldError
     setPhone("");  // Clear phone number when country code is changed
   };
 
-  const handlePhoneChange = (e) => {
-    const inputValue = e.target.value;
+ const handlePhoneChange = (e) => {
+  const inputValue = e.target.value;
 
-    if (/^\d*$/.test(inputValue)) {
-      setPhone(inputValue);
+  // Allow empty value (when user deletes all)
+  if (inputValue === "" || /^\d+$/.test(inputValue)) {
+    setPhone(inputValue);
 
-      // Clear error if user starts typing again
-      if (fieldErrors.phone) {
-        setFieldErrors(prev => ({ ...prev, phone: "" }));
-      }
+    // Clear error if user starts typing again or clears the field
+    if (fieldErrors.phone) {
+      setFieldErrors(prev => ({ ...prev, phone: "" }));
     }
-  };
+  }
+};
+
 
   // Mapping of countries to phone number formats
   const phoneFormats = {
