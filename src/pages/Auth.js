@@ -1717,7 +1717,7 @@ const handleSubmit = async () => {
     )}
 
     {/* Submit button */}
-    {(step === 2 || step === 3 || step === 4 || step === 5) && (
+    {(step === 3 || step === 4 || step === 5) && (
       <button onClick={nextStep} className="ok-button">
         Submit
       </button>
