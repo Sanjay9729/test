@@ -16,6 +16,7 @@ const PhoneNumberStep = ({ phone, setPhone, nextStep, fieldErrors, setFieldError
       setPhone(storedPhone); // Set the phone to state
     }
   }, [setPhone]);
+  
 
   // Save the phone number to localStorage whenever it changes
   useEffect(() => {

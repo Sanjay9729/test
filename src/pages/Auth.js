@@ -87,12 +87,8 @@ const Authe = () => {
     }
   }, [step, email]);
 
-  useEffect(() => {
-    const storedPhone = localStorage.getItem("phone");
-    if (storedPhone && storedPhone !== phone) {
-      setPhone(storedPhone);
-    }
-  }, [setPhone]);
+
+
 
 
   const handleEmailChange = (e) => {
