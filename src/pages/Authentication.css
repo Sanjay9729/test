@@ -434,8 +434,8 @@ button {
   cursor: pointer;
   transition: background-color 0.3s;
 }
-.verify_btn{
-  background-color: #fdf6ec;
+.verify_btn {
+  background-color: var(--secondary-color);
   color: #000;
 }
 
