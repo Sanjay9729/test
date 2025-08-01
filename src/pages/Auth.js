@@ -361,7 +361,7 @@ useEffect(() => {
       try {
         const res = await fetch("/.netlify/functions/products");
         const data = await res.json();
-        console.log("Fetched products:", data);
+        console.log("sanjay", data);
         if (Array.isArray(data)) {
           setProducts(data);
           // setFilteredProducts(data);

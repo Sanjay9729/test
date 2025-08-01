@@ -29,7 +29,7 @@ body {
 }
 .auth-wrapper {
   font-family: var(--font-family-secondary) !important;
-  background: var(--secondary-color);
+  background: #fff;
   display: flex;
   flex-direction: column;
   min-height: 100vh;
@@ -468,7 +468,7 @@ button {
   margin: 0 auto;
 }
 .logo-text {
-  background-color: var(--secondary-color);
+  background-color: #fff;
   font-size: 1.2rem;
   font-weight: 600;
   letter-spacing: 1px;
@@ -483,6 +483,7 @@ button {
 .logo-image img {
   width: 100%;
   max-width: 120px;
+  filter: invert(1);
 }
 .startpage-background .logo-text{
   width: auto;
@@ -551,7 +552,7 @@ input.styled-input {
 }
 .ok-button {
   display: inline-block;
-  background-color: #fdf6ec;
+  background-color: var(--secondary-color);
   color: var(--text-color);
   font-weight: bold;
   padding: 10px 20px;
@@ -785,7 +786,8 @@ input.search_product_input {
   color: rgb(69, 56, 52);
 }
 .submission_button {
-  background-color: rgb(239, 233, 219);
+  /* background-color: rgb(239, 233, 219); */
+  background-color: var(--secondary-color);
   box-shadow: rgba(0, 0, 0, 0.1) 0px 3px 12px 0px;
   color: var(--text-color);
   text-decoration: none;
@@ -807,7 +809,8 @@ input.search_product_input {
   color: #453534;
 }
 .startpage-background {
-  background-color: rgb(191, 165, 138);
+  /* background-color: rgb(191, 165, 138); */
+  background-color: #fff;
 }
 .startpage-subtitle{
   color: rgba(69, 56, 52, 0.7);
